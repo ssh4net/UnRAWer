@@ -1,0 +1,99 @@
+[Global]
+# Global app settings
+Console = true
+Threads = 10
+ExportSubf = false
+
+[Range]
+# Range conversion mode
+# 0 - Unsigned [0.0 ~ 1.0]
+# 1 - Signed [-1.0 ~ 1.0]
+# 2 - Signed to Unsigned [-1.0~1.0] -> [0.0~1.0]
+# 3 - Unsigned to Signed [0.0~1.0] -> [-1.0~1.0]
+RangeMode = 0
+
+[Export]
+# Export settings
+# FileFormat:
+# -1 - Same as input. If input format can't be
+#    used for export (for example CameraRAWs) 
+#    app will use default 
+# 0 - TIFF
+# 1 - OpenEXR
+# 2 - PNG
+# 3 - JPEG
+# 4 - JPEG-2000
+# 5 - PPM
+DefaultFormat = 3
+FileFormat = -1
+# Bit depth: 
+# -1 - Original
+# 0 - uint8 (8bit unsigned int)
+# 1 - uint16 (16bit unsigned int)
+# 2 - uint32 (64bit unsigned int) !! most file formats have not support 32bit unsigned int
+# 3 - uint64 (64bit unsigned int) !! most file formats have not support double precision
+# 4 - half (16bit float)
+# 5 - float (32bit float)
+# 6 - double (64bit float) !! most file formats have not support double precision
+DefaultBit = 1
+BitDepth = -1
+
+[CameraRaw]
+# Raw rotation:
+# -1 - Auto EXIF
+# 0 - Unrotated/Horisontal
+# 3 - 180 Horisontal
+# 5 - 90 CW Vertical
+# 6 - 90 CCW Vertical
+RawRotation = -1
+# Raw Color Space
+# 0 - raw
+# 1 - sRGB
+# 2 - sRGB-linear (sRGB primaries, but a linear transfer function)
+# 3 - Adobe
+# 4 - Wide
+# 5 - ProPhoto
+# 6 - ProPhoto-linear
+# 7 - XYZ
+# 8 - ACES (only supported by LibRaw >= 0.18)
+# 9 - DCI-P3 (LibRaw >= 0.21)
+# 10 - Rec2020 (LibRaw >= 0.2)
+RawColorSpace = 1
+# Demosaic
+# 0 - none,
+# 1 - linear
+# 2 - VNG
+# 3 - PPG
+# 4 - AHD (default)
+# 5 - DCB
+# 6 - AHD-Mod
+# 7 - AFD
+# 8 - VCD
+# 9 - Mixed
+# 10 - LMMSE
+# 11 - AMaZE
+# 12 - DHT
+# 13 - AAHD
+Demosaic = 4
+
+[OCIO]
+# OCIO settings
+# OCIO config file
+# If empty, OpenColorIO library will use $OCIO environment variable
+# If $OCIO is not set, app will give an error
+ocio_Config = "c:/aces_1.2/config.ocio"
+
+[Transform]
+# Transform image
+# LUT transform mode
+# LUT mode: -1 - disabled, 0 - Smart (faile path/name), 1 - Force
+LutTransform = -1
+# Force/Default preset
+LutDefault = "_texture"
+
+[LUT_Preset]
+# Presets:
+_texture = "w:/3D_LUT.csp"
+_geometry = "w:/TestLUT.csp"
+_cross = "w:/TestLUT.csp"
+_parallel = "w:/TestLUT.csp"
