@@ -20,6 +20,7 @@
 #include <vector>
 #include "ui.h"
 #include "LOG.H"
+
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
@@ -36,7 +37,8 @@ struct Settings {
 	int bitDepth, defBDepth;
 	int rawRot;
 	uint rawSpace, dDemosaic, numThreads;
-
+	float mltThreads;
+	uint verbosity;
 
 	std::vector<std::string> out_formats = { "tif", "exr", "png", "jpg", "jp2", "ppm" };
 	std::string ocioConfig, dLutPreset;
@@ -55,6 +57,7 @@ struct Settings {
 	void reSettings() {
 		conEnable = true;	// Console enabled/disabled
 		useSbFldr = false;	// Use subfolder for output
+		verbosity = 3;		// Verbosity level: 0 - none, 1 - errors, 2 - warnings, 3 - info, 4 - debug, 5 - trace
 		lutMode = 0;		// LUT mode: -1 - disabled, 0 - Smart, 1 - Force
 		dLutPreset = "";	// Default LUT preset, top one
 		numThreads = 5;		// Number of threads: 0 - auto, >0 - number of threads

@@ -25,6 +25,7 @@ int main(int argc, char* argv[]) {
     freopen("CONOUT$", "w", stderr);
 
     Log_Init();
+    Log_SetVerbosity(3);
 
     if (!loadSettings(settings, "unrw_config.toml")) {
         LOG(error) << "Can not load [unrw_config.toml] Using default settings." << std::endl;

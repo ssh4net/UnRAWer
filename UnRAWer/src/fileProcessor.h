@@ -19,13 +19,73 @@
 #include <cctype>
 #include <string>
 #include <algorithm>
+#include <optional>
 
 #include "Log.h"
 #include "settings.h"
 #include "imageio.h"
 #include "ui.h"
+#include "threadpool.h"
 
-//struct Settings;  // forward declaration
+#ifndef FILEPROCESSOR_H
+#define FILEPROCESSOR_H
+
+enum class ProcessingStatus {
+    NotStarted,
+    Prepared,
+    Loaded,
+    Demosaiced,
+    Processed,
+    Written,
+    Failed
+};
+
+struct ProcessingParams {
+    std::shared_ptr<OIIO::ImageBuf> image;
+    // File paths:
+    std::string srcFile;
+    std::string outFile;
+    // RAW image pointer
+    //LibRaw raw_data;
+    std::shared_ptr<LibRaw> raw_data;
+    // source settings:
+    OIIO::ImageSpec srcSpec;
+    // output settings:
+    OIIO::TypeDesc outType;
+    OIIO::ImageSpec outSpec;
+    // Color config:
+    std::string srcCSpace;
+    std::string outCSpace;
+    // Processing params:
+    std::string lut_preset;
+    // Filters:
+    struct sharpening {
+        bool enabled;
+        float amount;
+        float radius;
+        float threshold;
+    } sharp;
+
+    struct denoising {
+        bool enabled;
+        float sigma;
+    } denoise;
+
+    ProcessingStatus status = ProcessingStatus::NotStarted;
+    std::mutex statusMutex;
+
+    void setStatus(ProcessingStatus newStatus) {
+        std::lock_guard<std::mutex> lock(statusMutex);
+        status = newStatus;
+    }
+
+    ProcessingStatus getStatus() {
+        std::lock_guard<std::mutex> lock(statusMutex);
+        return status;
+    }
+};
+
+#endif // FILEPROCESSOR_H
 
 std::string toLower(const std::string& str);
 
@@ -33,6 +93,7 @@ void getWritableExt(QString* ext, Settings* settings);
 
 QString getExtension(const QString& fileName, Settings* settings);
 
-std::pair<const std::string, std::string>* getPresetfromName(const QString& fileName, Settings* settings);
+std::optional<std::string> getPresetfromName(const QString& fileName, Settings* settings);
 
 QString getOutName(const QString& fileName, QString& prest_sfx, Settings* settings);
+

@@ -63,7 +63,7 @@ QString getExtension(const QString& fileName, Settings* settings) {
     return extension;
 }
 
-std::pair<const std::string, std::string>* getPresetfromName(const QString& fileName, Settings* settings) {
+std::optional<std::string> getPresetfromName(const QString& fileName, Settings* settings) {
     QFileInfo fileInfo(fileName);
     QString baseName = fileInfo.baseName();
     QString path = fileInfo.absolutePath();
@@ -71,10 +71,10 @@ std::pair<const std::string, std::string>* getPresetfromName(const QString& file
     for (auto& lut_preset : settings->lut_Preset) {
         QString lut_preset_key = lut_preset.first.c_str();
         if (path.contains(lut_preset_key, Qt::CaseInsensitive) || baseName.contains(lut_preset_key, Qt::CaseInsensitive)) {
-            return &lut_preset;
+            return lut_preset.first;
         }
     }
-    return nullptr;
+    return std::nullopt;
 }
 
 QString getOutName(const QString& fileName, QString& prest_sfx, Settings* settings) {

@@ -1,8 +1,21 @@
 [Global]
 # Global app settings
 Console = true
-Threads = 10
+# Threads count for read and write
+Threads = 20
+# Threads multiplier for processing 1.0 equal all cores/threads
+ThredsMult = 2.0
+# 
 ExportSubf = false
+# log level is 0-5, 0 is most verbose
+# 0 = trace, 1 = debug, 2 = info, 3 = warning, 4 = error, 5 = fatal
+# fatal - 0 = only fatal errors, 
+# fatal - 1 = error,
+# fatal - 2 = warning, 
+# fatal - 3 = info (default), 
+# fatal - 4 = debug, 
+# fatal - 5 = trace (most outputs)
+Verbosity = 3
 
 [Range]
 # Range conversion mode
@@ -24,7 +37,7 @@ RangeMode = 0
 # 3 - JPEG
 # 4 - JPEG-2000
 # 5 - PPM
-DefaultFormat = 3
+DefaultFormat = 5
 FileFormat = -1
 # Bit depth: 
 # -1 - Original

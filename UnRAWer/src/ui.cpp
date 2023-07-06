@@ -111,6 +111,7 @@ MainWindow::MainWindow() {
     );
 
     QMenu* f_menu = new QMenu("Files", menuBar);
+    QMenu* p_menu = new QMenu("Processing", menuBar);
     QMenu* s_menu = new QMenu("Settings", menuBar);
 
     //menuBar->setStyleSheet(
@@ -130,19 +131,23 @@ MainWindow::MainWindow() {
     con_enable->setCheckable(true);
     con_enable->setChecked(settings.conEnable);
 
-    QAction* useSubfldr = new QAction("Export Subfolders", s_menu);
+    QAction* useSubfldr = new QAction("Export Subfolders", p_menu);
     useSubfldr->setCheckable(true);
     useSubfldr->setChecked(settings.useSbFldr);
 
     // Submenu
-    QMenu* rng_submenu = new QMenu("Floats type", s_menu);
-    QMenu* fmt_submenu = new QMenu("Formats", s_menu);
-    QMenu* bit_submenu = new QMenu("Bits Depth", s_menu);
-    QMenu* raw_submenu = new QMenu("Camera Raw", s_menu);
-    QMenu* dem_submenu = new QMenu("Demosaic", s_menu);
-    QMenu* rclr_submenu = new QMenu("RAW ColorSpace", s_menu);
-    QMenu* lut_submenu = new QMenu("LUT transform", s_menu);
+    QMenu* rng_submenu = new QMenu("Floats type", p_menu);
+    QMenu* fmt_submenu = new QMenu("Formats", p_menu);
+    QMenu* bit_submenu = new QMenu("Bits Depth", p_menu);
+    QMenu* raw_submenu = new QMenu("Camera Raw", p_menu);
+    QMenu* dem_submenu = new QMenu("Demosaic", p_menu);
+    QMenu* rclr_submenu = new QMenu("RAW ColorSpace", p_menu);
+    QMenu* lut_submenu = new QMenu("LUT transform", p_menu);
+    
     QMenu* lut_p_submenu = new QMenu("LUT Presets", lut_submenu);
+
+    QMenu* verb_submenu = new QMenu("Verbosity", s_menu);
+    
     QActionGroup* RangeGroup = new QActionGroup(rng_submenu);
     QActionGroup* FrmtGroup = new QActionGroup(fmt_submenu);
     QActionGroup* BitsGroup = new QActionGroup(bit_submenu);
@@ -152,6 +157,8 @@ MainWindow::MainWindow() {
     QActionGroup* LutGroup = new QActionGroup(lut_submenu);
     QActionGroup* LutPresetGroup = new QActionGroup(lut_p_submenu);
 
+    QActionGroup* VerbGroup = new QActionGroup(verb_submenu);
+
     auto createAction = [](const QString& title, QActionGroup* group, QMenu* menu, bool checkable = true, bool checked = false) {
         QAction* action = new QAction(title, menu);
         action->setCheckable(checkable);
@@ -160,6 +167,13 @@ MainWindow::MainWindow() {
         menu->addAction(action);
         return action;
     };
+    // Verbose level
+    std::vector<std::pair<const QString, int>> verbMenu = {
+        {"0 - Fatal", 0}, {"1 - Error", 1}, {"2 - Warning", 2}, {"3 - Info", 3}, {"4 - Debug", 4}, {"5 - Trace", 5} };
+    for (auto& [title, value] : verbMenu) {
+        QAction* action = createAction(title, VerbGroup, verb_submenu, true, (settings.verbosity == value));
+        verbActions.push_back(action);
+    }
 
     // Range
     std::vector<std::pair<const QString, int>> rngMenu = {
@@ -226,29 +240,35 @@ MainWindow::MainWindow() {
 		QAction* action = createAction(QString::fromStdString(key.first), LutPresetGroup, lut_p_submenu, true, (settings.dLutPreset == key.first));
 		lutActions.push_back(action);
 	}
-
-    s_menu->addMenu(raw_submenu);
-    s_menu->addMenu(dem_submenu);
-    s_menu->addMenu(rclr_submenu);
-    s_menu->addSeparator();
-    s_menu->addMenu(lut_submenu);
-    s_menu->addMenu(lut_p_submenu);
-    s_menu->addSeparator();
-    s_menu->addMenu(rng_submenu);
-    s_menu->addSeparator();
-    s_menu->addMenu(fmt_submenu);
-    s_menu->addMenu(bit_submenu);
-    s_menu->addSeparator();
-    s_menu->addAction(useSubfldr);
+    //
+    menuBar->addMenu(f_menu);
+    menuBar->addMenu(p_menu);
+    menuBar->addMenu(s_menu);
+    //
+    s_menu->addMenu(verb_submenu);
     s_menu->addSeparator();
     s_menu->addAction(con_enable);
+	//
+    p_menu->addMenu(raw_submenu);
+    p_menu->addMenu(dem_submenu);
+    p_menu->addMenu(rclr_submenu);
+    p_menu->addSeparator();
+    p_menu->addMenu(lut_submenu);
+    p_menu->addMenu(lut_p_submenu);
+    p_menu->addSeparator();
+    p_menu->addMenu(rng_submenu);
+    p_menu->addSeparator();
+    p_menu->addMenu(fmt_submenu);
+    p_menu->addMenu(bit_submenu);
+    p_menu->addSeparator();
+    p_menu->addAction(useSubfldr);
+    p_menu->addSeparator();
     //
     f_menu->addAction(f_RelConf);
     f_menu->addAction(f_Restart);
     f_menu->addSeparator();
     f_menu->addAction(f_Exit);
-    menuBar->addMenu(f_menu);
-    menuBar->addMenu(s_menu);
+
     setMenuBar(menuBar);
 
     setWindowFlags(Qt::WindowStaysOnTopHint);
@@ -282,6 +302,9 @@ MainWindow::MainWindow() {
     for (QAction* action : lutActions) {
         connect(action, &QAction::triggered, this, &MainWindow::lutSettings);
     }
+    for (QAction* action : verbActions) {
+		connect(action, &QAction::triggered, this, &MainWindow::verbLevel);
+	}
 
     connect(con_enable, &QAction::toggled, this, &MainWindow::toggleConsole);
     connect(useSubfldr, &QAction::toggled, this, &MainWindow::toggleSubfldr);
@@ -294,6 +317,22 @@ MainWindow::MainWindow() {
     connect(f_RelConf, &QAction::triggered, this, &MainWindow::reloadConfig);
 
     connect(this, &MainWindow::changeProgressBarColorSignal, this, &MainWindow::changeProgressBarColorSlot);
+}
+
+void MainWindow::verbLevel() {
+    std::vector<std::pair<QString, int>> actionMap = {
+        {"0 - Fatal", 0}, {"1 - Error", 1}, {"2 - Warning", 2}, {"3 - Info", 3}, {"4 - Debug", 4}, {"5 - Trace", 5}
+    };
+    QAction* action = qobject_cast<QAction*>(sender());
+    for (int i = 0; i < verbActions.size() && i < actionMap.size(); ++i) {
+        if (action == verbActions[i]) {
+			settings.verbosity = actionMap[i].second;
+            Log_SetVerbosity(settings.verbosity);
+			emit updateTextSignal(QString("Verbosity level set to %1").arg(settings.verbosity));
+            qDebug() << qPrintable(QString("Verbosity level set to %1").arg(settings.verbosity));
+			break;
+		}
+	}
 }
 
 void MainWindow::bitSettings() {

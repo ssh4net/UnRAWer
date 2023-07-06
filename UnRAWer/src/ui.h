@@ -75,7 +75,10 @@ public slots:
 private slots:
     void restartApp();
     void reloadConfig();
+    
     void toggleConsole(bool cheked);
+    void verbLevel();
+
     void toggleSubfldr(bool cheked);
     void startProcessing(QList<QUrl> urls);
     void rngSettings();
@@ -91,6 +94,7 @@ private:
     QProgressBar* progressBar;
 
     QAction* con_enable;
+    QList<QAction*> verbActions;
 
     QList<QAction*> rngActions;
     QList<QAction*> demActions;

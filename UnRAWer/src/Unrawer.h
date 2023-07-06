@@ -25,9 +25,9 @@
 using namespace OIIO;
 
 bool unrawer_main(const std::string& inputFileName, const std::string& outputFileName,
-                  ColorConfig* colorconfig, std::pair<const std::string, std::string>* lut_preset,
+                  ColorConfig* colorconfig, std::string* lut_preset,
                   QProgressBar* progressBar, MainWindow* mainWindow);
 
 std::pair<bool, std::shared_ptr<ImageBuf>>
-imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::pair<const std::string, std::string>* lut_preset,
+imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* lut_preset,
              QProgressBar* progressBar, MainWindow* mainWindow);

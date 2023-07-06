@@ -69,9 +69,22 @@ bool loadSettings(Settings& settings, const std::string& filename) {
 
         if (!check("Global", "Threads")) return false;
         settings.numThreads = parsed["Global"]["Threads"].as_integer();
+        if (!check("Global", "ThredsMult")) return false;
+        settings.mltThreads = parsed["Global"]["ThredsMult"].as_floating();
+        if (settings.mltThreads <= 0.0f) {
+			LOG(error) << "Error parsing settings file: [Global] section: \"ThredsMult\" key value should be more than 0." << std::endl;
+			return false;
+		}
 
         if (!check("Global", "ExportSubf")) return false;
         settings.useSbFldr = parsed["Global"]["ExportSubf"].as_boolean();
+
+        if (!check("Global", "Verbosity")) return false;
+        settings.verbosity = parsed["Global"]["Verbosity"].as_integer();
+        if (settings.verbosity < 0 || settings.verbosity > 5) {
+			LOG(error) << "Error parsing settings file: [Global] section: \"Verbosity\" key value is out of range." << std::endl;
+			return false;
+		}
 
         // Range
         if (!check("Range", "RangeMode")) return false;
@@ -179,6 +192,7 @@ bool loadSettings(Settings& settings, const std::string& filename) {
 void printSettings(Settings& settings) {
     QString mode;
     qDebug() << "Parallel Threads: " << settings.numThreads;
+    qDebug() << "Threads multiplier: " << settings.mltThreads;
 
     qDebug() << qPrintable(QString("Range Mode: %1").arg(mode));
 

@@ -193,7 +193,7 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
     // Sleep for the random delay
     std::this_thread::sleep_for(std::chrono::milliseconds(distr(gen)));
 
-    LOG(info) << "Reading " << inputFileName << std::endl;
+    LOG(info) << "READ: " << inputFileName << std::endl;
     //  make this as a function
     ImageSpec config;
     config["raw:user_flip"] = settings.rawRot;
@@ -216,15 +216,15 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
     ImageBuf outBuf(inputFileName, 0, 0, nullptr, &config, nullptr);
 
     if (!outBuf.init_spec(inputFileName, 0, 0)) {
-        LOG(error) << "Error reading " << inputFileName << std::endl;
-        LOG(error) << outBuf.geterror() << std::endl;
+        LOG(error) << "READ: Error reading " << inputFileName << std::endl;
+        LOG(error) << "READ: " << outBuf.geterror() << std::endl;
         mainWindow->emitUpdateTextSignal("Error! Check console for details");
         return { false, { std::make_shared<OIIO::ImageBuf>(), TypeDesc::UNKNOWN }};
     }
 
     TypeDesc orig_format = outBuf.spec().format;
 
-    LOG(info) << "File bith depth: " << formatText(orig_format) << std::endl;
+    LOG(info) << "READ: File bith depth: " << formatText(orig_format) << std::endl;
 ///////////////////////////
     
     int last_channel = -1;
@@ -235,7 +235,7 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
 //    outBuf.specmod().attribute("raw:user_flip", settings.rawRot);
 //    outBuf.specmod().extra_attribs["raw:user_flip"] = settings.rawRot;
 
-    LOG(info) << "CameraRaw Rotations: " << settings.rawRot << std::endl;
+    LOG(info) << "READ: CameraRaw Rotations: " << settings.rawRot << std::endl;
     
     TypeDesc o_format = spec.format; //getTypeDesc(settings.bitDepth);
 
@@ -265,7 +265,7 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
     
     bool read_ok = outBuf.read(0, 0, 0, last_channel, true, o_format, m_progress_callback, progressBar);
     if (!read_ok) {
-        LOG(error) << "Error: Could not read input image\n";
+        LOG(error) << "READ: Error! Could not read input image\n";
         mainWindow->emitUpdateTextSignal("Error! Check console for details");
         return { false, { std::make_shared<OIIO::ImageBuf>(), TypeDesc::UNKNOWN } };
     }
@@ -282,13 +282,13 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
     TypeDesc load_format = ispec.format;
     out_format = load_format; // copy latest buffer format as an output format
 
-    LOG(info) << "File loaded bit depth: " << formatText(load_format) << std::endl;
+    LOG(info) << "READ: File loaded bit depth: " << formatText(load_format) << std::endl;
 
     // get the image size
     int width = outBuf.spec().width;
     int height = outBuf.spec().height;
-    LOG(info) << "Image size: " << width << "x" << height << std::endl;
-    LOG(info) << "Channels: " << outBuf.nchannels() << " Alpha channel index: " << outBuf.spec().alpha_channel << std::endl;
+    LOG(info) << "READ: Image size: " << width << "x" << height << std::endl;
+    LOG(info) << "READ: Channels: " << outBuf.nchannels() << " Alpha channel index: " << outBuf.spec().alpha_channel << std::endl;
 
     return { true, {std::make_shared<OIIO::ImageBuf>(outBuf), orig_format} };
 }
@@ -334,3 +334,14 @@ bool img_write(ImageBuf& out_buf, const std::string& outputFileName, TypeDesc ou
     out->close();
     return true;
 }
+
+//std::pair<bool, std::shared_ptr<LibRaw>>
+//raw_read(const std::string srcFile){
+//    LibRaw RawProcessor;
+//
+//    if (RawProcessor.open_file(srcFile.c_str()) != LIBRAW_SUCCESS) {
+//        LOG(error) << "RAW: Cannot open file" << srcFile << std::endl;
+//        return { false, std::make_shared<float>() };
+//    }
+//    return { true, std::make_shared<uint>(RawProcessor.imgdata.rawdata.raw_image) };
+//}

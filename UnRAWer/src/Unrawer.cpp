@@ -36,7 +36,7 @@
 using namespace OIIO;
 
 std::pair<bool, std::shared_ptr<ImageBuf>> 
-imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::pair<const std::string, std::string>* lut_preset, 
+imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* lut_preset, 
              QProgressBar* progressBar, MainWindow* mainWindow) 
 {
 
@@ -46,14 +46,14 @@ imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::pair<const std:
     // LUT Transform
     bool lutValid = false;
     // check if lut_preset is not nullptr set lutValid to true
-    if (lut_preset != nullptr) {
+    if (*lut_preset != "") {
         lutValid = true;
     }
 
     if (settings.lutMode >= 0 && lutValid) {
         //auto lutPreset = settings.lut_Preset[settings.dLutPreset];
-        if (ImageBufAlgo::ociofiletransform(lut_buf, input_buf, lut_preset->second, false, false, colorconfig)) {
-            LOG(info) << "LUT preset " << lut_preset->first << " <" << lut_preset->second << "> " << " applied" << std::endl;
+        if (ImageBufAlgo::ociofiletransform(lut_buf, input_buf, settings.lut_Preset[*lut_preset], false, false, colorconfig)) {
+            LOG(info) << "LUT preset " << lut_preset << " <" << settings.lut_Preset[*lut_preset] << "> " << " applied" << std::endl;
         }
         else {
             LOG(error) << "LUT not applied: " << lut_buf.geterror() << std::endl;
@@ -87,7 +87,7 @@ imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::pair<const std:
 }
 
 bool unrawer_main(const std::string& inputFileName, const std::string& outputFileName, 
-    ColorConfig* colorconfig, std::pair<const std::string, std::string>* lut_preset,
+    ColorConfig* colorconfig, std::string* lut_preset,
     QProgressBar* progressBar, MainWindow* mainWindow) 
 {
     Timer g_timer;
