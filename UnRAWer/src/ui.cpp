@@ -1,5 +1,5 @@
 /*
- * UnRAWer implementation using OpenImageIO
+ * UnRAWer - camera raw batch processor on top of OpenImageIO
  * Copyright (c) 2023 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
 #include "stdafx.h"
 #include "ui.h"
 
-#include "processing.h"
+#include "process.h"
 #include "settings.h"
 
 class MainWindow;
@@ -208,11 +208,11 @@ MainWindow::MainWindow() {
     }
     // demosaic
     std::vector<std::pair<const QString, int>> demMenu = {
-        // "none", "linear", "VNG", "PPG", "AHD", "DCB", "AHD-Mod", "AFD", "VCD", "Mixed", "LMMSE", "AMaZE", "DHT", "AAHD"
-        {"none", 0}, {"linear", 1}, {"VNG", 2}, {"PPG", 3}, 
-        {"AHD", 4}, {"DCB", 5}, {"AHD-Mod", 6}, {"AFD", 7}, 
-        {"VCD", 8}, {"Mixed", 9}, {"LMMSE", 10}, {"AMaZE", 11}, 
-        {"DHT", 12}, {"AAHD", 13} };
+        // "raw data", "none", "linear", "VNG", "PPG", "AHD", "DCB", "AHD-Mod", "AFD", "VCD", "Mixed", "LMMSE", "AMaZE", "DHT", "AAHD"
+        {"RAW data", 0}, {"none", 1}, {"linear", 2}, {"VNG", 3}, {"PPG", 4},
+        {"AHD", 5}, {"DCB", 6}, {"AHD-Mod", 7}, {"AFD", 8}, 
+        {"VCD", 9}, {"Mixed", 10}, {"LMMSE", 11}, {"AMaZE", 12}, 
+        {"DHT", 13}, {"AAHD", 14} };
     for (auto& [title, value] : demMenu) {
         QAction* action = createAction(title, DemGroup, dem_submenu, true, (settings.dDemosaic == value));
         demActions.push_back(action);
@@ -441,12 +441,12 @@ void MainWindow::rawSettings() {
 
 void MainWindow::demSettings() {
     std::vector<std::pair<QString, int>> actionMap = { 
-        // "none", "linear", "VNG", "PPG", "AHD", "DCB", "AHD-Mod", "AFD", "VCD", "Mixed", "LMMSE", "AMaZE", "DHT", "AAHD"
-        {"none", 0}, {"linear", 1}, {"VNG", 2}, 
-        {"PPG", 3},  {"AHD", 4},    {"DCB", 5}, 
-        {"AHD-Mod", 6}, {"AFD", 7}, {"VCD", 8}, 
-        {"Mixed", 9}, {"LMMSE", 10}, {"AMaZE", 11}, 
-        {"DHT", 12}, {"AAHD", 13}
+        // "raw data", "none", "linear", "VNG", "PPG", "AHD", "DCB", "AHD-Mod", "AFD", "VCD", "Mixed", "LMMSE", "AMaZE", "DHT", "AAHD"
+        {"raw data", 0}, {"none", 1}, {"linear", 2}, {"VNG", 3},
+        {"PPG", 4},  {"AHD", 5},    {"DCB", 6}, 
+        {"AHD-Mod", 7}, {"AFD", 8}, {"VCD", 9}, 
+        {"Mixed", 10}, {"LMMSE", 11}, {"AMaZE", 12}, 
+        {"DHT", 13}, {"AAHD", 14}
     };
     QAction* action = qobject_cast<QAction*>(sender());
     for (int i = 0; i < demActions.size() && i < actionMap.size(); ++i) {

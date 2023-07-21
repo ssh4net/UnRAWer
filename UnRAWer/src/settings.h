@@ -1,5 +1,5 @@
 /*
- * UnRAWer implementation using OpenImageIO
+ * UnRAWer - camera raw batch processor on top of OpenImageIO
  * Copyright (c) 2023 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@ struct Settings {
 	const int raw_rot[5] = { -1, 0, 3, 5, 6 }; // -1 - Auto EXIF, 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CW Vertical, 6 - 90 CCW Vertical
 	const uint rngConv[4] = { 0, 1, 2, 3}; // 0 - unsigned, 1 - signed, 2 - unsigned -> signed, 3 - signed -> unsigned
 	const std::string rawCspace[11] = { "Raw", "sRGB", "sRGB-linear", "Adobe", "Wide", "ProPhoto", "ProPhoto-linear", "XYZ", "ACES", "DCI-P3", "Rec2020" };
-	const std::string demosaic[14] = { "none", "linear", "VNG", "PPG", "AHD", "DCB", "AHD-Mod", "AFD", "VCD", "Mixed", "LMMSE", "AMaZE", "DHT", "AAHD" };
+	const std::string demosaic[15] = { "raw data", "none", "linear", "VNG", "PPG", "AHD", "DCB", "AHD-Mod", "AFD", "VCD", "Mixed", "LMMSE", "AMaZE", "DHT", "AAHD"};
 
 	Settings() {
 		reSettings();
@@ -60,6 +60,8 @@ struct Settings {
 		verbosity = 3;		// Verbosity level: 0 - none, 1 - errors, 2 - warnings, 3 - info, 4 - debug, 5 - trace
 		lutMode = 0;		// LUT mode: -1 - disabled, 0 - Smart, 1 - Force
 		dLutPreset = "";	// Default LUT preset, top one
+		shrpMode = 1;		// Sharpening mode: -1 - disabled, 0 - Smart, 1 - Force
+
 		numThreads = 5;		// Number of threads: 0 - auto, >0 - number of threads
 		rangeMode = 0;		// Float type: 0 - unsigned, 1 - signed, 2 - unsigned -> signed, 3 - signed -> unsigned
 		fileFormat = -1;	// File format: -1 - original, 0 - TIFF, 1 - OpenEXR, 2 - PNG, 3 - JPEG, 4 - JPEG-2000, 5 - PPM
@@ -69,7 +71,7 @@ struct Settings {
 		
 		rawRot = -1;		// Raw rotation: -1 - Auto EXIF, 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CW Vertical, 6 - 90 CCW Vertical
 		rawSpace = 1;
-		dDemosaic = 4;
+		dDemosaic = 5;
 		
 		ocioConfig = "";
 	}

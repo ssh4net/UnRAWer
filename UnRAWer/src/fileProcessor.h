@@ -1,5 +1,5 @@
 /*
- * UnRAWer implementation using OpenImageIO
+ * UnRAWer - camera raw batch processor on top of OpenImageIO
  * Copyright (c) 2023 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -34,6 +34,7 @@ enum class ProcessingStatus {
     NotStarted,
     Prepared,
     Loaded,
+    Unpacked,
     Demosaiced,
     Processed,
     Written,
@@ -41,23 +42,30 @@ enum class ProcessingStatus {
 };
 
 struct ProcessingParams {
+    
     std::shared_ptr<OIIO::ImageBuf> image;
     // File paths:
     std::string srcFile;
     std::string outFile;
     // RAW image pointer
+    
     //LibRaw raw_data;
     std::shared_ptr<LibRaw> raw_data;
+    
     // source settings:
-    OIIO::ImageSpec srcSpec;
+    std::shared_ptr<OIIO::ImageSpec> srcSpec;
+    
     // output settings:
     OIIO::TypeDesc outType;
-    OIIO::ImageSpec outSpec;
+    std::shared_ptr<OIIO::ImageSpec> outSpec;
+    
     // Color config:
     std::string srcCSpace;
     std::string outCSpace;
+    
     // Processing params:
     std::string lut_preset;
+    
     // Filters:
     struct sharpening {
         bool enabled;
@@ -72,6 +80,8 @@ struct ProcessingParams {
     } denoise;
 
     ProcessingStatus status = ProcessingStatus::NotStarted;
+
+    // internal
     std::mutex statusMutex;
 
     void setStatus(ProcessingStatus newStatus) {

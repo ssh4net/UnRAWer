@@ -1,5 +1,5 @@
 /*
- * UnRAWer implementation using OpenImageIO
+ * UnRAWer - camera raw batch processor on top of OpenImageIO
  * Copyright (c) 2022 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 #include <OpenImageIO/imagebufalgo.h>
 
 #include "ui.h"
-
+#include "fileProcessor.h"
 using namespace OIIO;
 
 bool unrawer_main(const std::string& inputFileName, const std::string& outputFileName,
@@ -29,5 +29,6 @@ bool unrawer_main(const std::string& inputFileName, const std::string& outputFil
                   QProgressBar* progressBar, MainWindow* mainWindow);
 
 std::pair<bool, std::shared_ptr<ImageBuf>>
-imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* lut_preset,
+imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* lut_preset, 
+    std::shared_ptr<ProcessingParams>& processing_entry, libraw_processed_image_t* raw_image,
              QProgressBar* progressBar, MainWindow* mainWindow);

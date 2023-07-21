@@ -1,5 +1,5 @@
 /*
- * UnRAWer implementation using OpenImageIO
+ * UnRAWer - camera raw batch processor on top of OpenImageIO
  * Copyright (c) 2023 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,63 +29,86 @@
 
 #include "Log.h"
 #include "Unrawer.h"
-#include "imageio.h"
+//#include "imageio.h"
 #include "settings.h"
-#include "processing.h"
+//#include "processing.h"
 
 using namespace OIIO;
 
 std::pair<bool, std::shared_ptr<ImageBuf>> 
-imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* lut_preset, 
+imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* c_lut_preset, 
+             std::shared_ptr<ProcessingParams>& processing_entry, libraw_processed_image_t* raw_image,
              QProgressBar* progressBar, MainWindow* mainWindow) 
 {
 
     ImageBuf out_buf; // result_buf, rgba_buf, original_alpha, bit_alpha_buf;
     ImageBuf lut_buf;
     ImageBuf uns_buf;
+    ImageBuf* out_buf_ptr = &out_buf;
+    ImageBuf* lut_buf_ptr = &lut_buf;
+    ImageBuf* uns_buf_ptr = &uns_buf;
+    bool rawCleared = false;
     // LUT Transform
     bool lutValid = false;
     // check if lut_preset is not nullptr set lutValid to true
-    if (*lut_preset != "") {
+    if (*c_lut_preset != "") {
         lutValid = true;
     }
+    //auto test = input_buf.spec();
+    //std::cout << test.width << " " << test.height << " " << test.nchannels << std::endl;
 
     if (settings.lutMode >= 0 && lutValid) {
-        //auto lutPreset = settings.lut_Preset[settings.dLutPreset];
-        if (ImageBufAlgo::ociofiletransform(lut_buf, input_buf, settings.lut_Preset[*lut_preset], false, false, colorconfig)) {
-            LOG(info) << "LUT preset " << lut_preset << " <" << settings.lut_Preset[*lut_preset] << "> " << " applied" << std::endl;
+        auto lutPreset = settings.lut_Preset[settings.dLutPreset];
+        if (ImageBufAlgo::ociofiletransform(*lut_buf_ptr, input_buf, lutPreset, false, false, colorconfig)) {
+            LOG(info) << "LUT preset " << settings.dLutPreset << " <" << lutPreset << "> " << " applied" << std::endl;
+            input_buf.clear();
+            if (!rawCleared) {
+                processing_entry->raw_data->dcraw_clear_mem(raw_image);
+                rawCleared = true;
+            }
         }
         else {
             LOG(error) << "LUT not applied: " << lut_buf.geterror() << std::endl;
-            lut_buf = input_buf;
+            lut_buf_ptr = &input_buf;
         }
     }
     else {
-        lut_buf = input_buf;
+        lut_buf_ptr = &input_buf;
     }
 
     // Apply denoise
     // Apply unsharp mask
-    if (true) {
-        if (ImageBufAlgo::unsharp_mask(uns_buf, lut_buf, "gaussian", 1.0f, 0.5f, 0.0f)) {
+    
+    if (settings.shrpMode != -1) {
+        if (ImageBufAlgo::unsharp_mask(*uns_buf_ptr, *lut_buf_ptr, "gaussian", 1.0f, 0.5f, 0.0f)) {
             LOG(info) << "Unsharp mask applied: <Gaussian>" << std::endl;
+            lut_buf_ptr->clear();
+            if (!rawCleared) {
+                processing_entry->raw_data->dcraw_clear_mem(raw_image);
+                rawCleared = true;
+            }
         }
         else {
             LOG(error) << "Unsharp mask not applied: " << uns_buf.geterror() << std::endl;
-            uns_buf = lut_buf;
+            uns_buf_ptr = lut_buf_ptr;
         }
     }
     else
     {
-        uns_buf = lut_buf;
+        uns_buf_ptr = lut_buf_ptr;
     }
 
     // temp copy for saving
-    out_buf = uns_buf;
+    out_buf_ptr = uns_buf_ptr;
 
-    return { true, std::make_shared<ImageBuf>(input_buf) };
+    if (!rawCleared) {
+        processing_entry->raw_data->dcraw_clear_mem(raw_image);
+        rawCleared = true;
+    }
+
+    return { true, std::make_shared<ImageBuf>(*out_buf_ptr) };
 }
-
+/*
 bool unrawer_main(const std::string& inputFileName, const std::string& outputFileName, 
     ColorConfig* colorconfig, std::string* lut_preset,
     QProgressBar* progressBar, MainWindow* mainWindow) 
@@ -127,3 +150,4 @@ bool unrawer_main(const std::string& inputFileName, const std::string& outputFil
 
     return true;
 }
+*/

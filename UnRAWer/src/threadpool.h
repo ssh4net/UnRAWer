@@ -1,5 +1,5 @@
 /*
- * UnRAWer implementation using OpenImageIO
+ * UnRAWer - camera raw bnatch processor on top of OpenImageIO
  * Copyright (c) 2023 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -230,7 +230,7 @@ public:
     }
 
 private:
-    std::vector<std::thread> workers;               // Worker threads
+    std::vector<std::thread> workers;                // Worker threads
     std::queue<std::function<void()>> tasks;         // Task queue
     std::mutex queue_mutex;                          // Mutex to protect the task queue
     std::condition_variable condition;               // Condition variable for task availability
@@ -238,7 +238,7 @@ private:
     std::atomic<bool> stop;                          // Atomic flag to stop the ThreadPool
     std::atomic<int> working;                        // Atomic counter for the number of working threads
     std::atomic<int> tasks_count;                    // Atomic counter for the number of tasks in the queue
-    size_t maxQueueSize;                              // Maximum size of the task queue
+    size_t maxQueueSize;                             // Maximum size of the task queue
     std::atomic<bool> queue_full = false;            // Atomic flag indicating if the task queue is full
 };
 

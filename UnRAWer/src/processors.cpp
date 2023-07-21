@@ -1,0 +1,310 @@
+/*
+ * UnRAWer - camera raw batch processor on top of OpenImageIO
+ * Copyright (c) 2023 Erium Vladlen.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "processors.h"
+#include "Unrawer.h"
+
+void Sorter(int index, QString fileName, std::shared_ptr<ProcessingParams>& processing_entry, 
+            std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+    auto processing = std::make_shared<ProcessingParams>();
+    processing->srcFile = fileName.toStdString();
+
+    QString prest_sfx = "";
+    std::optional<std::string> lut_preset = getPresetfromName(fileName, &settings); // std::string or std::nullopt
+    if (lut_preset.has_value()) {
+        prest_sfx = lut_preset.value().c_str();
+    }
+    else {
+        LOG(warning) << "PRE: No suitable LUT preset was found from file name" << std::endl;
+    }
+
+    if (settings.lutMode > 0) {
+        // If LUT mode set to Force than use Default LUT preset find lut_preset by dLutPreset name
+        auto lut_preset_it = settings.lut_Preset.find(settings.dLutPreset);
+        if (lut_preset_it != settings.lut_Preset.end()) { // if the preset was found in the map
+            lut_preset = lut_preset_it->first;
+            prest_sfx = lut_preset.value().c_str();
+        }
+        else
+        {
+            // lut_preset remains empty or has the value from file name
+            LOG(error) << "PRE: LUT preset " << settings.dLutPreset << " not found" << std::endl;
+        }
+    }
+    else if (settings.lutMode == 0 && lut_preset.has_value()) {
+        // LUT mode set to auto and file or path contains LUT preset name
+        prest_sfx = lut_preset.value().c_str();
+    }
+
+    processing->outFile = getOutName(fileName, prest_sfx, &settings).toStdString();
+    processing->lut_preset = lut_preset.value_or("");
+
+    LOG(debug) << "PRE: Preprocessing file " << processing->srcFile << " > " << processing->outFile << std::endl;
+
+    processing_entry = processing;
+    processing->setStatus(ProcessingStatus::Prepared);
+
+    (*myPools)["reader"]->enqueue(Reader, index, processing_entry, fileCntr, myPools);
+}
+
+//bool read_chunk(std::ifstream* file, std::vector<char>& raw_buffer, std::streamoff start, std::streamoff end) {
+//    std::vector<char> buffer(end - start);
+//    file.seekg(start);
+//    file.read(buffer.data(), end - start);
+//    if (!file) {
+//        return false;
+//    }
+//    std::copy(buffer.begin(), buffer.end(), raw_buffer.begin() + start);
+//    return true;
+//}
+
+void Reader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+            std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+    auto processing = processing_entry;
+
+    LOG(info) << "Reader: file " << processing->srcFile << std::endl;
+
+    std::ifstream file(processing->srcFile, std::ios::binary | std::ios::ate);
+    if (!file)
+        LOG(error) << "Reader: Could not open file: " << processing->srcFile << std::endl;
+
+    const auto fileSize = file.tellg();
+    if (fileSize < 0)
+        LOG(error) << "Reader: Could not determine size of file: " << processing->srcFile << std::endl;
+    file.seekg(0);
+
+    LOG(debug) << "Reader: File size: " << fileSize << std::endl;
+
+    std::vector<char> raw_buffer(fileSize);
+
+#if 0
+    const int numThreads = 3;
+    ThreadPool poolChRead(numThreads, settings.numThreads > 0 ? settings.numThreads : 1);
+
+    std::streamoff chunkSize = fileSize / numThreads;
+    for (int i = 0; i < numThreads; ++i) {
+        std::streamoff start = i * chunkSize;
+        std::streamoff end = (i + 1) * chunkSize;
+        if (i == numThreads - 1) {
+            end = fileSize;
+        }
+        poolChRead.enqueue(read_chunk, std::ref(file), std::ref(raw_buffer), start, end);
+    }
+    poolChRead.waitForAllTasks();
+#endif
+
+#if 1
+    if (!file.read(raw_buffer.data(), fileSize)) {
+        throw std::runtime_error("Reader: Could not read file: " + processing->srcFile);
+    }
+#endif
+    std::shared_ptr<std::vector<char>> raw_buffer_ptr = std::make_shared<std::vector<char>>(raw_buffer);
+
+    processing->setStatus(ProcessingStatus::Loaded);
+    file.close();
+
+    (*myPools)["unpacker"]->enqueue(Unpacker, index, processing_entry, raw_buffer_ptr, fileCntr, myPools);
+}
+
+void Unpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry, std::shared_ptr<std::vector<char>> raw_buffer,
+              std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+    auto processing = processing_entry;
+    LOG(info) << "Unpack: file " << processing->srcFile << std::endl;
+
+    //LibRaw& raw = processing->raw_data;
+    std::shared_ptr<LibRaw> raw_ptr = std::make_shared<LibRaw>();
+    processing->raw_data = raw_ptr;
+    LibRaw* raw = raw_ptr.get();
+
+    int ret = raw->open_buffer(raw_buffer->data(), raw_buffer->size());
+    if (ret != LIBRAW_SUCCESS) {
+        LOG(error) << "Unpack: Cannot read buffer: " << processing->srcFile << std::endl;
+        return;
+    }
+
+    ret = raw->unpack();
+    if (ret != LIBRAW_SUCCESS) {
+        LOG(error) << "Unpack: Cannot unpack data from file: " << processing->srcFile << std::endl;
+        return;
+    }
+
+    processing->setStatus(ProcessingStatus::Unpacked);
+
+    if (settings.dDemosaic > 0) {
+        (*myPools)["demosaic"]->enqueue(Demosaic, index, processing_entry, fileCntr, myPools);
+    }
+    else {
+        (*myPools)["processor"]->enqueue(Processor, index, processing_entry, fileCntr, myPools);
+    }
+}
+
+void Demosaic(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+              std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+    auto processing = processing_entry;
+    std::shared_ptr<LibRaw> raw = processing->raw_data;
+    LOG(info) << "Demosaic: file " << processing->srcFile << std::endl;
+
+    auto& raw_parms = raw->imgdata.params;
+
+    if (settings.dDemosaic > 0) {
+
+        raw_parms.output_bps = 16;
+        raw_parms.user_qual = settings.dDemosaic - 1;
+
+        if (settings.dDemosaic == 1)
+            raw_parms.no_interpolation = 1;
+
+        if (raw->dcraw_process() != LIBRAW_SUCCESS) {
+            LOG(error) << "Unpack: Cannot process data from file" << processing->srcFile << std::endl;
+            return;
+        }
+        processing->setStatus(ProcessingStatus::Demosaiced);
+    }
+    else {
+        raw_parms.user_qual = settings.dDemosaic - 1;
+        raw_parms.no_interpolation = 1;
+        LOG(warning) << "Demosaic: Raw Data" << std::endl;
+    }
+
+    (*myPools)["processor"]->enqueue(Processor, index, processing_entry, fileCntr, myPools);
+}
+
+void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+               std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+    auto processing = processing_entry;
+    std::shared_ptr<LibRaw> raw = processing->raw_data;
+
+    LOG(info) << "Processor: Processing data from file: " << processing->srcFile << std::endl;
+
+    auto& raw_parms = raw->imgdata.params;
+    raw_parms.output_bps = 16;
+
+    libraw_processed_image_t* image = raw->dcraw_make_mem_image();
+    if (!image) {
+        LOG(error) << "Processor: Cannot process data from buffer: " << processing->srcFile << std::endl;
+        return;
+    }
+
+    //raw_parms.output_color = 1;
+
+/////////////////////////
+/// 
+
+    OIIO::ImageSpec image_spec(image->width, image->height, image->colors, OIIO::TypeDesc::UINT16);
+    OIIO::ImageBuf image_buf(image_spec, image->data);
+
+    OIIO::ColorConfig ocio_conf(settings.ocioConfig);
+
+    auto [process_ok, out_buf] = imgProcessor(std::ref<ImageBuf>(image_buf), &ocio_conf, &settings.dLutPreset, processing_entry, image, nullptr, nullptr);
+    if (!process_ok) {
+        LOG(error) << "Error processing " << processing->srcFile << std::endl;
+        //mainWindow->emitUpdateTextSignal("Error! Check console for details");
+        return;
+    }
+
+    //raw->dcraw_clear_mem(image);
+    //raw->recycle();
+    //image_buf.clear();
+
+    //LOG(debug) << "Image processed: " << out_buf->geterror() << std::endl;
+    processing->image = out_buf;
+    processing->outSpec = std::make_shared<OIIO::ImageSpec>(image_spec);
+    ///////////////////////// 
+
+    processing->setStatus(ProcessingStatus::Processed);
+
+    (*myPools)["writer"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
+}
+
+void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+            std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+    auto processing = processing_entry;
+    //LibRaw& raw = processing->raw_data;
+    std::shared_ptr<LibRaw> raw = processing->raw_data;
+
+    LOG(info) << "Writer: Writing data to file: " << processing->outFile << std::endl;
+    if (settings.dDemosaic == 0) {
+        // Write raw data to a file
+        std::ofstream output(processing->outFile, std::ios::binary);
+        if (!output) {
+            LOG(error) << "Writer: Cannot open output file" << processing->outFile << std::endl;
+            return;
+        }
+
+        size_t pix_count = raw->imgdata.sizes.raw_width * raw->imgdata.sizes.raw_height;
+        size_t raw_image_size = pix_count * sizeof(ushort);
+
+        // Write PGM header
+        output << "P5\n";
+        output << raw->imgdata.sizes.raw_width << " " << raw->imgdata.sizes.raw_height << "\n";
+        output << "65535\n";  // Max value for 16-bit data
+
+        // Write raw data
+        // output.write(reinterpret_cast<char*>(raws[pair.first].imgdata.rawdata.raw_image), raw_image_size);
+
+        // Write raw data with swapped byte order
+        for (size_t i = 0; i < pix_count; ++i) {
+            ushort value = raw->imgdata.rawdata.raw_image[i];
+            value = (value << 8) | (value >> 8);  // Swap bytes
+            output.write(reinterpret_cast<char*>(&value), sizeof(ushort));
+        }
+
+        output.close();
+    }
+    else if (settings.dDemosaic == 1) // writing color ppm/tiff using dcraw_ppm_tiff_writer
+    {
+        if (settings.fileFormat == -1) {
+            if (settings.defFormat == 0)
+                raw->imgdata.params.output_tiff = 1; // TIF
+            else if (settings.defFormat == 5)
+                raw->imgdata.params.output_tiff = 0; // PPM
+            else {
+                LOG(error) << "Writer: Unknown file format" << std::endl;
+                processing->raw_data.reset();
+                return;
+            }
+        }
+
+        int ret = raw->dcraw_ppm_tiff_writer(processing->outFile.c_str());
+        if (ret != LIBRAW_SUCCESS) {
+            LOG(error) << "Writer: Cannot write image to file" << processing->outFile << std::endl;
+            processing->raw_data.reset();
+            return;
+        }
+    }
+    else { // Write processed image using oiio
+        //////////////////////////////////////////////////
+        /// Image saving
+        /// 
+
+        bool write_ok = img_write(*processing->image, processing->outFile, TypeDesc::UINT16, TypeDesc::UINT16, nullptr, nullptr);
+        if (!write_ok) {
+            LOG(error) << "Error writing " << processing->outFile << std::endl;
+            //mainWindow->emitUpdateTextSignal("Error! Check console for details");
+            return;
+        }
+        processing->image->reset();
+        processing->image.reset();
+        //////////////////////////////////////////////////
+    }
+
+    processing->setStatus(ProcessingStatus::Written);
+    LOG(info) << "Writer: Finished writing data to file: " << processing->outFile << std::endl;
+    processing->raw_data.reset();
+
+    (*fileCntr)--;
+}

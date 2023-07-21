@@ -1,5 +1,5 @@
 /*
- * UnRAWer implementation using OpenImageIO
+ * UnRAWer - camera raw bnatch processor on top of OpenImageIO
  * Copyright (c) 2022 Erium Vladlen.
  * 
  * This program is free software: you can redistribute it and/or modify  

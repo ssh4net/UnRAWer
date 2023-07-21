@@ -1,5 +1,5 @@
 /*
- * UnRAWer implementation using OpenImageIO
+ * UnRAWer - camera raw batch processor on top of OpenImageIO
  * Copyright (c) 2023 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,10 +19,13 @@
 #include "settings.h"
 
 int main(int argc, char* argv[]) {
-    // Allocate console and redirect std output
-    AllocConsole();
-    freopen("CONOUT$", "w", stdout);
-    freopen("CONOUT$", "w", stderr);
+    HWND consoleWindow = GetConsoleWindow();
+    if (consoleWindow == NULL) {
+        // Allocate console and redirect std output
+        AllocConsole();
+        freopen("CONOUT$", "w", stdout);
+        freopen("CONOUT$", "w", stderr);
+    }
 
     Log_Init();
     Log_SetVerbosity(3);

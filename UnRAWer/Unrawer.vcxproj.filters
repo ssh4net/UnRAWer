@@ -30,7 +30,7 @@
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\processing.cpp">
+    <ClCompile Include="src\process.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\stdafx.cpp">
@@ -51,6 +51,9 @@
     <ClCompile Include="src\fileProcessor.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\processors.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="src\gui.ui">
@@ -58,7 +61,7 @@
     </QtUic>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\processing.h">
+    <ClInclude Include="src\process.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\Unrawer.h">
@@ -89,6 +92,9 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="src\fileProcessor.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\processors.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

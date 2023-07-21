@@ -1,5 +1,5 @@
 /*
- * UnRAWer implementation using OpenImageIO
+ * UnRAWer - camera raw batch processor on top of OpenImageIO
  * Copyright (c) 2023 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include <QtCore/QRandomGenerator>
 
-#include "processing.h"
+#include "process.h"
 
 #define VERSION_MAJOR 1
 #define VERSION_MINOR 35
