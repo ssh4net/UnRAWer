@@ -87,7 +87,7 @@ RawColorSpace = 1
 # 11 - AMaZE
 # 12 - DHT
 # 13 - AAHD
-Demosaic = 4
+Demosaic = 5
 
 [OCIO]
 # OCIO settings

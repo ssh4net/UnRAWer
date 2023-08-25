@@ -39,9 +39,9 @@ void getWritableExt(QString* ext, Settings* settings) {
     probe.reset();
 }
 
-QString getExtension(const QString& fileName, Settings* settings) {
-    QFileInfo fileInfo(fileName);
-    QString extension = "." + fileInfo.completeSuffix();
+QString getExtension(QString& extension, Settings* settings) {
+    //QFileInfo fileInfo(fileName);
+    //QString extension = "." + fileInfo.completeSuffix();
     extension = extension.toLower();
     switch (settings->fileFormat) {
         //-1 - original, 0 - TIFF, 1 - OpenEXR, 2 - PNG, 3 - JPEG, 4 - JPEG-2000, 5 - PPM
@@ -63,6 +63,15 @@ QString getExtension(const QString& fileName, Settings* settings) {
     return extension;
 }
 
+std::tuple<QString, QString, QString, QString> splitPath(const QString& fileName) { // returns path, parent folder, base name, extension
+    QFileInfo fileInfo(fileName);
+    QString path = fileInfo.absolutePath();
+    QDir parentFolder = fileInfo.dir();
+    QString baseName = fileInfo.baseName();
+    QString extension = "." + fileInfo.completeSuffix();
+    return { path, parentFolder.dirName(), baseName, extension };
+}
+
 std::optional<std::string> getPresetfromName(const QString& fileName, Settings* settings) {
     QFileInfo fileInfo(fileName);
     QString baseName = fileInfo.baseName();
@@ -77,20 +86,28 @@ std::optional<std::string> getPresetfromName(const QString& fileName, Settings* 
     return std::nullopt;
 }
 
-QString getOutName(const QString& fileName, QString& prest_sfx, Settings* settings) {
-    QFileInfo fileInfo(fileName);
-    QString baseName = fileInfo.baseName();
-    QString path = fileInfo.absolutePath();
-    QString outName = path;
+std::pair<QString, QString> getOutName(QString& path, QString& baseName, QString& extension, QString& prest_sfx, Settings* settings) {
+    //QFileInfo fileInfo(fileName);
+    //QString baseName = fileInfo.baseName();
+    //QString path = fileInfo.absolutePath();
+    QString outPath = path;
+    QString outName = baseName;
     QString proc_sfx = "_conv";
     if (prest_sfx != "") {
-        proc_sfx += "_" + prest_sfx;
+        if (prest_sfx.startsWith("_")) {
+            prest_sfx = prest_sfx.replace(QRegularExpression("_{2,}"), "_");
+			proc_sfx = prest_sfx;
+		}
+		else {
+			proc_sfx = "_" + prest_sfx;
+		}
     }
     if (settings->useSbFldr) {
-        outName += "/" + proc_sfx + "/" + baseName + getExtension(fileName, settings);
+        outPath += "/" + proc_sfx;
+        outName += getExtension(extension, settings);
     }
     else {
-        outName += "/" + baseName + proc_sfx + getExtension(fileName, settings);
+        outName += proc_sfx + getExtension(extension, settings);
     }
-    return outName;
+    return { outPath , outName };
 }

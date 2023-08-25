@@ -28,7 +28,8 @@ std::atomic_size_t fileCntr;
 
 bool doProgress(std::atomic_size_t* fileCntr, size_t files, QProgressBar* progressBar, MainWindow* mainWindow) {
     while (*fileCntr > 0) {
-        float progress = static_cast<float>(files - *fileCntr) / static_cast<float>(files);
+        float counts = static_cast<float>(files * 5); // 5 queues
+        float progress = (counts - *fileCntr) / counts;
         bool ok = m_progress_callback(progressBar, progress);
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
     }
@@ -39,16 +40,48 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
     std::vector<QString> fileNames;
     Timer f_timer;
 
+// todo: add support for user defined raw formats and move to global scope?
+    auto raw_ext = OIIO::get_extension_map()["raw"];
+    const std::unordered_set<std::string> raw_ext_set(raw_ext.begin(), raw_ext.end());
+// end todo
+
     for (const QUrl& url : urls) {
-        QString fileName = url.toLocalFile();
-        if (!fileName.isEmpty()) {
-            fileNames.push_back(fileName);
+        QString fileString = url.toLocalFile();
+        if (!fileString.isEmpty()) {
+            QFileInfo fileInfo(fileString);
+            if (fileInfo.isDir()) {
+                LOG(trace) << "SORT: Directory: " << fileInfo.absoluteFilePath().toStdString() << std::endl;
+                QDirIterator it(fileInfo.absoluteFilePath(), QDir::Files | QDir::NoDotAndDotDot, 
+                                QDirIterator::Subdirectories | QDirIterator::FollowSymlinks);
+                while (it.hasNext()) {
+                    QString file = it.next();
+                    if (isRaw(file, raw_ext_set)) {
+                        fileNames.push_back(file);
+                    }
+                    else {
+                        LOG(error) << "SORT: Not a raw file: " << file.toStdString() << std::endl;
+                    }
+                    LOG(trace) << "SORT File: " << file.toStdString() << std::endl;
+                }
+
+            }
+			else {
+                if (isRaw(fileString, raw_ext_set)) {
+                    fileNames.push_back(fileString);
+                }
+                else {
+                    LOG(error) << "SORT: Not a raw file: " << fileString.toStdString() << std::endl;
+                }
+                LOG(trace) << "SORT: File: " << fileString.toStdString() << std::endl;
+			}
         }
     }
 
     OIIO::ColorConfig ocio_conf(settings.ocioConfig);
 
     std::vector< std::future<bool> > results;
+
+    //OutPaths outpaths_map;
     ///////////////////////////////////////////////////////////////////////////////////////////
     /// Multi-threading processing
     ///
@@ -66,7 +99,7 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
     int process_size = processThreads;  // 10;
     int write_size = writeThreads;      // 10
 
-    myPools.emplace("progress", std::make_unique<ThreadPool>(1, 1));                            // Progress pool")
+    myPools.emplace("progress", std::make_unique<ThreadPool>(1, 1));                            // Progress pool
     myPools.emplace("sorter", std::make_unique<ThreadPool>(preThreads, pre_size));              // Preprocessor pool
     myPools.emplace("reader", std::make_unique<ThreadPool>(readThreads, read_size));            // Reader pool
     myPools.emplace("unpacker", std::make_unique<ThreadPool>(unpackThreads, unpack_size));      // Unpacker pool
@@ -76,8 +109,8 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
 
     std::vector<std::shared_ptr<ProcessingParams>> processingList(fileNames.size());            // Initialize the list
 
-    fileCntr = fileNames.size();
-    QString progressText = QString("Processing %1 files...\n").arg(fileCntr) + 
+    fileCntr = fileNames.size() * 5; // 5 queues
+    QString progressText = QString("Processing %1 files...\n").arg(fileNames.size()) +
         QString("Processing steps: Load -> %1 %2 %3 Export").arg(settings.dDemosaic ? "Demosaic -> " : "").arg(settings.lutMode > -1 ? "Lut -> " : "").arg("Unsharp -> ");
     
     mainWindow->emitUpdateTextSignal(progressText);

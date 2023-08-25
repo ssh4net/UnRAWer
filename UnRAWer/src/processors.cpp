@@ -18,18 +18,33 @@
 #include "processors.h"
 #include "Unrawer.h"
 
+OutPaths outpaths;
+
+bool isRaw(QString file, const std::unordered_set<std::string>& raw_ext_set) {
+    QFileInfo fileInfo(file);
+    QString ext = fileInfo.suffix().toLower();
+
+    if (raw_ext_set.find(ext.toStdString()) != raw_ext_set.end()) {
+        return true;
+    }
+    return false;
+}
+
 void Sorter(int index, QString fileName, std::shared_ptr<ProcessingParams>& processing_entry, 
             std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+
     auto processing = std::make_shared<ProcessingParams>();
     processing->srcFile = fileName.toStdString();
 
     QString prest_sfx = "";
-    std::optional<std::string> lut_preset = getPresetfromName(fileName, &settings); // std::string or std::nullopt
+    auto [path, parentFolderName, baseName, extension] = splitPath(fileName);
+    
+    std::optional<std::string> lut_preset = getPresetfromName(parentFolderName + "/" + baseName, &settings); // std::string or std::nullopt
     if (lut_preset.has_value()) {
         prest_sfx = lut_preset.value().c_str();
     }
     else {
-        LOG(warning) << "PRE: No suitable LUT preset was found from file name" << std::endl;
+        LOG(debug) << "PRE: No suitable LUT preset was found from file name" << std::endl;
     }
 
     if (settings.lutMode > 0) {
@@ -49,11 +64,16 @@ void Sorter(int index, QString fileName, std::shared_ptr<ProcessingParams>& proc
         // LUT mode set to auto and file or path contains LUT preset name
         prest_sfx = lut_preset.value().c_str();
     }
-
-    processing->outFile = getOutName(fileName, prest_sfx, &settings).toStdString();
+    auto [outPath, outName] = getOutName(path, baseName, extension, prest_sfx, &settings);
+    
+    auto [exist, path_idx] = outpaths.try_add(outPath.toStdString());
+    if (!exist) {
+        LOG(debug) << "PRE: New output path added: " << outPath.toStdString() << std::endl;
+    }
+    processing->outPathIdx = path_idx;
+    processing->outFile = outName.toStdString();
     processing->lut_preset = lut_preset.value_or("");
-
-    LOG(debug) << "PRE: Preprocessing file " << processing->srcFile << " > " << processing->outFile << std::endl;
+    LOG(debug) << "PRE: Preprocessing file " << processing->srcFile << " > " << outpaths.get_path(path_idx) + "/" + processing->outFile << std::endl;
 
     processing_entry = processing;
     processing->setStatus(ProcessingStatus::Prepared);
@@ -61,22 +81,29 @@ void Sorter(int index, QString fileName, std::shared_ptr<ProcessingParams>& proc
     (*myPools)["reader"]->enqueue(Reader, index, processing_entry, fileCntr, myPools);
 }
 
-//bool read_chunk(std::ifstream* file, std::vector<char>& raw_buffer, std::streamoff start, std::streamoff end) {
-//    std::vector<char> buffer(end - start);
-//    file.seekg(start);
-//    file.read(buffer.data(), end - start);
-//    if (!file) {
-//        return false;
-//    }
-//    std::copy(buffer.begin(), buffer.end(), raw_buffer.begin() + start);
-//    return true;
-//}
+bool read_chunk(std::ifstream* file, std::vector<char>& raw_buffer, std::streamoff start, std::streamoff end) {
+    std::vector<char> buffer(end - start);
+    file->seekg(start);
+    file->read(buffer.data(), end - start);
+    if (!file) {
+        return false;
+    }
+    std::copy(buffer.begin(), buffer.end(), raw_buffer.begin() + start);
+    return true;
+}
 
 void Reader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
             std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto processing = processing_entry;
 
     LOG(info) << "Reader: file " << processing->srcFile << std::endl;
+
+    QFileInfo fileInfo(processing->srcFile.c_str());
+    if (fileInfo.isSymLink()) {
+        std::string symLinkTarget = fileInfo.symLinkTarget().toStdString();
+        LOG(debug) << "Reader: File is a symlink to: " << symLinkTarget << std::endl;
+        processing->srcFile = symLinkTarget;
+    }
 
     std::ifstream file(processing->srcFile, std::ios::binary | std::ios::ate);
     if (!file)
@@ -117,6 +144,8 @@ void Reader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     processing->setStatus(ProcessingStatus::Loaded);
     file.close();
 
+    (*fileCntr)--;
+
     (*myPools)["unpacker"]->enqueue(Unpacker, index, processing_entry, raw_buffer_ptr, fileCntr, myPools);
 }
 
@@ -144,10 +173,13 @@ void Unpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry, st
 
     processing->setStatus(ProcessingStatus::Unpacked);
 
+    (*fileCntr)--;
+
     if (settings.dDemosaic > 0) {
         (*myPools)["demosaic"]->enqueue(Demosaic, index, processing_entry, fileCntr, myPools);
     }
     else {
+        (*fileCntr)--; // no demosaic, so we can skip the processor
         (*myPools)["processor"]->enqueue(Processor, index, processing_entry, fileCntr, myPools);
     }
 }
@@ -177,9 +209,10 @@ void Demosaic(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     else {
         raw_parms.user_qual = settings.dDemosaic - 1;
         raw_parms.no_interpolation = 1;
-        LOG(warning) << "Demosaic: Raw Data" << std::endl;
+        LOG(warning) << "Demosaic: Using Raw Data" << std::endl;
     }
 
+    (*fileCntr)--;
     (*myPools)["processor"]->enqueue(Processor, index, processing_entry, fileCntr, myPools);
 }
 
@@ -188,7 +221,7 @@ void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     auto processing = processing_entry;
     std::shared_ptr<LibRaw> raw = processing->raw_data;
 
-    LOG(info) << "Processor: Processing data from file: " << processing->srcFile << std::endl;
+    LOG(debug) << "Processor: Processing data from file: " << processing->srcFile << std::endl;
 
     auto& raw_parms = raw->imgdata.params;
     raw_parms.output_bps = 16;
@@ -200,9 +233,6 @@ void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     }
 
     //raw_parms.output_color = 1;
-
-/////////////////////////
-/// 
 
     OIIO::ImageSpec image_spec(image->width, image->height, image->colors, OIIO::TypeDesc::UINT16);
     OIIO::ImageBuf image_buf(image_spec, image->data);
@@ -220,12 +250,12 @@ void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     //raw->recycle();
     //image_buf.clear();
 
-    //LOG(debug) << "Image processed: " << out_buf->geterror() << std::endl;
     processing->image = out_buf;
     processing->outSpec = std::make_shared<OIIO::ImageSpec>(image_spec);
-    ///////////////////////// 
 
     processing->setStatus(ProcessingStatus::Processed);
+
+    (*fileCntr)--;
 
     (*myPools)["writer"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
 }
@@ -235,6 +265,11 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     auto processing = processing_entry;
     //LibRaw& raw = processing->raw_data;
     std::shared_ptr<LibRaw> raw = processing->raw_data;
+
+    if (!makePath(processing->outFile)) {
+        LOG(error) << "Writer: Cannot create output directory" << processing->outFile << std::endl;
+		return;
+    };
 
     LOG(info) << "Writer: Writing data to file: " << processing->outFile << std::endl;
     if (settings.dDemosaic == 0) {
@@ -290,8 +325,18 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         //////////////////////////////////////////////////
         /// Image saving
         /// 
+        std::string outDir = outpaths.get_path(processing->outPathIdx);
+        std::string outFilePath = outDir + "/" + processing->outFile;
 
-        bool write_ok = img_write(*processing->image, processing->outFile, TypeDesc::UINT16, TypeDesc::UINT16, nullptr, nullptr);
+        if (!outpaths.get_path_status(processing->outPathIdx)) {
+            // check if outFilePath folder exists
+            QDir dir(QString::fromStdString(outDir));
+            if (!dir.exists()) {
+                dir.mkpath(".");
+            }
+            outpaths.set_path_status(processing->outPathIdx, true);
+		}
+        bool write_ok = img_write(*processing->image, outFilePath, TypeDesc::UINT16, TypeDesc::UINT16, nullptr, nullptr);
         if (!write_ok) {
             LOG(error) << "Error writing " << processing->outFile << std::endl;
             //mainWindow->emitUpdateTextSignal("Error! Check console for details");
@@ -303,7 +348,7 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     }
 
     processing->setStatus(ProcessingStatus::Written);
-    LOG(info) << "Writer: Finished writing data to file: " << processing->outFile << std::endl;
+    LOG(debug) << "Writer: Finished writing data to file: " << processing->outFile << std::endl;
     processing->raw_data.reset();
 
     (*fileCntr)--;

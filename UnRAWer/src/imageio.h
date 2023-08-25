@@ -50,6 +50,8 @@ std::pair<bool, std::pair<std::shared_ptr<ImageBuf>, TypeDesc>>
 bool img_write(ImageBuf& out_buf, const std::string& outputFileName, TypeDesc out_format, TypeDesc orig_format,
     QProgressBar* progressBar, MainWindow* mainWindow);
 
+bool makePath(const std::string& out_path);
+
 bool thumb_load(ImageBuf& outBuf, const std::string inputFileName, MainWindow* mainWindow);
 
 void debugImageBufWrite(const ImageBuf& buf, const std::string& filename);

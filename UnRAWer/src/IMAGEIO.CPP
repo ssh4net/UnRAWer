@@ -293,6 +293,10 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
     return { true, {std::make_shared<OIIO::ImageBuf>(outBuf), orig_format} };
 }
 
+bool makePath(const std::string& out_path) {
+    return true;
+}
+
 bool img_write(ImageBuf& out_buf, const std::string& outputFileName, TypeDesc out_format, TypeDesc orig_format,
                QProgressBar* progressBar, MainWindow* mainWindow) {
     

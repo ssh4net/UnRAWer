@@ -37,7 +37,7 @@
     <QtQMLDebugEnable>true</QtQMLDebugEnable>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
-    <QtInstall>vcpkg_qt5</QtInstall>
+    <QtInstall>6.2.4_msvc2019_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
@@ -56,15 +56,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>E:\VC\installed\x64-windows\include\qt5;E:\VC\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath)</IncludePath>
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>E:\VC\installed\x64-windows\debug\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <SourcePath>E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <IncludePath>E:\VC\installed\x64-windows\include\qt5;E:\VC\installed\x64-windows\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\GH\OpenImageIO\build\include;e:\GH\OpenImageIO\src\include;e:\GH\Imath\build\RELEASE\include;e:\GH\LibRaw\build\Release\include;e:\GH\boost\VS\include\boost-1_83;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
     <SourcePath>E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
+    <LibraryPath>e:\GH\boost\VS\lib;e:\GH\OpenImageIO\build\lib\Release;e:\GH\LibRaw\build\Release\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -77,6 +78,72 @@
     <QtMoc>
       <PrependInclude>$(ProjectDir)src\stdafx.h;%(PrependInclude)</PrependInclude>
     </QtMoc>
+    <Link>
+      <AdditionalDependencies>OpenImageIO.lib;OpenImageIO_Util.lib;raw_r.lib;raw.lib;libboost_atomic-vc143-mt-x64-1_83.lib;libboost_log_setup-vc143-mt-x64-1_83.lib;libboost_log-vc143-mt-x64-1_83.lib;libboost_thread-vc143-mt-x64-1_83.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y e:\GH\LibPNG\build\Release\bin\libpng16.dll "$(TargetDir)"
+xcopy /y e:\GH\zlib-ng\build\Release\bin\zlib1.dll "$(TargetDir)"
+xcopy /y e:\GH\OpenColorIO\build\RELEASE\bin\OpenColorIO_2_1.dll "$(TargetDir)"
+xcopy /y e:\GH\yaml-cpp\build\Release\bin\yaml-cpp.dll "$(TargetDir)"
+xcopy /y e:\GH\OpenEXR\build\RELEASE\bin\OpenEXRUtil-3_1.dll "$(TargetDir)"
+xcopy /y e:\GH\OpenEXR\build\RELEASE\bin\OpenEXR-3_1.dll "$(TargetDir)"
+xcopy /y e:\GH\OpenEXR\build\RELEASE\bin\OpenEXRCore-3_1.dll "$(TargetDir)"
+xcopy /y e:\GH\OpenEXR\build\RELEASE\bin\IlmThread-3_1.dll "$(TargetDir)"
+xcopy /y e:\GH\OpenEXR\build\RELEASE\bin\Iex-3_1.dll "$(TargetDir)"
+xcopy /y e:\GH\LibRaw\build\Release\bin\raw_r.dll "$(TargetDir)"
+xcopy /y e:\GH\LibRaw\build\Release\bin\raw.dll "$(TargetDir)"
+xcopy /y e:\GH\XZ\build\Release\bin\liblzma.dll "$(TargetDir)"
+xcopy /y e:\GH\libjpeg-turbo\build\Release\bin\turbojpeg.dll "$(TargetDir)"
+xcopy /y e:\GH\libjpeg-turbo\build\Release\bin\jpeg62.dll "$(TargetDir)"
+xcopy /y e:\GH\libtiff\build\RELEASE\bin\tiff.dll "$(TargetDir)"
+xcopy /y e:\GH\LibDeflate\build\Release\bin\deflate.dll "$(TargetDir)"
+xcopy /y e:\GH\Imath\build\RELEASE\bin\Imath-3_1.dll "$(TargetDir)"
+xcopy /y e:\GH\OpenJPEG\build\RELEASE\bin\openjp2.dll "$(TargetDir)"
+xcopy /y e:\GH\libexpat\expat\build\Release\bin\libexpat.dll "$(TargetDir)"
+xcopy /y e:\GH\Little-CMS\RELEASE\lcms2.dll "$(TargetDir)"
+
+xcopy /y e:\GH\OpenImageIO\build\bin\Release\OpenImageIO.dll "$(TargetDir)"
+xcopy /y e:\GH\OpenImageIO\build\bin\Release\OpenImageIO_Util.dll "$(TargetDir)"
+
+xcopy /y e:\GH\boost\VS\lib\boost_atomic-vc143-mt-x64-1_83.dll "$(TargetDir)"
+xcopy /y e:\GH\boost\VS\lib\boost_filesystem-vc143-mt-x64-1_83.dll "$(TargetDir)"
+xcopy /y e:\GH\boost\VS\lib\boost_log_setup-vc143-mt-x64-1_83.dll "$(TargetDir)"
+xcopy /y e:\GH\boost\VS\lib\boost_log-vc143-mt-x64-1_83.dll "$(TargetDir)"
+xcopy /y e:\GH\boost\VS\lib\boost_thread-vc143-mt-x64-1_83.dll "$(TargetDir)"
+xcopy /y e:\GH\JasPer\bld\RELEASE\bin\jasper.dll "$(TargetDir)"
+
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt5Core.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt5Gui.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt5Widgets.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt5Svg.dll "$(TargetDir)"
+
+mkdir "$(TargetDir)\plugins\platforms"
+mkdir "$(TargetDir)\plugins\imageformats"
+mkdir "$(TargetDir)\plugins\styles"
+mkdir "$(TargetDir)\plugins\iconengines"
+
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\platforms\qwindows.dll "$(TargetDir)\plugins\platforms"
+
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qgif.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qicns.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qico.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qjpeg.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qsvg.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qtga.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qtiff.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qwbmp.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qwebp.dll "$(TargetDir)\plugins\imageformats"
+
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\styles\qwindowsvistastyle.dll "$(TargetDir)\plugins\styles"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\iconengines\qsvgicon.dll "$(TargetDir)\plugins\iconengines"
+
+xcopy /y e:\GH\libwebp\build\Release\bin\libsharpyuv.dll "$(TargetDir)"
+xcopy /y e:\GH\libwebp\build\Release\bin\libwebp.dll "$(TargetDir)"
+xcopy /y e:\GH\libwebp\build\Release\bin\libwebpdecoder.dll "$(TargetDir)"
+xcopy /y e:\GH\libwebp\build\Release\bin\libwebpdemux.dll "$(TargetDir)"
+xcopy /y e:\GH\libwebp\build\Release\bin\libwebpmux.dll "$(TargetDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -92,9 +159,8 @@
     <Link />
     <Link />
     <Link>
-      <AdditionalLibraryDirectories>E:\VC\installed\x64-windows\debug\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies />
-      <AdditionalOptions>"kernel32.lib" "user32.lib" "gdi32.lib" "winspool.lib" "comdlg32.lib" "advapi32.lib" "shell32.lib" "ole32.lib" "oleaut32.lib" "uuid.lib" "odbc32.lib" "odbccp32.lib" "E:\VC\installed\x64-windows\debug\lib\Qt5Widgetsd.lib" "E:\VC\installed\x64-windows\debug\lib\Qt5Guid.lib" "E:\VC\installed\x64-windows\debug\lib\Qt5Cored.lib" "E:\VC\installed\x64-windows\debug\lib\manual-link\qtmaind.lib" "E:\VC\installed\x64-windows\debug\lib\zstd.lib" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>"kernel32.lib" "user32.lib" "gdi32.lib" "winspool.lib" "comdlg32.lib" "advapi32.lib" "shell32.lib" "ole32.lib" "oleaut32.lib" "uuid.lib" "odbc32.lib" "odbccp32.lib" %(AdditionalOptions)</AdditionalOptions>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
     </Link>
