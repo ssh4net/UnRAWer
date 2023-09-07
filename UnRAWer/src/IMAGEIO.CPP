@@ -207,11 +207,11 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
     config["raw:ColorSpace"] = settings.rawCspace[settings.rawSpace]; // raw, sRGB, sRGB-linear (sRGB primaries, but a linear transfer function), Adobe, Wide, ProPhoto, ProPhoto-linear, XYZ, ACES (only supported by LibRaw >= 0.18), DCI-P3 (LibRaw >= 0.21), Rec2020 (LibRaw >= 0.2). (Default: sRGB)
     config["raw:Demosaic"] = settings.demosaic[settings.dDemosaic]; // linear, VNG, PPG, AHD (default), DCB, AHD-Mod, AFD, VCD, Mixed, LMMSE, AMaZE, DHT, AAHD, none
     //
-    config["raw:use_camera_wb"] = 0; // If 1, use libraw’s camera white balance adjustment.
+    config["raw:use_camera_wb"] = 0;     // If 1, use libraw camera white balance adjustment.
     config["raw:use_camera_matrix"] = 0; // 0 = never, 1 (default) = only for DNG files, 3 = always.
-    config["raw:HighlightMode"] = 0; // 0 = clip, 1 = unclip, 2 = blend, 3 = reconstruct
-    config["raw:aber"] = (1.0f, 1.0f);  //The default (1,1) means to perform no correction. This is an overall spatial scale, sensible values will be very close to 1.0.
-    config["raw:Exposure"] = 1.0f; // Exposure correction in stops before demosaic. Default: 1.0f
+    config["raw:HighlightMode"] = 0;     // 0 = clip, 1 = unclip, 2 = blend, 3 = reconstruct
+    config["raw:aber"] = (1.0f, 1.0f);   //The default (1,1) means to perform no correction. This is an overall spatial scale, sensible values will be very close to 1.0.
+    config["raw:Exposure"] = 1.0f;       // Exposure correction in stops before demosaic. Default: 1.0f
 
     ImageBuf outBuf(inputFileName, 0, 0, nullptr, &config, nullptr);
 

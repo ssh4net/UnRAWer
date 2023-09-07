@@ -19,7 +19,6 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QMenu>
-//#include <QtWidgets/QAction>
 
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QLabel>
@@ -40,7 +39,7 @@
 #include "process.h"
 
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 35
+#define VERSION_MINOR 40
 
 void setPBarColor(QProgressBar* progressBar, const QColor& color = QColor("#05B8CC"));
 

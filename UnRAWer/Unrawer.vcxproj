@@ -31,7 +31,7 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>vcpkg_qt5</QtInstall>
+    <QtInstall>6.2.4_msvc2019_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
     <QtQMLDebugEnable>true</QtQMLDebugEnable>
@@ -56,16 +56,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_84;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <SourcePath>E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\GH\OpenImageIO\build\include;e:\GH\OpenImageIO\src\include;e:\GH\Imath\build\RELEASE\include;e:\GH\LibRaw\build\Release\include;e:\GH\boost\VS\include\boost-1_83;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_84;e:\GH\toml11\build\RELEASE\include</IncludePath>
     <SourcePath>E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
-    <LibraryPath>e:\GH\boost\VS\lib;e:\GH\OpenImageIO\build\lib\Release;e:\GH\LibRaw\build\Release\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -79,44 +79,51 @@
       <PrependInclude>$(ProjectDir)src\stdafx.h;%(PrependInclude)</PrependInclude>
     </QtMoc>
     <Link>
-      <AdditionalDependencies>OpenImageIO.lib;OpenImageIO_Util.lib;raw_r.lib;raw.lib;libboost_atomic-vc143-mt-x64-1_83.lib;libboost_log_setup-vc143-mt-x64-1_83.lib;libboost_log-vc143-mt-x64-1_83.lib;libboost_thread-vc143-mt-x64-1_83.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenImageIO.lib;OpenImageIO_Util.lib;raw_r.lib;raw.lib;libboost_atomic-vc143-mt-x64-1_84.lib;libboost_log_setup-vc143-mt-x64-1_84.lib;libboost_log-vc143-mt-x64-1_84.lib;libboost_thread-vc143-mt-x64-1_84.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y e:\GH\LibPNG\build\Release\bin\libpng16.dll "$(TargetDir)"
-xcopy /y e:\GH\zlib-ng\build\Release\bin\zlib1.dll "$(TargetDir)"
-xcopy /y e:\GH\OpenColorIO\build\RELEASE\bin\OpenColorIO_2_1.dll "$(TargetDir)"
-xcopy /y e:\GH\yaml-cpp\build\Release\bin\yaml-cpp.dll "$(TargetDir)"
-xcopy /y e:\GH\OpenEXR\build\RELEASE\bin\OpenEXRUtil-3_1.dll "$(TargetDir)"
-xcopy /y e:\GH\OpenEXR\build\RELEASE\bin\OpenEXR-3_1.dll "$(TargetDir)"
-xcopy /y e:\GH\OpenEXR\build\RELEASE\bin\OpenEXRCore-3_1.dll "$(TargetDir)"
-xcopy /y e:\GH\OpenEXR\build\RELEASE\bin\IlmThread-3_1.dll "$(TargetDir)"
-xcopy /y e:\GH\OpenEXR\build\RELEASE\bin\Iex-3_1.dll "$(TargetDir)"
-xcopy /y e:\GH\LibRaw\build\Release\bin\raw_r.dll "$(TargetDir)"
-xcopy /y e:\GH\LibRaw\build\Release\bin\raw.dll "$(TargetDir)"
-xcopy /y e:\GH\XZ\build\Release\bin\liblzma.dll "$(TargetDir)"
-xcopy /y e:\GH\libjpeg-turbo\build\Release\bin\turbojpeg.dll "$(TargetDir)"
-xcopy /y e:\GH\libjpeg-turbo\build\Release\bin\jpeg62.dll "$(TargetDir)"
-xcopy /y e:\GH\libtiff\build\RELEASE\bin\tiff.dll "$(TargetDir)"
-xcopy /y e:\GH\LibDeflate\build\Release\bin\deflate.dll "$(TargetDir)"
-xcopy /y e:\GH\Imath\build\RELEASE\bin\Imath-3_1.dll "$(TargetDir)"
-xcopy /y e:\GH\OpenJPEG\build\RELEASE\bin\openjp2.dll "$(TargetDir)"
-xcopy /y e:\GH\libexpat\expat\build\Release\bin\libexpat.dll "$(TargetDir)"
-xcopy /y e:\GH\Little-CMS\RELEASE\lcms2.dll "$(TargetDir)"
+      <Command>xcopy /y e:\DVR\bin\libpng16.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\zlib1.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\yaml-cpp.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\zstd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\jasper.dll "$(TargetDir)"
 
-xcopy /y e:\GH\OpenImageIO\build\bin\Release\OpenImageIO.dll "$(TargetDir)"
-xcopy /y e:\GH\OpenImageIO\build\bin\Release\OpenImageIO_Util.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenColorIO_2_3.dll "$(TargetDir)"
 
-xcopy /y e:\GH\boost\VS\lib\boost_atomic-vc143-mt-x64-1_83.dll "$(TargetDir)"
-xcopy /y e:\GH\boost\VS\lib\boost_filesystem-vc143-mt-x64-1_83.dll "$(TargetDir)"
-xcopy /y e:\GH\boost\VS\lib\boost_log_setup-vc143-mt-x64-1_83.dll "$(TargetDir)"
-xcopy /y e:\GH\boost\VS\lib\boost_log-vc143-mt-x64-1_83.dll "$(TargetDir)"
-xcopy /y e:\GH\boost\VS\lib\boost_thread-vc143-mt-x64-1_83.dll "$(TargetDir)"
-xcopy /y e:\GH\JasPer\bld\RELEASE\bin\jasper.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenEXRUtil-3_2.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenEXR-3_2.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenEXRCore-3_2.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\IlmThread-3_2.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\Iex-3_2.dll "$(TargetDir)"
 
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt5Core.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt5Gui.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt5Widgets.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt5Svg.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\raw_r.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\raw.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\liblzma.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\turbojpeg.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\jpeg62.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\tiff.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\deflate.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\Imath-3_1.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\openjp2.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libexpat.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\gif.dll "$(TargetDir)"
+
+xcopy /y e:\GH\Little-CMS\bin\lcms2.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\OpenImageIO.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenImageIO_Util.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\lib\boost_atomic-vc143-mt-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_filesystem-vc143-mt-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log-vc143-mt-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_thread-vc143-mt-x64-1_84.dll "$(TargetDir)"
+
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Core.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Gui.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Widgets.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Svg.dll "$(TargetDir)"
 
 mkdir "$(TargetDir)\plugins\platforms"
 mkdir "$(TargetDir)\plugins\imageformats"
@@ -138,11 +145,11 @@ xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qwebp.dll "$(TargetDir)\pl
 xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\styles\qwindowsvistastyle.dll "$(TargetDir)\plugins\styles"
 xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\iconengines\qsvgicon.dll "$(TargetDir)\plugins\iconengines"
 
-xcopy /y e:\GH\libwebp\build\Release\bin\libsharpyuv.dll "$(TargetDir)"
-xcopy /y e:\GH\libwebp\build\Release\bin\libwebp.dll "$(TargetDir)"
-xcopy /y e:\GH\libwebp\build\Release\bin\libwebpdecoder.dll "$(TargetDir)"
-xcopy /y e:\GH\libwebp\build\Release\bin\libwebpdemux.dll "$(TargetDir)"
-xcopy /y e:\GH\libwebp\build\Release\bin\libwebpmux.dll "$(TargetDir)"</Command>
+xcopy /y e:\DVR\bin\libsharpyuv.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libwebp.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libwebpdecoder.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libwebpdemux.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libwebpmux.dll "$(TargetDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -159,11 +166,81 @@ xcopy /y e:\GH\libwebp\build\Release\bin\libwebpmux.dll "$(TargetDir)"</Command>
     <Link />
     <Link />
     <Link>
-      <AdditionalDependencies />
+      <AdditionalDependencies>OpenImageIO_d.lib;OpenImageIO_Util_d.lib;raw_rd.lib;rawd.lib;libboost_atomic-vc143-mt-x64-1_84.lib;libboost_log_setup-vc143-mt-x64-1_84.lib;libboost_log-vc143-mt-x64-1_84.lib;libboost_thread-vc143-mt-x64-1_84.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>"kernel32.lib" "user32.lib" "gdi32.lib" "winspool.lib" "comdlg32.lib" "advapi32.lib" "shell32.lib" "ole32.lib" "oleaut32.lib" "uuid.lib" "odbc32.lib" "odbccp32.lib" %(AdditionalOptions)</AdditionalOptions>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y e:\DVR\bin\libpng16d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\zlibd1.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\yaml-cppd.dll "$(TargetDir)"
+xcopy /y e:\DVR\debug\bin\zstd.dll "$(TargetDir)"
+xcopy /y e:\DVR\debug\bin\jasper.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\OpenColorIO_d_2_3.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\OpenEXRUtil-3_2_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenEXR-3_2_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenEXRCore-3_2_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\IlmThread-3_2_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\Iex-3_2_d.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\raw_rd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\rawd.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\debug\bin\liblzma.dll "$(TargetDir)"
+xcopy /y e:\DVR\debug\bin\turbojpeg.dll "$(TargetDir)"
+xcopy /y e:\DVR\debug\bin\jpeg62.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\tiffd.dll "$(TargetDir)"
+xcopy /y e:\DVR\debug\bin\deflate.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\Imath-3_1_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\openjp2d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libexpatd.dll "$(TargetDir)"
+xcopy /y e:\DVR\debug\bin\gif.dll "$(TargetDir)"
+
+xcopy /y e:\GH\Little-CMS\debug\lcms2.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\OpenImageIO_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenImageIO_Util_d.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\lib\boost_atomic-vc143-mt-gd-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_filesystem-vc143-mt-gd-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-gd-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log-vc143-mt-gd-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_thread-vc143-mt-gd-x64-1_84.dll "$(TargetDir)"
+
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Cored.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Guid.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Widgetsd.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Svgd.dll "$(TargetDir)"
+
+mkdir "$(TargetDir)\plugins\platforms"
+mkdir "$(TargetDir)\plugins\imageformats"
+mkdir "$(TargetDir)\plugins\styles"
+mkdir "$(TargetDir)\plugins\iconengines"
+
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\platforms\qwindowsd.dll "$(TargetDir)\plugins\platforms"
+
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qgifd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qicnsd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qicod.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qjpegd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qsvgd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qtgad.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qtiffd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qwbmpd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qwebpd.dll "$(TargetDir)\plugins\imageformats"
+
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\styles\qwindowsvistastyled.dll "$(TargetDir)\plugins\styles"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\iconengines\qsvgicond.dll "$(TargetDir)\plugins\iconengines"
+
+xcopy /y e:\DVR\bin\libsharpyuvd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libwebpd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libwebpdecoderd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libwebpdemuxd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>

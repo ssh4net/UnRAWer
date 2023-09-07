@@ -6,7 +6,7 @@ Threads = 20
 # Threads multiplier for processing 1.0 equal all cores/threads
 ThredsMult = 1.0
 # 
-ExportSubf = false
+ExportSubf = true
 # log level is 0-5, 0 is most verbose
 # 0 = trace, 1 = debug, 2 = info, 3 = warning, 4 = error, 5 = fatal
 # fatal - 0 = only fatal errors, 
@@ -100,7 +100,7 @@ ocio_Config = "c:/aces_1.2/config.ocio"
 # Transform image
 # LUT transform mode
 # LUT mode: -1 - disabled, 0 - Smart (faile path/name), 1 - Force
-LutTransform = 1
+LutTransform = 0
 # Force/Default preset
 LutDefault = "_linear"
 
