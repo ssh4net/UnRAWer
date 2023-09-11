@@ -235,9 +235,8 @@ MainWindow::MainWindow() {
 		lutActions.push_back(action);
 	}
     //lut presets
-    for (auto& key : settings.lut_Preset) {
-        // const std::string to QString
-		QAction* action = createAction(QString::fromStdString(key.first), LutPresetGroup, lut_p_submenu, true, (settings.dLutPreset == key.first));
+    for (auto& [key, value] : settings.lut_Preset) {
+		QAction* action = createAction(key.c_str(), LutPresetGroup, lut_p_submenu, true, (settings.dLutPreset == key));
 		lutActions.push_back(action);
 	}
     //

@@ -79,7 +79,8 @@
       <PrependInclude>$(ProjectDir)src\stdafx.h;%(PrependInclude)</PrependInclude>
     </QtMoc>
     <Link>
-      <AdditionalDependencies>OpenImageIO.lib;OpenImageIO_Util.lib;raw_r.lib;raw.lib;libboost_atomic-vc143-mt-x64-1_84.lib;libboost_log_setup-vc143-mt-x64-1_84.lib;libboost_log-vc143-mt-x64-1_84.lib;libboost_thread-vc143-mt-x64-1_84.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenImageIO.lib;OpenImageIO_Util.lib;raw_r.lib;raw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y e:\DVR\bin\libpng16.dll "$(TargetDir)"
@@ -88,7 +89,7 @@ xcopy /y e:\DVR\bin\yaml-cpp.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\zstd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\jasper.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\bin\OpenColorIO_2_3.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenColorIO_2_1.dll "$(TargetDir)"
 
 xcopy /y e:\DVR\bin\OpenEXRUtil-3_2.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenEXR-3_2.dll "$(TargetDir)"
@@ -166,8 +167,8 @@ xcopy /y e:\DVR\bin\libwebpmux.dll "$(TargetDir)"</Command>
     <Link />
     <Link />
     <Link>
-      <AdditionalDependencies>OpenImageIO_d.lib;OpenImageIO_Util_d.lib;raw_rd.lib;rawd.lib;libboost_atomic-vc143-mt-x64-1_84.lib;libboost_log_setup-vc143-mt-x64-1_84.lib;libboost_log-vc143-mt-x64-1_84.lib;libboost_thread-vc143-mt-x64-1_84.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>"kernel32.lib" "user32.lib" "gdi32.lib" "winspool.lib" "comdlg32.lib" "advapi32.lib" "shell32.lib" "ole32.lib" "oleaut32.lib" "uuid.lib" "odbc32.lib" "odbccp32.lib" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>OpenImageIO_d.lib;OpenImageIO_Util_d.lib;raw_rd.lib;rawd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions> /VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
     </Link>
@@ -178,7 +179,7 @@ xcopy /y e:\DVR\bin\yaml-cppd.dll "$(TargetDir)"
 xcopy /y e:\DVR\debug\bin\zstd.dll "$(TargetDir)"
 xcopy /y e:\DVR\debug\bin\jasper.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\bin\OpenColorIO_d_2_3.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenColorIO_d_2_1.dll "$(TargetDir)"
 
 xcopy /y e:\DVR\bin\OpenEXRUtil-3_2_d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenEXR-3_2_d.dll "$(TargetDir)"
