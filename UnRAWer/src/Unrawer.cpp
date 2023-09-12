@@ -71,15 +71,20 @@ imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* c_lut_p
         }
     }
     else {
+        LOG(debug) << "LUT transformation disabled" << std::endl;
         lut_buf_ptr = &input_buf;
     }
 
     // Apply denoise
     // Apply unsharp mask
     
-    if (settings.shrpMode != -1) {
-        if (ImageBufAlgo::unsharp_mask(*uns_buf_ptr, *lut_buf_ptr, "gaussian", 1.0f, 0.5f, 0.0f)) {
-            LOG(info) << "Unsharp mask applied: <Gaussian>" << std::endl;
+    if (settings.sharp_mode != -1) {
+        string_view kernel = settings.sharp_kerns[settings.sharp_kernel];
+        float width = settings.sharp_width;
+        float contrast = settings.sharp_contrast;
+        float threshold = settings.sharp_tresh;
+        if (ImageBufAlgo::unsharp_mask(*uns_buf_ptr, *lut_buf_ptr, kernel, width, contrast, threshold)) {
+            LOG(debug) << "Unsharp mask applied: <" << kernel.c_str() << ">" << std::endl;
             lut_buf_ptr->clear();
             if (!rawCleared) {
                 processing_entry->raw_data->dcraw_clear_mem(raw_image);
@@ -93,6 +98,7 @@ imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* c_lut_p
     }
     else
     {
+        LOG(debug) << "Unsharp mask disabled" << std::endl;
         uns_buf_ptr = lut_buf_ptr;
     }
 

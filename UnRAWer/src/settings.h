@@ -32,7 +32,7 @@ typedef unsigned long ulong;
 struct Settings {
 	bool conEnable, useSbFldr;
 	uint rangeMode;
-	int lutMode, shrpMode;
+	int lutMode, sharp_mode;
 	int fileFormat, defFormat;
 	int bitDepth, defBDepth;
 	int rawRot;
@@ -43,6 +43,13 @@ struct Settings {
 	std::vector<std::string> out_formats = { "tif", "exr", "png", "jpg", "jp2", "ppm" };
 	std::string ocioConfig, dLutPreset;
 	std::map<std::string, std::string> lut_Preset;
+	const std::string sharp_kerns[12] = {"gaussian", "sharp-gaussian", "box", "triangle",
+		"blackman-harris", "mitchell", "b-spline", "catmull-rom", "lanczos3",
+		"disk", "binomial", "laplacian" };
+	uint sharp_kernel;		// index of the kernel in sharp_kerns[] array
+	float sharp_width;
+	float sharp_contrast;
+	float sharp_tresh;
 
 	const int raw_rot[5] = { -1, 0, 3, 5, 6 }; // -1 - Auto EXIF, 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CW Vertical, 6 - 90 CCW Vertical
 	const uint rngConv[4] = { 0, 1, 2, 3}; // 0 - unsigned, 1 - signed, 2 - unsigned -> signed, 3 - signed -> unsigned
@@ -60,7 +67,6 @@ struct Settings {
 		verbosity = 3;		// Verbosity level: 0 - none, 1 - errors, 2 - warnings, 3 - info, 4 - debug, 5 - trace
 		lutMode = 0;		// LUT mode: -1 - disabled, 0 - Smart, 1 - Force
 		dLutPreset = "";	// Default LUT preset, top one
-		shrpMode = 1;		// Sharpening mode: -1 - disabled, 0 - Smart, 1 - Force
 
 		numThreads = 5;		// Number of threads: 0 - auto, >0 - number of threads
 		rangeMode = 0;		// Float type: 0 - unsigned, 1 - signed, 2 - unsigned -> signed, 3 - signed -> unsigned
@@ -74,6 +80,12 @@ struct Settings {
 		dDemosaic = 5;
 		
 		ocioConfig = "";
+
+		sharp_mode = 1;		// Sharpening mode: -1 - disabled, 0 - Smart, 1 - Force
+		sharp_kernel = 0;
+		sharp_width = 3.0f;
+		sharp_contrast = 0.5f;
+		sharp_tresh = 0.125f;
 	}
 
 	// get bit depth in bytes

@@ -112,6 +112,7 @@ MainWindow::MainWindow() {
 
     QMenu* f_menu = new QMenu("Files", menuBar);
     QMenu* p_menu = new QMenu("Processing", menuBar);
+    QMenu* o_menu = new QMenu("Outputs", menuBar);
     QMenu* s_menu = new QMenu("Settings", menuBar);
 
     //menuBar->setStyleSheet(
@@ -131,20 +132,23 @@ MainWindow::MainWindow() {
     con_enable->setCheckable(true);
     con_enable->setChecked(settings.conEnable);
 
-    QAction* useSubfldr = new QAction("Export Subfolders", p_menu);
+    QAction* useSubfldr = new QAction("Export Subfolders", o_menu);
     useSubfldr->setCheckable(true);
     useSubfldr->setChecked(settings.useSbFldr);
 
     // Submenu
-    QMenu* rng_submenu = new QMenu("Floats type", p_menu);
-    QMenu* fmt_submenu = new QMenu("Formats", p_menu);
-    QMenu* bit_submenu = new QMenu("Bits Depth", p_menu);
+    QMenu* rng_submenu = new QMenu("Floats type", o_menu);
+    QMenu* fmt_submenu = new QMenu("Formats", o_menu);
+    QMenu* bit_submenu = new QMenu("Bits Depth", o_menu);
     QMenu* raw_submenu = new QMenu("Camera Raw", p_menu);
     QMenu* dem_submenu = new QMenu("Demosaic", p_menu);
     QMenu* rclr_submenu = new QMenu("RAW ColorSpace", p_menu);
     QMenu* lut_submenu = new QMenu("LUT transform", p_menu);
     
     QMenu* lut_p_submenu = new QMenu("LUT Presets", lut_submenu);
+
+    QMenu* sharp_submenu = new QMenu("Unsharp", p_menu);
+    QMenu* sharp_k_submenu = new QMenu("Unsharp kernel", p_menu);
 
     QMenu* verb_submenu = new QMenu("Verbosity", s_menu);
     
@@ -155,6 +159,8 @@ MainWindow::MainWindow() {
     QActionGroup* DemGroup = new QActionGroup(dem_submenu);
     QActionGroup* RclrGroup = new QActionGroup(rclr_submenu);
     QActionGroup* LutGroup = new QActionGroup(lut_submenu);
+    QActionGroup* SharpGroup = new QActionGroup(sharp_submenu);
+    QActionGroup* SharpKGroup = new QActionGroup(sharp_k_submenu);
     QActionGroup* LutPresetGroup = new QActionGroup(lut_p_submenu);
 
     QActionGroup* VerbGroup = new QActionGroup(verb_submenu);
@@ -237,11 +243,25 @@ MainWindow::MainWindow() {
     //lut presets
     for (auto& [key, value] : settings.lut_Preset) {
 		QAction* action = createAction(key.c_str(), LutPresetGroup, lut_p_submenu, true, (settings.dLutPreset == key));
-		lutActions.push_back(action);
+		lutPActions.push_back(action);
 	}
+    // sharpening
+    std::vector<std::pair<const QString, int>> unsharpMenu = {
+		{"Disabled", -1}, {"Smart", 0}, {"Forced", 1} };
+    for (auto& [title, value] : unsharpMenu) {
+        QAction* action = createAction(title, SharpGroup, sharp_submenu, true, (settings.sharp_mode == value));
+        sharpActions.push_back(action);
+    }
+    //sharpen kernels
+    for (auto& key : settings.sharp_kerns) {
+        std::string kernel = settings.sharp_kerns[settings.sharp_kernel];
+        QAction* action = createAction(key.c_str(), SharpKGroup, sharp_k_submenu, true, (kernel == key));
+        sharpKActions.push_back(action);
+    }
     //
     menuBar->addMenu(f_menu);
     menuBar->addMenu(p_menu);
+    menuBar->addMenu(o_menu);
     menuBar->addMenu(s_menu);
     //
     s_menu->addMenu(verb_submenu);
@@ -255,13 +275,17 @@ MainWindow::MainWindow() {
     p_menu->addMenu(lut_submenu);
     p_menu->addMenu(lut_p_submenu);
     p_menu->addSeparator();
-    p_menu->addMenu(rng_submenu);
+    p_menu->addMenu(sharp_submenu);
+    p_menu->addMenu(sharp_k_submenu);
     p_menu->addSeparator();
-    p_menu->addMenu(fmt_submenu);
-    p_menu->addMenu(bit_submenu);
-    p_menu->addSeparator();
-    p_menu->addAction(useSubfldr);
-    p_menu->addSeparator();
+    //
+    o_menu->addMenu(rng_submenu);
+    o_menu->addSeparator();
+    o_menu->addMenu(fmt_submenu);
+    o_menu->addMenu(bit_submenu);
+    o_menu->addSeparator();
+    o_menu->addAction(useSubfldr);
+    o_menu->addSeparator();
     //
     f_menu->addAction(f_RelConf);
     f_menu->addAction(f_Restart);
@@ -301,6 +325,15 @@ MainWindow::MainWindow() {
     for (QAction* action : lutActions) {
         connect(action, &QAction::triggered, this, &MainWindow::lutSettings);
     }
+    for (QAction* action : lutPActions) {
+        connect(action, &QAction::triggered, this, &MainWindow::lutPSettings);
+    }
+    for (QAction* action : sharpActions) {
+        connect(action, &QAction::triggered, this, &MainWindow::sharpSettings);
+    }
+    for (QAction* action : sharpKActions) {
+		connect(action, &QAction::triggered, this, &MainWindow::sharpKSettings);
+	}
     for (QAction* action : verbActions) {
 		connect(action, &QAction::triggered, this, &MainWindow::verbLevel);
 	}
@@ -483,9 +516,49 @@ void MainWindow::lutSettings() {
     for (int i = 0; i < lutActions.size() && i < actionMap.size(); ++i) {
 		if (action == lutActions[i]) {
 			settings.lutMode = actionMap[i].second;
-			emit updateTextSignal(QString("LUT transform - %1 ").arg(actionMap[i].first));
-			qDebug() << qPrintable(QString("LUT transform - %1 ").arg(actionMap[i].first));
+			emit updateTextSignal(QString("LUT transform: %1 ").arg(actionMap[i].first));
+			qDebug() << qPrintable(QString("LUT transform: %1 ").arg(actionMap[i].first));
 			break;
+		}
+	}
+}
+
+void MainWindow::lutPSettings() {
+    QAction* action = qobject_cast<QAction*>(sender());
+    for (int i = 0; i < lutPActions.size() && i < settings.lut_Preset.size(); ++i) {
+        if (action == lutPActions[i]) {
+            settings.dLutPreset = lutPActions[i]->text().toStdString();
+            emit updateTextSignal(QString("LUT preset: %1 ").arg(settings.dLutPreset.c_str()));
+            qDebug() << qPrintable(QString("LUT preset: %1 ").arg(settings.dLutPreset.c_str()));
+        }
+    }
+}
+
+void MainWindow::sharpSettings() {
+    std::vector<std::pair<QString, int>> actionMap = { {"Off", -1}, {"Smart", 0}, {"Forced", 1} };
+
+    QAction* action = qobject_cast<QAction*>(sender());
+    for (int i = 0; i < sharpActions.size() && i < actionMap.size(); ++i) {
+        if (action == sharpActions[i]) {
+			settings.sharp_mode = actionMap[i].second;
+			emit updateTextSignal(QString("Unsharp - %1 ").arg(actionMap[i].first));
+			qDebug() << qPrintable(QString("Unsharp - %1 ").arg(actionMap[i].first));
+			break;
+		}
+	}
+}
+
+void MainWindow::sharpKSettings() {
+    QAction* action = qobject_cast<QAction*>(sender());
+    uint s = sizeof(settings.sharp_kerns) / sizeof(settings.sharp_kerns[0]);
+    uint a = sharpKActions.size();
+    for (int i = 0; i < a && i < s ; ++i) {
+        if (action == sharpKActions[i]) {
+			settings.sharp_kernel = i;
+            QString kernel = settings.sharp_kerns[settings.sharp_kernel].c_str();
+			emit updateTextSignal(QString("Unsharp kernel: %1 ").arg(kernel));
+			qDebug() << qPrintable(QString("Unsharp kernel: %1 ").arg(kernel));
+            break;
 		}
 	}
 }
