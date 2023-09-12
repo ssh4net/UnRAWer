@@ -92,6 +92,8 @@ enum class ProcessingStatus {
     Unpacked,
     Demosaiced,
     Processed,
+    Graded,
+    Unsharped,
     Written,
     Failed
 };
@@ -107,7 +109,7 @@ struct ProcessingParams {
     
     //LibRaw raw_data;
     std::shared_ptr<LibRaw> raw_data;
-    
+    libraw_processed_image_t* raw_image;
     // source settings:
     std::shared_ptr<OIIO::ImageSpec> srcSpec;
     
@@ -136,6 +138,8 @@ struct ProcessingParams {
     } denoise;
 
     ProcessingStatus status = ProcessingStatus::NotStarted;
+    // TODO: maybe add mutex for raw clear status
+    bool rawCleared = false;
 
     // internal
     std::mutex statusMutex;

@@ -226,7 +226,10 @@ void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     auto& raw_parms = raw->imgdata.params;
     raw_parms.output_bps = 16;
 
-    libraw_processed_image_t* image = raw->dcraw_make_mem_image();
+    //libraw_processed_image_t* image = raw->dcraw_make_mem_image();
+    processing->raw_image = raw->dcraw_make_mem_image();
+    libraw_processed_image_t* image = processing->raw_image;
+
     if (!image) {
         LOG(error) << "Processor: Cannot process data from buffer: " << processing->srcFile << std::endl;
         return;
@@ -274,7 +277,8 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     LOG(info) << "Writer: Writing data to file: " << processing->outFile << std::endl;
     if (settings.dDemosaic == 0) {
         // Write raw data to a file
-        std::ofstream output(processing->outFile, std::ios::binary);
+        // TODO: move this to OIIO writer to fix file format issue and byte order
+        std::ofstream output(processing->outFile+".ppm", std::ios::binary); // hack to add .ppm extension
         if (!output) {
             LOG(error) << "Writer: Cannot open output file" << processing->outFile << std::endl;
             return;
@@ -342,6 +346,12 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
             //mainWindow->emitUpdateTextSignal("Error! Check console for details");
             return;
         }
+
+        if (!processing->rawCleared) {
+            processing->raw_data->dcraw_clear_mem(processing->raw_image);
+            processing->rawCleared = true;
+        }
+
         processing->image->reset();
         processing->image.reset();
         //////////////////////////////////////////////////

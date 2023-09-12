@@ -45,7 +45,6 @@ imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* c_lut_p
     ImageBuf* out_buf_ptr = &out_buf;
     ImageBuf* lut_buf_ptr = &lut_buf;
     ImageBuf* uns_buf_ptr = &uns_buf;
-    bool rawCleared = false;
     // LUT Transform
     bool lutValid = false;
     // check if lut_preset is not nullptr set lutValid to true
@@ -54,15 +53,18 @@ imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* c_lut_p
     }
     //auto test = input_buf.spec();
     //std::cout << test.width << " " << test.height << " " << test.nchannels << std::endl;
+    LOG(trace) << "Input image: " << input_buf.spec().width << "x" << input_buf.spec().height << "x" << input_buf.spec().nchannels << std::endl;
+    LOG(trace) << "Input image: " << input_buf.spec().format << std::endl;
 
     if (settings.lutMode >= 0 && lutValid) {
         auto lutPreset = settings.lut_Preset[settings.dLutPreset];
         if (ImageBufAlgo::ociofiletransform(*lut_buf_ptr, input_buf, lutPreset, false, false, colorconfig)) {
             LOG(info) << "LUT preset " << settings.dLutPreset << " <" << lutPreset << "> " << " applied" << std::endl;
+            processing_entry->setStatus(ProcessingStatus::Graded);
             input_buf.clear();
-            if (!rawCleared) {
+            if (!processing_entry->rawCleared) {
                 processing_entry->raw_data->dcraw_clear_mem(raw_image);
-                rawCleared = true;
+                processing_entry->rawCleared = true;
             }
         }
         else {
@@ -85,10 +87,11 @@ imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* c_lut_p
         float threshold = settings.sharp_tresh;
         if (ImageBufAlgo::unsharp_mask(*uns_buf_ptr, *lut_buf_ptr, kernel, width, contrast, threshold)) {
             LOG(debug) << "Unsharp mask applied: <" << kernel.c_str() << ">" << std::endl;
+            processing_entry->setStatus(ProcessingStatus::Unsharped);
             lut_buf_ptr->clear();
-            if (!rawCleared) {
+            if (!processing_entry->rawCleared) {
                 processing_entry->raw_data->dcraw_clear_mem(raw_image);
-                rawCleared = true;
+                processing_entry->rawCleared = true;
             }
         }
         else {
@@ -105,10 +108,10 @@ imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* c_lut_p
     // temp copy for saving
     out_buf_ptr = uns_buf_ptr;
 
-    if (!rawCleared) {
-        processing_entry->raw_data->dcraw_clear_mem(raw_image);
-        rawCleared = true;
-    }
+    //if (!rawCleared) {
+    //    processing_entry->raw_data->dcraw_clear_mem(raw_image);
+    //    rawCleared = true;
+    //}
 
     return { true, std::make_shared<ImageBuf>(*out_buf_ptr) };
 }

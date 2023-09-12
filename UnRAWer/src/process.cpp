@@ -111,7 +111,10 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
 
     fileCntr = fileNames.size() * 5; // 5 queues
     QString progressText = QString("Processing %1 files...\n").arg(fileNames.size()) +
-        QString("Processing steps: Load -> %1 %2 %3 Export").arg(settings.dDemosaic ? "Demosaic -> " : "").arg(settings.lutMode > -1 ? "Lut -> " : "").arg("Unsharp -> ");
+        QString("Processing steps: Load -> %1 %2 %3 Export").
+        arg(settings.dDemosaic ? "Demosaic -> " : "").
+        arg(settings.lutMode > -1 ? "Lut -> " : "").
+        arg(settings.sharp_mode > -1 ?"Unsharp -> " : "");
     
     mainWindow->emitUpdateTextSignal(progressText);
     myPools["progress"]->enqueue(doProgress, &fileCntr, fileNames.size(), progressBar, mainWindow);
