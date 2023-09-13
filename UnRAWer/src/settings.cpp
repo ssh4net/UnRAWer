@@ -35,6 +35,7 @@ bool loadSettings(Settings& settings, const std::string& filename) {
             LOG(error) << "Error parsing settings file: [Range] section not found or empty." << std::endl;
             return false;
         }
+        // Lut transform
         if (!parsed.contains("Transform") || parsed["Transform"].as_table().empty()) {
             LOG(error) << "Error parsing settings file: [Transform] section not found or empty." << std::endl;
             return false;
@@ -51,10 +52,17 @@ bool loadSettings(Settings& settings, const std::string& filename) {
 			LOG(error) << "Error parsing settings file: [OCIO] section not found or empty." << std::endl;
 			return false;
 		}
+        // Lut Preset
         if (!parsed.contains("LUT_Preset")) {
             LOG(error) << "Error parsing settings file: [LUT_Preset] section not found." << std::endl;
 			return false;
         }
+        // Unsharp
+        if (!parsed.contains("Unsharp") || parsed["Unsharp"].as_table().empty()) {
+            LOG(error) << "Error parsing settings file: [Unsharp] section not found." << std::endl;
+            return false;
+        }
+        ///////////////////////////
         auto check = [&parsed](const std::string& section, const std::string& key) {
             auto ts = parsed[section].as_table().find(key);
             if (ts == parsed[section].as_table().end()) {
@@ -171,6 +179,35 @@ bool loadSettings(Settings& settings, const std::string& filename) {
 				LOG(error) << "Error parsing settings file: [Transform] section: \"LutDefault\" key value is invalid." << std::endl;
 				return false;
             }
+        }
+        // Unsharp
+        if (!check("Unsharp", "sharp_mode")) return false;
+        settings.sharp_mode = parsed["Unsharp"]["sharp_mode"].as_integer();
+        if (settings.sharp_mode < -1 || settings.sharp_mode > 1) {
+            LOG(error) << "Error parsing settings file: [Unsharp] section: \"sharp_mode\" key value is out of range." << std::endl;
+            return false;
+        }
+        if (!check("Unsharp", "sharp_kernel")) return false;
+        settings.sharp_kernel = parsed["Unsharp"]["sharp_kernel"].as_integer();
+        if (settings.sharp_kernel < 0 || settings.sharp_kernel > 12) {
+			LOG(error) << "Error parsing settings file: [Unsharp] section: \"sharp_kernel\" key value is out of range." << std::endl;
+			return false;
+		}
+        if (!check("Unsharp", "sharp_width")) return false;
+        settings.sharp_width = parsed["Unsharp"]["sharp_width"].as_floating();
+        if (settings.sharp_width < 0.0f ) {
+            LOG(error) << "Error parsing settings file: [Unsharp] section: \"sharp_width\" key value should be positive float" << std::endl;
+        }
+        if (!check("Unsharp", "sharp_contrast")) return false;
+        settings.sharp_contrast = parsed["Unsharp"]["sharp_contrast"].as_floating();
+        if (settings.sharp_contrast < 0.0f ) {
+			LOG(error) << "Error parsing settings file: [Unsharp] section: \"sharp_contrast\" key value should be positive float" << std::endl;
+			return false;
+		}
+        if (!check("Unsharp", "sharp_treshold")) return false;
+        settings.sharp_tresh = parsed["Unsharp"]["sharp_treshold"].as_floating();
+        if (settings.sharp_tresh < 0.0f) {
+            LOG(error) << "Error parsing settings file: [Unsharp] section: \"sharp_treshold\" key value should bepositive float" << std::endl;
         }
 
         return true;

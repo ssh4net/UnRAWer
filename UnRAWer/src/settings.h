@@ -43,9 +43,9 @@ struct Settings {
 	std::vector<std::string> out_formats = { "tif", "exr", "png", "jpg", "jp2", "ppm" };
 	std::string ocioConfig, dLutPreset;
 	std::map<std::string, std::string> lut_Preset;
-	const std::string sharp_kerns[12] = {"gaussian", "sharp-gaussian", "box", "triangle",
+	const std::string sharp_kerns[13] = {"gaussian", "sharp-gaussian", "box", "triangle",
 		"blackman-harris", "mitchell", "b-spline", "catmull-rom", "lanczos3",
-		"disk", "binomial", "laplacian" };
+		"disk", "binomial", "laplacian", "median" };
 	uint sharp_kernel;		// index of the kernel in sharp_kerns[] array
 	float sharp_width;
 	float sharp_contrast;

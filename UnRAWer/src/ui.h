@@ -91,6 +91,8 @@ private slots:
     void sharpSettings();
     void sharpKSettings();
 
+    void prntSettings();
+
 private:
     QFutureWatcher<bool> processingWatcher;
     QProgressBar* progressBar;

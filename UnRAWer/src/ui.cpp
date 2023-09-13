@@ -132,6 +132,9 @@ MainWindow::MainWindow() {
     con_enable->setCheckable(true);
     con_enable->setChecked(settings.conEnable);
 
+    QAction* prnt_settings = new QAction("Print Settings", s_menu);
+    prnt_settings->setCheckable(false);
+
     QAction* useSubfldr = new QAction("Export Subfolders", o_menu);
     useSubfldr->setCheckable(true);
     useSubfldr->setChecked(settings.useSbFldr);
@@ -267,6 +270,8 @@ MainWindow::MainWindow() {
     s_menu->addMenu(verb_submenu);
     s_menu->addSeparator();
     s_menu->addAction(con_enable);
+    s_menu->addSeparator();
+    s_menu->addAction(prnt_settings);
 	//
     p_menu->addMenu(raw_submenu);
     p_menu->addMenu(dem_submenu);
@@ -339,6 +344,7 @@ MainWindow::MainWindow() {
 	}
 
     connect(con_enable, &QAction::toggled, this, &MainWindow::toggleConsole);
+    connect(prnt_settings, &QAction::triggered, this, &MainWindow::prntSettings);
     connect(useSubfldr, &QAction::toggled, this, &MainWindow::toggleSubfldr);
     // Add new connection for updating the textOutput
     connect(this, &MainWindow::updateTextSignal, textOutput, &QPlainTextEdit::setPlainText);
@@ -365,6 +371,9 @@ void MainWindow::verbLevel() {
 			break;
 		}
 	}
+}
+void MainWindow::prntSettings(){
+    printSettings(settings);
 }
 
 void MainWindow::bitSettings() {
