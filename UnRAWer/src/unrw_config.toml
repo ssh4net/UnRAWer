@@ -73,21 +73,25 @@ RawRotation = -1
 # 10 - Rec2020 (LibRaw >= 0.2)
 RawColorSpace = 1
 # Demosaic (only some of this methods are available)
-# 0 - none,
-# 1 - linear
-# 2 - VNG
-# 3 - PPG
-# 4 - AHD (default)
-# 5 - DCB
-# 6 - AHD-Mod
-# 7 - AFD
-# 8 - VCD
-# 9 - Mixed
-# 10 - LMMSE
-# 11 - AMaZE
-# 12 - DHT
-# 13 - AAHD
-Demosaic = 5
+# -2 - raw data (Single channel)
+# -1 - no demosaic (RGB)
+# 0 - linear 
+# 1 - VNG
+# 2 - PPG
+# 3 - AHD (default)
+# 4 - DCB
+# 5 ~ 10 is not used
+# 11 - DHT
+# 12 - AAHD (Modified AHD)
+Demosaic = 3
+# Import Camera RAW in half resolution
+half_size = false
+# use_camera_wb
+# use_camera_matrix
+# highlight
+# aber[0]
+# aber[1]
+# exp_correc
 
 [OCIO]
 # OCIO settings

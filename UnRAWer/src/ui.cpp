@@ -139,6 +139,10 @@ MainWindow::MainWindow() {
     useSubfldr->setCheckable(true);
     useSubfldr->setChecked(settings.useSbFldr);
 
+    QAction* halfSizeRaw = new QAction("Half Resolution", p_menu);
+    halfSizeRaw->setCheckable(true);
+    halfSizeRaw->setChecked(settings.rawParms.half_size == 0 ? false : true);
+
     // Submenu
     QMenu* rng_submenu = new QMenu("Floats type", o_menu);
     QMenu* fmt_submenu = new QMenu("Formats", o_menu);
@@ -217,11 +221,12 @@ MainWindow::MainWindow() {
     }
     // demosaic
     std::vector<std::pair<const QString, int>> demMenu = {
-        // "raw data", "none", "linear", "VNG", "PPG", "AHD", "DCB", "AHD-Mod", "AFD", "VCD", "Mixed", "LMMSE", "AMaZE", "DHT", "AAHD"
-        {"RAW data", 0}, {"none", 1}, {"linear", 2}, {"VNG", 3}, {"PPG", 4},
-        {"AHD", 5}, {"DCB", 6}, {"AHD-Mod", 7}, {"AFD", 8}, 
-        {"VCD", 9}, {"Mixed", 10}, {"LMMSE", 11}, {"AMaZE", 12}, 
-        {"DHT", 13}, {"AAHD", 14} };
+        // "raw data", "none", "linear", "VNG", "PPG", "AHD", "DCB", "", "", "", "", "", "", "DHT", "AAHD"
+        {"RAW data", -2}, {"none", -1}, {"linear", 0}, {"VNG", 1}, {"PPG", 2},
+        {"AHD", 3}, {"DCB", 4}, 
+        //{"", 5}, {"", 6}, 
+        //{"", 7}, {"", 8}, {"", 9}, {"", 10}, 
+        {"DHT", 11}, {"AAHD", 12} };
     for (auto& [title, value] : demMenu) {
         QAction* action = createAction(title, DemGroup, dem_submenu, true, (settings.dDemosaic == value));
         demActions.push_back(action);
@@ -282,6 +287,8 @@ MainWindow::MainWindow() {
     p_menu->addSeparator();
     p_menu->addMenu(sharp_submenu);
     p_menu->addMenu(sharp_k_submenu);
+    p_menu->addSeparator();
+    p_menu->addAction(halfSizeRaw);
     p_menu->addSeparator();
     //
     o_menu->addMenu(rng_submenu);
@@ -346,6 +353,7 @@ MainWindow::MainWindow() {
     connect(con_enable, &QAction::toggled, this, &MainWindow::toggleConsole);
     connect(prnt_settings, &QAction::triggered, this, &MainWindow::prntSettings);
     connect(useSubfldr, &QAction::toggled, this, &MainWindow::toggleSubfldr);
+    connect(halfSizeRaw, &QAction::toggled, this, &MainWindow::halfSizeSettings);
     // Add new connection for updating the textOutput
     connect(this, &MainWindow::updateTextSignal, textOutput, &QPlainTextEdit::setPlainText);
 
@@ -480,14 +488,22 @@ void MainWindow::rawSettings() {
 	}
 }
 
+void MainWindow::halfSizeSettings(bool checked) {
+
+		settings.rawParms.half_size = checked ? 1 : 0;
+		emit updateTextSignal(QString("Half size raw - %1 ").arg(checked ? "Enabled" : "Disabled"));
+        qDebug() << qPrintable(QString("Half size raw - %1 ").arg(checked ? "Enabled" : "Disabled"));
+
+}
+
 void MainWindow::demSettings() {
     std::vector<std::pair<QString, int>> actionMap = { 
-        // "raw data", "none", "linear", "VNG", "PPG", "AHD", "DCB", "AHD-Mod", "AFD", "VCD", "Mixed", "LMMSE", "AMaZE", "DHT", "AAHD"
-        {"raw data", 0}, {"none", 1}, {"linear", 2}, {"VNG", 3},
-        {"PPG", 4},  {"AHD", 5},    {"DCB", 6}, 
-        {"AHD-Mod", 7}, {"AFD", 8}, {"VCD", 9}, 
-        {"Mixed", 10}, {"LMMSE", 11}, {"AMaZE", 12}, 
-        {"DHT", 13}, {"AAHD", 14}
+        // "raw data", "none", "linear", "VNG", "PPG", "AHD", "DCB", "", "", "", "", "", "", "DHT", "AAHD"
+        {"raw data", -2}, {"none", -1}, {"linear", 0}, {"VNG", 2},
+        {"PPG", 2},  {"AHD", 3},    {"DCB", 4}, 
+        //{"", 5}, {"", 6}, {"", 7}, 
+        //{"", 8}, {"", 9}, {"", 10},
+        {"DHT", 11}, {"AAHD", 12}
     };
     QAction* action = qobject_cast<QAction*>(sender());
     for (int i = 0; i < demActions.size() && i < actionMap.size(); ++i) {

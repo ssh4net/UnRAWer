@@ -110,11 +110,18 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
     std::vector<std::shared_ptr<ProcessingParams>> processingList(fileNames.size());            // Initialize the list
 
     fileCntr = fileNames.size() * 5; // 5 queues
-    QString progressText = QString("Processing %1 files...\n").arg(fileNames.size()) +
-        QString("Processing steps: Load -> %1 %2 %3 Export").
-        arg(settings.dDemosaic ? "Demosaic -> " : "").
-        arg(settings.lutMode > -1 ? "Lut -> " : "").
-        arg(settings.sharp_mode > -1 ?"Unsharp -> " : "");
+    QString processText = "Processing steps : Load -> ";
+    if (settings.dDemosaic > -1) {
+		processText += "Demosaic -> ";
+        if (settings.lutMode > -1) {
+            processText += "Lut -> ";
+        }
+        if (settings.sharp_mode > -1) {
+			processText += "Unsharp -> ";
+		}
+	}
+    processText += "Export";
+    QString progressText = QString("Processing %1 files...\n").arg(fileNames.size()) + processText;
     
     mainWindow->emitUpdateTextSignal(progressText);
     myPools["progress"]->enqueue(doProgress, &fileCntr, fileNames.size(), progressBar, mainWindow);

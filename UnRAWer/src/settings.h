@@ -36,7 +36,8 @@ struct Settings {
 	int fileFormat, defFormat;
 	int bitDepth, defBDepth;
 	int rawRot;
-	uint rawSpace, dDemosaic, numThreads;
+	uint rawSpace, numThreads;
+	int dDemosaic;
 	float mltThreads;
 	uint verbosity;
 
@@ -54,7 +55,17 @@ struct Settings {
 	const int raw_rot[5] = { -1, 0, 3, 5, 6 }; // -1 - Auto EXIF, 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CW Vertical, 6 - 90 CCW Vertical
 	const uint rngConv[4] = { 0, 1, 2, 3}; // 0 - unsigned, 1 - signed, 2 - unsigned -> signed, 3 - signed -> unsigned
 	const std::string rawCspace[11] = { "Raw", "sRGB", "sRGB-linear", "Adobe", "Wide", "ProPhoto", "ProPhoto-linear", "XYZ", "ACES", "DCI-P3", "Rec2020" };
-	const std::string demosaic[15] = { "raw data", "none", "linear", "VNG", "PPG", "AHD", "DCB", "AHD-Mod", "AFD", "VCD", "Mixed", "LMMSE", "AMaZE", "DHT", "AAHD"};
+	const std::string demosaic[15] = { "raw data", "none", "linear", "VNG", "PPG", "AHD", "DCB", "", "", "", "", "", "", "DHT", "AAHD"};
+
+	struct rawparms {
+		int use_camera_wb;
+		int use_camera_matrix;
+		int highlight;
+		float aber[2];
+		float exp_correc;
+		int half_size;
+		float denoise_thr;
+	} rawParms;
 
 	Settings() {
 		reSettings();
@@ -77,7 +88,7 @@ struct Settings {
 		
 		rawRot = -1;		// Raw rotation: -1 - Auto EXIF, 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CW Vertical, 6 - 90 CCW Vertical
 		rawSpace = 1;
-		dDemosaic = 5;
+		dDemosaic = 3;
 		
 		ocioConfig = "";
 
@@ -86,6 +97,18 @@ struct Settings {
 		sharp_width = 3.0f;
 		sharp_contrast = 0.5f;
 		sharp_tresh = 0.125f;
+
+		rawParms.use_camera_wb = 1;		// If possible, use the white balance from the camera. 
+		rawParms.use_camera_matrix = 1;
+		// 0: do not use embedded color profile
+		// 1 (default) : use embedded color profile(if present) for DNG files(always); for other files only if use_camera_wb is set;
+		// 3: use embedded color data(if present) regardless of white balance setting.
+		rawParms.highlight = 0;			// 0-9: Highlight mode (0=clip, 1=unclip, 2=blend, 3+=rebuild).
+		rawParms.aber[0] = 1.0f;
+		rawParms.aber[1] = 1.0f;
+		rawParms.exp_correc = 1.0f;
+		rawParms.half_size = 0;			// Half-size raw image (1=yes). For some formats, it affects RAW data reading.
+		rawParms.denoise_thr = 0.0f;	// Threshold for wavelet denoising
 	}
 
 	// get bit depth in bytes

@@ -86,13 +86,14 @@ std::optional<std::string> getPresetfromName(const QString& fileName, Settings* 
     return std::nullopt;
 }
 
-std::pair<QString, QString> getOutName(QString& path, QString& baseName, QString& extension, QString& prest_sfx, Settings* settings) {
+std::tuple<QString, QString, QString> getOutName(QString& path, QString& baseName, QString& extension, QString& prest_sfx, Settings* settings) {
     //QFileInfo fileInfo(fileName);
     //QString baseName = fileInfo.baseName();
     //QString path = fileInfo.absolutePath();
     QString outPath = path;
     QString outName = baseName;
     QString proc_sfx = "_conv";
+    QString outExt;
     if (prest_sfx != "") {
         if (prest_sfx.startsWith("_")) {
             prest_sfx = prest_sfx.replace(QRegularExpression("_{2,}"), "_");
@@ -102,12 +103,14 @@ std::pair<QString, QString> getOutName(QString& path, QString& baseName, QString
 			proc_sfx = "_" + prest_sfx;
 		}
     }
+
+    outExt = getExtension(extension, settings);
+
     if (settings->useSbFldr) {
         outPath += "/" + proc_sfx;
-        outName += getExtension(extension, settings);
     }
     else {
-        outName += proc_sfx + getExtension(extension, settings);
+        outName += proc_sfx;
     }
-    return { outPath , outName };
+    return { outPath , outName, outExt };
 }

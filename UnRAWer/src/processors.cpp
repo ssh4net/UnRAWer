@@ -64,7 +64,7 @@ void Sorter(int index, QString fileName, std::shared_ptr<ProcessingParams>& proc
         // LUT mode set to auto and file or path contains LUT preset name
         prest_sfx = lut_preset.value().c_str();
     }
-    auto [outPath, outName] = getOutName(path, baseName, extension, prest_sfx, &settings);
+    auto [outPath, outName, outExt] = getOutName(path, baseName, extension, prest_sfx, &settings);
     
     auto [exist, path_idx] = outpaths.try_add(outPath.toStdString());
     if (!exist) {
@@ -72,8 +72,9 @@ void Sorter(int index, QString fileName, std::shared_ptr<ProcessingParams>& proc
     }
     processing->outPathIdx = path_idx;
     processing->outFile = outName.toStdString();
+    processing->outExt = outExt.toStdString();
     processing->lut_preset = lut_preset.value_or("");
-    LOG(debug) << "PRE: Preprocessing file " << processing->srcFile << " > " << outpaths.get_path(path_idx) + "/" + processing->outFile << std::endl;
+    LOG(debug) << "PRE: Preprocessing file " << processing->srcFile << " > " << outpaths.get_path(path_idx) + "/" + processing->outFile + processing->outExt << std::endl;
 
     processing_entry = processing;
     processing->setStatus(ProcessingStatus::Prepared);
@@ -159,6 +160,18 @@ void Unpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry, st
     processing->raw_data = raw_ptr;
     LibRaw* raw = raw_ptr.get();
 
+    raw->imgdata.params.use_camera_wb = settings.rawParms.use_camera_wb;
+    raw->imgdata.params.use_camera_matrix = settings.rawParms.use_camera_matrix;
+    raw->imgdata.params.highlight = settings.rawParms.highlight;
+    raw->imgdata.params.aber[0] = settings.rawParms.aber[0];
+    raw->imgdata.params.aber[1] = settings.rawParms.aber[1];
+    raw->imgdata.params.exp_correc = settings.rawParms.exp_correc;
+    raw->imgdata.params.half_size = settings.rawParms.half_size;
+
+    raw->imgdata.params.output_color = settings.rawSpace;
+
+    raw->imgdata.params.user_flip = settings.rawRot;
+
     int ret = raw->open_buffer(raw_buffer->data(), raw_buffer->size());
     if (ret != LIBRAW_SUCCESS) {
         LOG(error) << "Unpack: Cannot read buffer: " << processing->srcFile << std::endl;
@@ -175,12 +188,13 @@ void Unpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry, st
 
     (*fileCntr)--;
 
-    if (settings.dDemosaic > 0) {
+    if (settings.dDemosaic > -2) {
         (*myPools)["demosaic"]->enqueue(Demosaic, index, processing_entry, fileCntr, myPools);
     }
     else {
         (*fileCntr)--; // no demosaic, so we can skip the processor
-        (*myPools)["processor"]->enqueue(Processor, index, processing_entry, fileCntr, myPools);
+        (*fileCntr)--; // no demosaic, so we can skip the writer
+        (*myPools)["processor"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
     }
 }
 
@@ -192,28 +206,39 @@ void Demosaic(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 
     auto& raw_parms = raw->imgdata.params;
 
-    if (settings.dDemosaic > 0) {
+    if (settings.dDemosaic == -1) {
 
         raw_parms.output_bps = 16;
-        raw_parms.user_qual = settings.dDemosaic - 1;
-
-        if (settings.dDemosaic == 1)
-            raw_parms.no_interpolation = 1;
+        raw_parms.user_qual = settings.dDemosaic;
+        raw_parms.no_interpolation = 1;
 
         if (raw->dcraw_process() != LIBRAW_SUCCESS) {
             LOG(error) << "Unpack: Cannot process data from file" << processing->srcFile << std::endl;
             return;
         }
         processing->setStatus(ProcessingStatus::Demosaiced);
-    }
-    else {
-        raw_parms.user_qual = settings.dDemosaic - 1;
-        raw_parms.no_interpolation = 1;
-        LOG(warning) << "Demosaic: Using Raw Data" << std::endl;
-    }
 
-    (*fileCntr)--;
-    (*myPools)["processor"]->enqueue(Processor, index, processing_entry, fileCntr, myPools);
+        (*fileCntr)--;
+        (*fileCntr)--;
+        (*myPools)["writer"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
+    }
+    else if (settings.dDemosaic > -1) {
+        raw_parms.output_bps = 16;
+        raw_parms.user_qual = settings.dDemosaic;
+
+        if (raw->dcraw_process() != LIBRAW_SUCCESS) {
+            LOG(error) << "Unpack: Cannot process data from file" << processing->srcFile << std::endl;
+            return;
+        }
+        processing->setStatus(ProcessingStatus::Demosaiced);
+
+        (*fileCntr)--;
+        (*myPools)["processor"]->enqueue(Processor, index, processing_entry, fileCntr, myPools);
+	}
+    else {
+        LOG(error) << "Unpack: Unknown demosaic mode" << std::endl;
+        return;
+    }
 }
 
 void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
@@ -269,18 +294,32 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     //LibRaw& raw = processing->raw_data;
     std::shared_ptr<LibRaw> raw = processing->raw_data;
 
-    if (!makePath(processing->outFile)) {
-        LOG(error) << "Writer: Cannot create output directory" << processing->outFile << std::endl;
+    // Check if the output path exists and create it if not
+    std::string outDir = outpaths.get_path(processing->outPathIdx);
+    if (!outpaths.get_path_status(processing->outPathIdx)) {
+        // check if outFilePath folder exists
+        QDir dir(QString::fromStdString(outDir));
+        if (!dir.exists()) {
+            dir.mkpath(".");
+        }
+        outpaths.set_path_status(processing->outPathIdx, true);
+    }
+
+    std::string outFilePath = outDir + "/" + processing->outFile + processing->outExt;
+
+    if (!makePath(outDir)) {
+        LOG(error) << "Writer: Cannot create output directory" << outFilePath << std::endl;
 		return;
     };
 
-    LOG(info) << "Writer: Writing data to file: " << processing->outFile << std::endl;
-    if (settings.dDemosaic == 0) {
+    LOG(info) << "Writer: Writing data to file: " << outFilePath << std::endl;
+    if (settings.dDemosaic == -2) {
         // Write raw data to a file
         // TODO: move this to OIIO writer to fix file format issue and byte order
-        std::ofstream output(processing->outFile+".ppm", std::ios::binary); // hack to add .ppm extension
+        outFilePath = outDir + "/" + processing->outFile + ".ppm";
+        std::ofstream output(outFilePath, std::ios::binary); // hack to add .ppm extension
         if (!output) {
-            LOG(error) << "Writer: Cannot open output file" << processing->outFile << std::endl;
+            LOG(error) << "Writer: Cannot open output file " << outFilePath << std::endl;
             return;
         }
 
@@ -304,23 +343,26 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 
         output.close();
     }
-    else if (settings.dDemosaic == 1) // writing color ppm/tiff using dcraw_ppm_tiff_writer
+    else if (settings.dDemosaic == -1) // writing color ppm/tiff using dcraw_ppm_tiff_writer
     {
         if (settings.fileFormat == -1) {
-            if (settings.defFormat == 0)
+            if (settings.defFormat == 0) {
                 raw->imgdata.params.output_tiff = 1; // TIF
-            else if (settings.defFormat == 5)
+            }
+            else if (settings.defFormat == 5) {
                 raw->imgdata.params.output_tiff = 0; // PPM
+            }
             else {
-                LOG(error) << "Writer: Unknown file format" << std::endl;
-                processing->raw_data.reset();
-                return;
+                LOG(error) << "Writer: Unknown file format. Format changed to *.tif" << std::endl;
+                outFilePath = outDir + "/" + processing->outFile + ".tif";
+                //processing->raw_data.reset();
+                //return;
             }
         }
 
-        int ret = raw->dcraw_ppm_tiff_writer(processing->outFile.c_str());
+        int ret = raw->dcraw_ppm_tiff_writer(outFilePath.c_str());
         if (ret != LIBRAW_SUCCESS) {
-            LOG(error) << "Writer: Cannot write image to file" << processing->outFile << std::endl;
+            LOG(error) << "Writer: Cannot write image to file " << outFilePath << std::endl;
             processing->raw_data.reset();
             return;
         }
@@ -329,20 +371,10 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         //////////////////////////////////////////////////
         /// Image saving
         /// 
-        std::string outDir = outpaths.get_path(processing->outPathIdx);
-        std::string outFilePath = outDir + "/" + processing->outFile;
 
-        if (!outpaths.get_path_status(processing->outPathIdx)) {
-            // check if outFilePath folder exists
-            QDir dir(QString::fromStdString(outDir));
-            if (!dir.exists()) {
-                dir.mkpath(".");
-            }
-            outpaths.set_path_status(processing->outPathIdx, true);
-		}
         bool write_ok = img_write(*processing->image, outFilePath, TypeDesc::UINT16, TypeDesc::UINT16, nullptr, nullptr);
         if (!write_ok) {
-            LOG(error) << "Error writing " << processing->outFile << std::endl;
+            LOG(error) << "Error writing " << outFilePath << std::endl;
             //mainWindow->emitUpdateTextSignal("Error! Check console for details");
             return;
         }
@@ -358,7 +390,7 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     }
 
     processing->setStatus(ProcessingStatus::Written);
-    LOG(debug) << "Writer: Finished writing data to file: " << processing->outFile << std::endl;
+    LOG(debug) << "Writer: Finished writing data to file: " << outFilePath << std::endl;
     processing->raw_data.reset();
 
     (*fileCntr)--;

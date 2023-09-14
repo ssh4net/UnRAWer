@@ -104,7 +104,8 @@ struct ProcessingParams {
     // File paths:
     std::string srcFile; // Source file full path name
     int outPathIdx;      // Index of the output path in the vector of output paths
-    std::string outFile; // Output file name with extension
+    std::string outFile; // Output file name without extension
+    std::string outExt;  // Output file name extension
     // RAW image pointer
     
     //LibRaw raw_data;
@@ -167,5 +168,5 @@ std::tuple<QString, QString, QString, QString> splitPath(const QString& fileName
 
 std::optional<std::string> getPresetfromName(const QString& fileName, Settings* settings);
 
-std::pair<QString, QString> getOutName(QString& path, QString& baseName, QString& extension, QString& prest_sfx, Settings* settings);
+std::tuple<QString, QString, QString> getOutName(QString& path, QString& baseName, QString& extension, QString& prest_sfx, Settings* settings);
 

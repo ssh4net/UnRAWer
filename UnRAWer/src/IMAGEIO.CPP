@@ -303,6 +303,18 @@ bool img_write(ImageBuf& out_buf, const std::string& outputFileName, TypeDesc ou
     ImageSpec& ospec = out_buf.specmod();
 
     //rspec.attribute("oiio:BitsPerSample", bits);
+    /*
+    "scene_linear" : Color pixel values are known to be scene-linear and using facility-default color primaries as defined by the OpenColorIO configuration. Note that "linear" is treated as a synonym. (Note: when no color config is found, this are presumed to use sRGB/Rec709 color primaries when built against OpenColorIO 2.1 or earlier, or when no OCIO support is available, but is presumed to be ACEScg when built against OCIO 2.2 or higher and using its built-in config.)
+    "lin_srgb" : Color pixel values are known to be linear and using sRGB/Rec709 color primaries.
+    "sRGB" : Using standard sRGB response and primaries.
+    "Rec709" : Using standard Rec709 response and primaries.
+    "ACEScg" : ACEScg color space encoding.
+    "AdobeRGB" : Adobe RGB color space.
+    "KodakLog" : Kodak logarithmic color space.
+    "GammaX.Y" : Color values have been gamma corrected (raised to the power ). The X.Y is the numeric value of the gamma exponent.
+    arbitrary : The name of any color space known to OpenColorIO (if OCIO support is present).
+    */
+    ospec.attribute("oiio:ColorSpace", "lin_srgb");
     ospec.attribute("pnm:binary", 1);
     ospec.attribute("oiio:UnassociatedAlpha", 1);
     ospec.attribute("jpeg:subsampling", "4:4:4");

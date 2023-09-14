@@ -116,7 +116,7 @@ bool loadSettings(Settings& settings, const std::string& filename) {
             return false;
         }
         if (!check("Export", "DefaultBit")) return false;
-        settings.defBDepth = parsed["Export"]["DefaultBit"].as_integer();// ://.value_or(1);
+        settings.defBDepth = parsed["Export"]["DefaultBit"].as_integer();;
         if (settings.defBDepth < 0 || settings.defBDepth > 6) {
             LOG(error) << "Error parsing settings file: [Export] section: \"DefaultBit\" key value is out of range." << std::endl;
             return false;
@@ -129,23 +129,25 @@ bool loadSettings(Settings& settings, const std::string& filename) {
         }
         // CameraRaw
         if (!check("CameraRaw", "RawRotation")) return false;
-        settings.rawRot = parsed["CameraRaw"]["RawRotation"].as_integer();//.value_or(-1);
+        settings.rawRot = parsed["CameraRaw"]["RawRotation"].as_integer();
         if (settings.rawRot < -1 || settings.rawRot > 6) {
             LOG(error) << "Error parsing settings file: [CameraRaw] section: \"RawRotation\" key value is out of range." << std::endl;
             return false;
         }
         if (!check("CameraRaw", "RawColorSpace")) return false;
-        settings.rawSpace = parsed["CameraRaw"]["RawColorSpace"].as_integer();//.value_or(1);
+        settings.rawSpace = parsed["CameraRaw"]["RawColorSpace"].as_integer();
         if (settings.rawSpace < 0 || settings.rawSpace > 10) {
 			LOG(error) << "Error parsing settings file: [CameraRaw] section: \"RawColorSpace\" key value is out of range." << std::endl;
 			return false;
 		}
         if (!check("CameraRaw", "Demosaic")) return false;
-        settings.dDemosaic = parsed["CameraRaw"]["Demosaic"].as_integer();// .value_or(0);
-        if (settings.dDemosaic < 0 || settings.dDemosaic > 14) {
+        settings.dDemosaic = parsed["CameraRaw"]["Demosaic"].as_integer();
+        if (settings.dDemosaic < -2 || settings.dDemosaic > 12) {
             LOG(error) << "Error parsing settings file: [CameraRaw] section: \"Demosaic\" key value is out of range." << std::endl;
 			return false;
         }
+        if (!check("CameraRaw", "half_size")) return false;
+        settings.rawParms.half_size = static_cast<int>(parsed["CameraRaw"]["half_size"].as_boolean());
 
         // OCIO
         if (!check("OCIO", "ocio_Config")) return false;
@@ -296,6 +298,8 @@ void printSettings(Settings& settings) {
     };
 
     qDebug() << qPrintable(QString("Raw Rotation: %1").arg(getRawRotation(settings.rawRot)));
+    qDebug() << qPrintable(QString("Half -size raw image: %1").arg(settings.rawParms.half_size == 0 ? "disabled" : "enabled"));
+    qDebug() << qPrintable(QString("Raw Color Space: %1").arg(settings.rawSpace));
 
     qDebug() << qPrintable(QString("OCIO Config: %1").arg(settings.ocioConfig.c_str()));
 }

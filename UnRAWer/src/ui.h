@@ -75,15 +75,16 @@ private slots:
     void restartApp();
     void reloadConfig();
     
-    void toggleConsole(bool cheked);
+    void toggleConsole(bool checked);
     void verbLevel();
 
-    void toggleSubfldr(bool cheked);
+    void toggleSubfldr(bool checked);
     void startProcessing(QList<QUrl> urls);
     void rngSettings();
     void frmtSettings();
     void bitSettings();
     void rawSettings();
+    void halfSizeSettings(bool checked);
     void demSettings();
     void rclrSettings();
     void lutSettings();
