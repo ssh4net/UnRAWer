@@ -1,5 +1,7 @@
 # UnRAWer
- Small GUI utility to Batch process Camera RAW images with OpenColorIO 3D Lut support.
+ Small GUI utility to Batch process Camera RAW images with OpenColorIO 3D Lut support. A tool designed as a
+ helper tool for photogrammetry (3D scanning) image batch processing tool where speed is more important than
+ feature-rich raw image processors.
 
 ![UnRAWer2](https://github.com/ssh4net/UnRAWer/assets/3924000/798b24ff-bdac-451c-aebc-47256d0fff7a)
 
@@ -14,6 +16,12 @@
  - tool configuration via TOML config file
 
 ![UnRAWer](https://github.com/ssh4net/UnRAWer/assets/3924000/c8414525-ab87-4ce7-8110-f7a18161a658)
+
+Limitations
+-------
+For this moment all EXIF meta-data are lost on output files. To speed up (up to 10%) the process, UnRAWer 
+uses libraw buffer reading directly, that not supported in OpenImageIO libraw plugin, and metadata conversion
+between libraw and OpenImageIO is not implemented yet. 
 
 User Manual
 -------
