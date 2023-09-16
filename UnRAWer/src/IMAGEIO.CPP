@@ -314,7 +314,7 @@ bool img_write(ImageBuf& out_buf, const std::string& outputFileName, TypeDesc ou
     "GammaX.Y" : Color values have been gamma corrected (raised to the power ). The X.Y is the numeric value of the gamma exponent.
     arbitrary : The name of any color space known to OpenColorIO (if OCIO support is present).
     */
-    ospec.attribute("oiio:ColorSpace", "lin_srgb");
+    // ospec.attribute("oiio:ColorSpace", "lin_srgb");
     ospec.attribute("pnm:binary", 1);
     ospec.attribute("oiio:UnassociatedAlpha", 1);
     ospec.attribute("jpeg:subsampling", "4:4:4");

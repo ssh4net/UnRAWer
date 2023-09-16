@@ -31,6 +31,8 @@ typedef unsigned long ulong;
 
 struct Settings {
 	bool conEnable, useSbFldr;
+	std::string pathPrefix;
+
 	uint rangeMode;
 	int lutMode, sharp_mode;
 	int fileFormat, defFormat;
@@ -60,9 +62,10 @@ struct Settings {
 	struct rawparms {
 		int use_camera_wb;
 		int use_camera_matrix;
+		int use_auto_wb;
 		int highlight;
 		float aber[2];
-		float exp_correc;
+		// int exp_correc;
 		int half_size;
 		float denoise_thr;
 	} rawParms;
@@ -75,6 +78,7 @@ struct Settings {
 	void reSettings() {
 		conEnable = true;	// Console enabled/disabled
 		useSbFldr = false;	// Use subfolder for output
+		pathPrefix = "";	// Path prefix for output
 		verbosity = 3;		// Verbosity level: 0 - none, 1 - errors, 2 - warnings, 3 - info, 4 - debug, 5 - trace
 		lutMode = 0;		// LUT mode: -1 - disabled, 0 - Smart, 1 - Force
 		dLutPreset = "";	// Default LUT preset, top one
@@ -99,6 +103,7 @@ struct Settings {
 		sharp_tresh = 0.125f;
 
 		rawParms.use_camera_wb = 1;		// If possible, use the white balance from the camera. 
+		rawParms.use_auto_wb = 0;		// use auto white balance.
 		rawParms.use_camera_matrix = 1;
 		// 0: do not use embedded color profile
 		// 1 (default) : use embedded color profile(if present) for DNG files(always); for other files only if use_camera_wb is set;
@@ -106,7 +111,7 @@ struct Settings {
 		rawParms.highlight = 0;			// 0-9: Highlight mode (0=clip, 1=unclip, 2=blend, 3+=rebuild).
 		rawParms.aber[0] = 1.0f;
 		rawParms.aber[1] = 1.0f;
-		rawParms.exp_correc = 1.0f;
+		//rawParms.exp_correc = 1;
 		rawParms.half_size = 0;			// Half-size raw image (1=yes). For some formats, it affects RAW data reading.
 		rawParms.denoise_thr = 0.0f;	// Threshold for wavelet denoising
 	}

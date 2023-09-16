@@ -23,6 +23,18 @@
 
 Settings settings;
 
+bool isValidPath(const std::string& path) {
+    // List of characters not allowed in file paths.
+    const std::string disallowedChars = "<>:\"|?*";
+
+    for (char ch : path) {
+        if (disallowedChars.find(ch) != std::string::npos) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool loadSettings(Settings& settings, const std::string& filename) {
     try {
         auto parsed = toml::parse(filename);
@@ -87,6 +99,12 @@ bool loadSettings(Settings& settings, const std::string& filename) {
         if (!check("Global", "ExportSubf")) return false;
         settings.useSbFldr = parsed["Global"]["ExportSubf"].as_boolean();
 
+        if (!check("Global", "PathPrefix")) return false;
+        settings.pathPrefix = parsed["Global"]["PathPrefix"].as_string();
+        if (!isValidPath(settings.pathPrefix)) {
+            LOG(error) << "Error parsing settings file: [Global] section: \"PathPrefix\" key value contains invalid characters." << std::endl;
+        }
+
         if (!check("Global", "Verbosity")) return false;
         settings.verbosity = parsed["Global"]["Verbosity"].as_integer();
         if (settings.verbosity < 0 || settings.verbosity > 5) {
@@ -148,10 +166,33 @@ bool loadSettings(Settings& settings, const std::string& filename) {
         }
         if (!check("CameraRaw", "half_size")) return false;
         settings.rawParms.half_size = static_cast<int>(parsed["CameraRaw"]["half_size"].as_boolean());
+        if (!check("CameraRaw", "use_auto_wb")) return false;
+        settings.rawParms.use_auto_wb = static_cast<int>(parsed["CameraRaw"]["use_auto_wb"].as_boolean());
+        if (!check("CameraRaw", "use_camera_wb")) return false;
+        settings.rawParms.use_camera_wb = static_cast<int>(parsed["CameraRaw"]["use_camera_wb"].as_boolean());
+        if (!check("CameraRaw", "use_camera_matrix")) return false;
+        settings.rawParms.use_camera_matrix = parsed["CameraRaw"]["use_camera_matrix"].as_integer();
+        if (settings.rawParms.use_camera_matrix < 0 || settings.rawParms.use_camera_matrix > 3) {
+            LOG(error) << "Error parsing settings file: [CameraRaw] section: \"use_camera_matrix\" key value is out of range." << std::endl;
+            return false;
+        }
+        if (!check("CameraRaw", "highlights")) return false;
+        settings.rawParms.highlight = parsed["CameraRaw"]["highlights"].as_integer();
+        if (settings.rawParms.highlight < 0 || settings.rawParms.highlight > 9) {
+			LOG(error) << "Error parsing settings file: [CameraRaw] section: \"highlight\" key value is out of range." << std::endl;
+            return false;
+		}
+        if (!check("CameraRaw", "aberrations")) return false;
+        settings.rawParms.aber[0] = parsed["CameraRaw"]["aberrations"][0].as_floating();
+        settings.rawParms.aber[1] = parsed["CameraRaw"]["aberrations"][1].as_floating();
+        if (settings.rawParms.aber[0] < 0.0f || settings.rawParms.aber[1] < 0.0f) {
+			LOG(error) << "Error parsing settings file: [CameraRaw] section: \"aberrations\" key value should use positive floats" << std::endl;
+			return false;
+		}
 
         // OCIO
-        if (!check("OCIO", "ocio_Config")) return false;
-        settings.ocioConfig = parsed["OCIO"]["ocio_Config"].as_string();//.value_or("");
+        if (!check("OCIO", "OCIO_Config")) return false;
+        settings.ocioConfig = parsed["OCIO"]["OCIO_Config"].as_string();//.value_or("");
         // check if file exists
         if (!std::filesystem::exists(settings.ocioConfig)) {
 			LOG(error) << "Error parsing settings file: [OCIO] section: \"ocio_Config\" key value is invalid." << std::endl;
@@ -230,6 +271,8 @@ bool loadSettings(Settings& settings, const std::string& filename) {
 
 void printSettings(Settings& settings) {
     QString mode;
+    qDebug() << "--------- Settings ---------";
+
     qDebug() << "Parallel Threads: " << settings.numThreads;
     qDebug() << "Threads multiplier: " << settings.mltThreads;
 
@@ -299,7 +342,20 @@ void printSettings(Settings& settings) {
 
     qDebug() << qPrintable(QString("Raw Rotation: %1").arg(getRawRotation(settings.rawRot)));
     qDebug() << qPrintable(QString("Half -size raw image: %1").arg(settings.rawParms.half_size == 0 ? "disabled" : "enabled"));
+    qDebug() << qPrintable(QString("Use auto white balance: %1").arg(settings.rawParms.use_auto_wb == 0 ? "disabled" : "enabled"));
+    qDebug() << qPrintable(QString("Use camera white balance: %1").arg(settings.rawParms.use_camera_wb == 0 ? "disabled" : "enabled"));
+    qDebug() << qPrintable(QString("Use camera matrix: %1").arg(settings.rawParms.use_camera_matrix));
+    qDebug() << qPrintable(QString("Highlight mode: %1").arg(settings.rawParms.highlight));
+    qDebug() << qPrintable(QString("Aberrations: %1, %2")
+        .arg(QString::number(settings.rawParms.aber[0], 'f', 2))
+        .arg(QString::number(settings.rawParms.aber[1], 'f', 2)));
     qDebug() << qPrintable(QString("Raw Color Space: %1").arg(settings.rawSpace));
 
+    if (settings.pathPrefix != "") {
+        qDebug() << qPrintable(QString("Processed images will be saved to subfolder: %1").arg(settings.pathPrefix.c_str()));
+    }
+
     qDebug() << qPrintable(QString("OCIO Config: %1").arg(settings.ocioConfig.c_str()));
+
+    qDebug() << "----------------------------";
 }

@@ -91,6 +91,9 @@ std::tuple<QString, QString, QString> getOutName(QString& path, QString& baseNam
     //QString baseName = fileInfo.baseName();
     //QString path = fileInfo.absolutePath();
     QString outPath = path;
+    if (settings->pathPrefix != "") {
+		outPath += "/" + QString(settings->pathPrefix.c_str());
+	}
     QString outName = baseName;
     QString proc_sfx = "_conv";
     QString outExt;

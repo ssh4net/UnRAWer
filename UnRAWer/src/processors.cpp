@@ -165,7 +165,7 @@ void Unpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry, st
     raw->imgdata.params.highlight = settings.rawParms.highlight;
     raw->imgdata.params.aber[0] = settings.rawParms.aber[0];
     raw->imgdata.params.aber[1] = settings.rawParms.aber[1];
-    raw->imgdata.params.exp_correc = settings.rawParms.exp_correc;
+    //raw->imgdata.params.exp_correc = settings.rawParms.exp_correc;
     raw->imgdata.params.half_size = settings.rawParms.half_size;
 
     raw->imgdata.params.output_color = settings.rawSpace;
