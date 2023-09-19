@@ -111,6 +111,7 @@ MainWindow::MainWindow() {
     );
 
     QMenu* f_menu = new QMenu("Files", menuBar);
+    QMenu* r_menu = new QMenu("RAW", menuBar);
     QMenu* p_menu = new QMenu("Processing", menuBar);
     QMenu* o_menu = new QMenu("Outputs", menuBar);
     QMenu* s_menu = new QMenu("Settings", menuBar);
@@ -139,7 +140,7 @@ MainWindow::MainWindow() {
     useSubfldr->setCheckable(true);
     useSubfldr->setChecked(settings.useSbFldr);
 
-    QAction* halfSizeRaw = new QAction("Half Resolution", p_menu);
+    QAction* halfSizeRaw = new QAction("Half Resolution", r_menu);
     halfSizeRaw->setCheckable(true);
     halfSizeRaw->setChecked(settings.rawParms.half_size == 0 ? false : true);
 
@@ -147,9 +148,10 @@ MainWindow::MainWindow() {
     QMenu* rng_submenu = new QMenu("Floats type", o_menu);
     QMenu* fmt_submenu = new QMenu("Formats", o_menu);
     QMenu* bit_submenu = new QMenu("Bits Depth", o_menu);
-    QMenu* raw_submenu = new QMenu("Camera Raw", p_menu);
-    QMenu* dem_submenu = new QMenu("Demosaic", p_menu);
-    QMenu* rclr_submenu = new QMenu("RAW ColorSpace", p_menu);
+    QMenu* raw_submenu = new QMenu("RAW Rotation", r_menu);
+    QMenu* dem_submenu = new QMenu("Demosaic", r_menu);
+    QMenu* denoise_submenu = new QMenu("Denoise", r_menu);
+    QMenu* rclr_submenu = new QMenu("RAW ColorSpace", r_menu);
     QMenu* lut_submenu = new QMenu("LUT transform", p_menu);
     
     QMenu* lut_p_submenu = new QMenu("LUT Presets", lut_submenu);
@@ -164,6 +166,7 @@ MainWindow::MainWindow() {
     QActionGroup* BitsGroup = new QActionGroup(bit_submenu);
     QActionGroup* RawGroup = new QActionGroup(raw_submenu);
     QActionGroup* DemGroup = new QActionGroup(dem_submenu);
+    QActionGroup* DenoiseGroup = new QActionGroup(dem_submenu);
     QActionGroup* RclrGroup = new QActionGroup(rclr_submenu);
     QActionGroup* LutGroup = new QActionGroup(lut_submenu);
     QActionGroup* SharpGroup = new QActionGroup(sharp_submenu);
@@ -231,6 +234,12 @@ MainWindow::MainWindow() {
         QAction* action = createAction(title, DemGroup, dem_submenu, true, (settings.dDemosaic == value));
         demActions.push_back(action);
     }
+    // Denoise
+    std::vector<std::pair<const QString, uint>> denoiseMenu = { {"Disabled", 0}, {"Wavelet", 1}, {"FBDD", 2}, {"Both", 3} };
+    for (auto& [title, value] : denoiseMenu) {
+		QAction* action = createAction(title, DenoiseGroup, denoise_submenu, true, (settings.denoise_mode == value));
+        denoiseActions.push_back(action);
+	}
     // raw colorspace
     std::vector<std::pair<const QString, int>> rclrMenu = {
         // "Raw", "sRGB", "sRGB-linear", "Adobe", "Wide", "ProPhoto", "ProPhoto-linear", "XYZ", "ACES", "DCI-P3", "Rec2020"
@@ -268,6 +277,7 @@ MainWindow::MainWindow() {
     }
     //
     menuBar->addMenu(f_menu);
+    menuBar->addMenu(r_menu);
     menuBar->addMenu(p_menu);
     menuBar->addMenu(o_menu);
     menuBar->addMenu(s_menu);
@@ -278,17 +288,20 @@ MainWindow::MainWindow() {
     s_menu->addSeparator();
     s_menu->addAction(prnt_settings);
 	//
-    p_menu->addMenu(raw_submenu);
-    p_menu->addMenu(dem_submenu);
-    p_menu->addMenu(rclr_submenu);
-    p_menu->addSeparator();
+    r_menu->addMenu(raw_submenu);
+    r_menu->addMenu(dem_submenu);
+    r_menu->addMenu(rclr_submenu);
+    r_menu->addSeparator();
+    r_menu->addMenu(denoise_submenu);
+    r_menu->addSeparator();
+    r_menu->addAction(halfSizeRaw);
+    r_menu->addSeparator();
+    //
     p_menu->addMenu(lut_submenu);
     p_menu->addMenu(lut_p_submenu);
     p_menu->addSeparator();
     p_menu->addMenu(sharp_submenu);
     p_menu->addMenu(sharp_k_submenu);
-    p_menu->addSeparator();
-    p_menu->addAction(halfSizeRaw);
     p_menu->addSeparator();
     //
     o_menu->addMenu(rng_submenu);
@@ -330,6 +343,9 @@ MainWindow::MainWindow() {
 	}
     for (QAction* action : demActions) {
         connect(action, &QAction::triggered, this, &MainWindow::demSettings);
+    }
+    for (QAction* action : denoiseActions) {
+        connect(action, &QAction::triggered, this, &MainWindow::denoiseSettings);
     }
     for (QAction* action : rclrActions) {
 		connect(action, &QAction::triggered, this, &MainWindow::rclrSettings);
@@ -514,6 +530,19 @@ void MainWindow::demSettings() {
 			break;
 		}
     }
+}
+
+void MainWindow::denoiseSettings() {
+	std::vector<std::pair<QString, uint>> actionMap = { {"Disabled", 0}, {"Wavelet", 1}, {"FBDD", 2}, {"Both", 3} };
+	QAction* action = qobject_cast<QAction*>(sender());
+	for (int i = 0; i < denoiseActions.size() && i < actionMap.size(); ++i) {
+		if (action == denoiseActions[i]) {
+			settings.denoise_mode = actionMap[i].second;
+			emit updateTextSignal(QString("Denoise - %1 ").arg(actionMap[i].first));
+			qDebug() << qPrintable(QString("Denoise - %1 ").arg(actionMap[i].first));
+			break;
+		}
+	}
 }
 
 void MainWindow::rclrSettings() {

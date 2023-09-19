@@ -39,7 +39,7 @@
 #include "process.h"
 
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 42
+#define VERSION_MINOR 43
 
 void setPBarColor(QProgressBar* progressBar, const QColor& color = QColor("#05B8CC"));
 
@@ -89,6 +89,7 @@ private slots:
     void rclrSettings();
     void lutSettings();
     void lutPSettings();
+    void denoiseSettings();
     void sharpSettings();
     void sharpKSettings();
 
@@ -108,6 +109,7 @@ private:
     QList<QAction*> rawActions;
     QList<QAction*> lutActions;
     QList<QAction*> lutPActions;
+    QList<QAction*> denoiseActions;
     QList<QAction*> sharpActions;
     QList<QAction*> sharpKActions;
     QList<QAction*> rclrActions;

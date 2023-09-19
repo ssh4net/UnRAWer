@@ -189,6 +189,24 @@ bool loadSettings(Settings& settings, const std::string& filename) {
 			LOG(error) << "Error parsing settings file: [CameraRaw] section: \"aberrations\" key value should use positive floats" << std::endl;
 			return false;
 		}
+        if (!check("CameraRaw", "denoise_mode")) return false;
+        settings.denoise_mode = parsed["CameraRaw"]["denoise_mode"].as_integer();
+        if (settings.denoise_mode < 0 || settings.denoise_mode > 3) {
+			LOG(error) << "Error parsing settings file: [CameraRaw] section: \"denoise_mode\" key value is out of range." << std::endl;
+			return false;
+		}
+        if (!check("CameraRaw", "dnz_threshold")) return false;
+        settings.rawParms.denoise_thr = parsed["CameraRaw"]["dnz_threshold"].as_floating();
+        if (settings.rawParms.denoise_thr < 0.0f) {
+			LOG(error) << "Error parsing settings file: [CameraRaw] section: \"dnz_threshold\" key value should be positive float" << std::endl;
+			return false;
+		}
+        if (!check("CameraRaw", "fbdd_noiserd")) return false;
+        settings.rawParms.fbdd_noiserd = parsed["CameraRaw"]["fbdd_noiserd"].as_integer();
+        if (settings.rawParms.fbdd_noiserd < 0 || settings.rawParms.fbdd_noiserd > 3) {
+            LOG(error) << "Error parsing settings file: [CameraRaw] section: \"fbdd_noiserd\" key value is out of range." << std::endl;
+            return false;
+        }
 
         // OCIO
         if (!check("OCIO", "OCIO_Config")) return false;
@@ -349,6 +367,10 @@ void printSettings(Settings& settings) {
     qDebug() << qPrintable(QString("Aberrations: %1, %2")
         .arg(QString::number(settings.rawParms.aber[0], 'f', 2))
         .arg(QString::number(settings.rawParms.aber[1], 'f', 2)));
+    qDebug() << qPrintable(QString("Denoise mode: %1").arg(settings.denoise_mode));
+    qDebug() << qPrintable(QString("Denoise threshold: %1").arg(QString::number(settings.rawParms.denoise_thr, 'f', 2)));
+    qDebug() << qPrintable(QString("FBDD noise reduction: %1").arg(settings.rawParms.fbdd_noiserd));
+
     qDebug() << qPrintable(QString("Raw Color Space: %1").arg(settings.rawSpace));
 
     if (settings.pathPrefix != "") {

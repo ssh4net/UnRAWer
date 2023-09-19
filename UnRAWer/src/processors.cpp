@@ -172,6 +172,20 @@ void Unpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry, st
 
     raw->imgdata.params.user_flip = settings.rawRot;
 
+    if (settings.denoise_mode == 1 || settings.denoise_mode == 3) {
+        raw->imgdata.params.threshold = settings.rawParms.denoise_thr;
+	}
+	else {
+        raw->imgdata.params.threshold = 0.0f;
+	}
+    
+    if (settings.denoise_mode == 2 || settings.denoise_mode == 3) {
+        raw->imgdata.params.fbdd_noiserd = settings.rawParms.fbdd_noiserd;
+    }
+    else {
+		raw->imgdata.params.fbdd_noiserd = 0;
+	}
+
     int ret = raw->open_buffer(raw_buffer->data(), raw_buffer->size());
     if (ret != LIBRAW_SUCCESS) {
         LOG(error) << "Unpack: Cannot read buffer: " << processing->srcFile << std::endl;

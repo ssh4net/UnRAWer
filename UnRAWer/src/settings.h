@@ -35,6 +35,7 @@ struct Settings {
 
 	uint rangeMode;
 	int lutMode, sharp_mode;
+	uint denoise_mode;
 	int fileFormat, defFormat;
 	int bitDepth, defBDepth;
 	int rawRot;
@@ -106,6 +107,8 @@ struct Settings {
 		sharp_width = 3.0f;
 		sharp_contrast = 0.5f;
 		sharp_tresh = 0.125f;
+
+		denoise_mode = 1;	// 0 - disabled, 1 - wavelength, 2 - fbdd, 3 - both
 
 		rawParms.use_camera_wb = 1;		// If possible, use the white balance from the camera. 
 		rawParms.use_auto_wb = 0;		// use auto white balance.
