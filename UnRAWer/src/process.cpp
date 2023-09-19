@@ -77,8 +77,8 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
         }
     }
 
-    OIIO::ColorConfig ocio_conf(settings.ocioConfig);
-
+    OIIO::ColorConfig ocio_conf(settings.ocioConfigPath);
+    
     std::vector< std::future<bool> > results;
 
     //OutPaths outpaths_map;

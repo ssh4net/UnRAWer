@@ -107,6 +107,18 @@ highlights = 3
 # aberrations
 # Correction of chromatic aberrations; [red multiplier, blue multiplier].
 aberrations = [1.0, 1.0]
+#
+# Denoise before debayering. Do not recommended to use both wavelet denoising and FBDD noise reduction!
+#
+# threshold
+# Parameter for noise reduction through wavelet denoising.
+threshold = 0.0
+# fbdd_noiserd
+# Controls FBDD noise reduction before demosaic.
+# 0 - do not use FBDD noise reduction
+# 1 - light FBDD reduction
+# 2 (and more) - full FBDD reduction
+fbdd_noiserd = 0
 
 [OCIO]
 # OCIO settings

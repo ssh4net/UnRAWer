@@ -192,9 +192,9 @@ bool loadSettings(Settings& settings, const std::string& filename) {
 
         // OCIO
         if (!check("OCIO", "OCIO_Config")) return false;
-        settings.ocioConfig = parsed["OCIO"]["OCIO_Config"].as_string();//.value_or("");
+        settings.ocioConfigPath = parsed["OCIO"]["OCIO_Config"].as_string();//.value_or("");
         // check if file exists
-        if (!std::filesystem::exists(settings.ocioConfig)) {
+        if (!std::filesystem::exists(settings.ocioConfigPath)) {
 			LOG(error) << "Error parsing settings file: [OCIO] section: \"ocio_Config\" key value is invalid." << std::endl;
 			return false;
 		}
@@ -355,7 +355,7 @@ void printSettings(Settings& settings) {
         qDebug() << qPrintable(QString("Processed images will be saved to subfolder: %1").arg(settings.pathPrefix.c_str()));
     }
 
-    qDebug() << qPrintable(QString("OCIO Config: %1").arg(settings.ocioConfig.c_str()));
+    qDebug() << qPrintable(QString("OCIO Config: %1").arg(settings.ocioConfigPath.c_str()));
 
     qDebug() << "----------------------------";
 }

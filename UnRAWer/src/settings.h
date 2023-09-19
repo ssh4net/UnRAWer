@@ -44,7 +44,10 @@ struct Settings {
 	uint verbosity;
 
 	std::vector<std::string> out_formats = { "tif", "exr", "png", "jpg", "jp2", "ppm" };
-	std::string ocioConfig, dLutPreset;
+	std::string ocioConfigPath, dLutPreset;
+	
+	OIIO::ColorConfig ocio_config;
+
 	std::map<std::string, std::string> lut_Preset;
 	const std::string sharp_kerns[13] = {"gaussian", "sharp-gaussian", "box", "triangle",
 		"blackman-harris", "mitchell", "b-spline", "catmull-rom", "lanczos3",
@@ -68,6 +71,10 @@ struct Settings {
 		// int exp_correc;
 		int half_size;
 		float denoise_thr;
+		int fbdd_noiserd; // Controls FBDD noise reduction before demosaic.
+		// 0 - do not use FBDD noise reduction
+		// 1 - light FBDD reduction
+		// 2 (and more) - full FBDD reduction
 	} rawParms;
 
 	Settings() {
@@ -94,7 +101,7 @@ struct Settings {
 		rawSpace = 1;
 		dDemosaic = 3;
 		
-		ocioConfig = "";
+		ocioConfigPath = "";
 
 		sharp_mode = 1;		// Sharpening mode: -1 - disabled, 0 - Smart, 1 - Force
 		sharp_kernel = 0;
