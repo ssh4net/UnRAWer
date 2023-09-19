@@ -46,8 +46,6 @@ struct Settings {
 	std::vector<std::string> out_formats = { "tif", "exr", "png", "jpg", "jp2", "ppm" };
 	std::string ocioConfigPath, dLutPreset;
 	
-	OIIO::ColorConfig ocio_config;
-
 	std::map<std::string, std::string> lut_Preset;
 	const std::string sharp_kerns[13] = {"gaussian", "sharp-gaussian", "box", "triangle",
 		"blackman-harris", "mitchell", "b-spline", "catmull-rom", "lanczos3",

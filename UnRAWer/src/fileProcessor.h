@@ -156,6 +156,12 @@ struct ProcessingParams {
     }
 };
 
+struct ProcessGlobals {
+    std::shared_ptr<OIIO::ColorConfig> ocio_conf_ptr; // per session color config load
+};
+
+extern ProcessGlobals procGlobals;
+
 #endif // FILEPROCESSOR_H
 
 std::string toLower(const std::string& str);

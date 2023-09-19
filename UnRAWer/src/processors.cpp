@@ -265,9 +265,9 @@ void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     OIIO::ImageSpec image_spec(image->width, image->height, image->colors, OIIO::TypeDesc::UINT16);
     OIIO::ImageBuf image_buf(image_spec, image->data);
 
-    OIIO::ColorConfig ocio_conf(settings.ocioConfigPath);
+    //OIIO::ColorConfig ocio_conf(settings.ocioConfigPath);
 
-    auto [process_ok, out_buf] = imgProcessor(std::ref<ImageBuf>(image_buf), &ocio_conf, &settings.dLutPreset, processing_entry, image, nullptr, nullptr);
+    auto [process_ok, out_buf] = imgProcessor(std::ref<ImageBuf>(image_buf), procGlobals.ocio_conf_ptr.get(), &settings.dLutPreset, processing_entry, image, nullptr, nullptr);
     if (!process_ok) {
         LOG(error) << "Error processing " << processing->srcFile << std::endl;
         //mainWindow->emitUpdateTextSignal("Error! Check console for details");

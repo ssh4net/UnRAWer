@@ -25,6 +25,7 @@
 
 std::map<std::string, std::unique_ptr<ThreadPool>> myPools;
 std::atomic_size_t fileCntr;
+ProcessGlobals procGlobals;
 
 bool doProgress(std::atomic_size_t* fileCntr, size_t files, QProgressBar* progressBar, MainWindow* mainWindow) {
     while (*fileCntr > 0) {
@@ -77,9 +78,11 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
         }
     }
 
-    OIIO::ColorConfig ocio_conf(settings.ocioConfigPath);
-    
-    std::vector< std::future<bool> > results;
+    //OIIO::ColorConfig ocio_conf(settings.ocioConfigPath); // load ocio config once
+
+    procGlobals.ocio_conf_ptr = std::make_shared<OIIO::ColorConfig>(settings.ocioConfigPath);
+
+    std::vector<std::future<bool>> results;
 
     //OutPaths outpaths_map;
     ///////////////////////////////////////////////////////////////////////////////////////////
