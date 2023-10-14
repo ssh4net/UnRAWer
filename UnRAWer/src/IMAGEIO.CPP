@@ -185,14 +185,6 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
 {
     TypeDesc out_format;
 
-    // Generate a random delay
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distr(1, 1000); // delay range in milliseconds
-
-    // Sleep for the random delay
-    std::this_thread::sleep_for(std::chrono::milliseconds(distr(gen)));
-
     LOG(info) << "READ: " << inputFileName << std::endl;
     //  make this as a function
     ImageSpec config;
@@ -207,10 +199,10 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
     config["raw:ColorSpace"] = settings.rawCspace[settings.rawSpace]; // raw, sRGB, sRGB-linear (sRGB primaries, but a linear transfer function), Adobe, Wide, ProPhoto, ProPhoto-linear, XYZ, ACES (only supported by LibRaw >= 0.18), DCI-P3 (LibRaw >= 0.21), Rec2020 (LibRaw >= 0.2). (Default: sRGB)
     config["raw:Demosaic"] = settings.demosaic[settings.dDemosaic]; // linear, VNG, PPG, AHD (default), DCB, AHD-Mod, AFD, VCD, Mixed, LMMSE, AMaZE, DHT, AAHD, none
     //
-    config["raw:use_camera_wb"] = 0;     // If 1, use libraw camera white balance adjustment.
-    config["raw:use_camera_matrix"] = 0; // 0 = never, 1 (default) = only for DNG files, 3 = always.
-    config["raw:HighlightMode"] = 0;     // 0 = clip, 1 = unclip, 2 = blend, 3 = reconstruct
-    config["raw:aber"] = (1.0f, 1.0f);   //The default (1,1) means to perform no correction. This is an overall spatial scale, sensible values will be very close to 1.0.
+    config["raw:use_camera_wb"] = settings.rawParms.use_camera_wb;     // If 1, use libraw camera white balance adjustment.
+    config["raw:use_camera_matrix"] = settings.rawParms.use_camera_matrix; // 0 = never, 1 (default) = only for DNG files, 3 = always.
+    config["raw:HighlightMode"] = settings.rawParms.highlight;     // 0 = clip, 1 = unclip, 2 = blend, 3 = reconstruct
+    config["raw:aber"] = (settings.rawParms.aber[0], settings.rawParms.aber[1]);   //The default (1,1) means to perform no correction. This is an overall spatial scale, sensible values will be very close to 1.0.
     config["raw:Exposure"] = 1.0f;       // Exposure correction in stops before demosaic. Default: 1.0f
 
     ImageBuf outBuf(inputFileName, 0, 0, nullptr, &config, nullptr);
@@ -248,7 +240,7 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
             break;
 		default:
 			break;
-    } 
+    }
 
     // = TypeDesc::FLOAT;// getTypeDesc(settings.bitDepth);//TypeUnknown; //TypeDesc::FLOAT
 
@@ -297,10 +289,10 @@ bool makePath(const std::string& out_path) {
     return true;
 }
 
-bool img_write(ImageBuf& out_buf, const std::string& outputFileName, TypeDesc out_format, TypeDesc orig_format,
+bool img_write(std::shared_ptr<ImageBuf> out_buf, const std::string& outputFileName, TypeDesc out_format, TypeDesc orig_format,
                QProgressBar* progressBar, MainWindow* mainWindow) {
     
-    ImageSpec& ospec = out_buf.specmod();
+    ImageSpec& ospec = out_buf->specmod();
 
     //rspec.attribute("oiio:BitsPerSample", bits);
     /*
@@ -329,7 +321,7 @@ bool img_write(ImageBuf& out_buf, const std::string& outputFileName, TypeDesc ou
         ospec.set_format(orig_format);
     }
     else {
-        ospec.set_format(getTypeDesc(settings.bitDepth));
+        ospec.set_format(TypeDesc::UINT16); //getTypeDesc(settings.bitDepth));
     }
 
     LOG(info) << "Output file format: " << formatText(ospec.format) << std::endl;
@@ -346,7 +338,12 @@ bool img_write(ImageBuf& out_buf, const std::string& outputFileName, TypeDesc ou
 
     LOG(info) << "Writing " << outputFileName << std::endl;
 
-    out->write_image(out_format, out_buf.localpixels(), out_buf.pixel_stride(), out_buf.scanline_stride(), out_buf.z_stride(), *m_progress_callback, progressBar);
+    auto ou_px = out_buf->localpixels();
+    auto ou_pst = out_buf->pixel_stride();
+    auto ou_bst = out_buf->scanline_stride();
+    auto ou_zst = out_buf->z_stride();
+
+    out->write_image(out_format, ou_px, ou_pst, ou_bst, ou_zst, *m_progress_callback, progressBar);
     out->close();
     return true;
 }

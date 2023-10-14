@@ -105,13 +105,16 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
     myPools.emplace("progress", std::make_unique<ThreadPool>(1, 1));                            // Progress pool
     myPools.emplace("sorter", std::make_unique<ThreadPool>(preThreads, pre_size));              // Preprocessor pool
     myPools.emplace("reader", std::make_unique<ThreadPool>(readThreads, read_size));            // Reader pool
+    myPools.emplace("lReader", std::make_unique<ThreadPool>(readThreads, read_size));            // Reader pool
+    myPools.emplace("oReader", std::make_unique<ThreadPool>(readThreads, read_size));            // Reader pool
     myPools.emplace("unpacker", std::make_unique<ThreadPool>(unpackThreads, unpack_size));      // Unpacker pool
     myPools.emplace("demosaic", std::make_unique<ThreadPool>(demosaicThreads, demosaic_size));  // Demosaic pool
+    myPools.emplace("tProcessor", std::make_unique<ThreadPool>(processThreads, process_size));   // Processor pool
     myPools.emplace("processor", std::make_unique<ThreadPool>(processThreads, process_size));   // Processor pool
     myPools.emplace("writer", std::make_unique<ThreadPool>(writeThreads, write_size));          // Writer pool
 
     std::vector<std::shared_ptr<ProcessingParams>> processingList(fileNames.size());            // Initialize the list
-
+//
     fileCntr = fileNames.size() * 5; // 5 queues
     QString processText = "Processing steps : Load -> ";
     if (settings.dDemosaic > -1) {
@@ -135,75 +138,17 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
     }
 
     myPools["sorter"]->waitForAllTasks();
+    myPools["oReader"]->waitForAllTasks();
     myPools["reader"]->waitForAllTasks();
     myPools["unpacker"]->waitForAllTasks();
+    myPools["lReader"]->waitForAllTasks();
     myPools["demosaic"]->waitForAllTasks();
     myPools["processor"]->waitForAllTasks();
+    myPools["tProcessor"]->waitForAllTasks();
     myPools["writer"]->waitForAllTasks();
     myPools["progress"]->waitForAllTasks();
 
-///////////////////////////////////////////////////////////////////////////////////////////
-/* 
-    // Create a pool with 5 threads
-    ThreadPool pool(settings.numThreads > 0 ? settings.numThreads : 1);
-    //for (auto& thr_file : fileNames) {
-    for (int i = 0; i < fileNames.size(); i++) {
-        //qDebug() << "File name: " << fileName;
 
-        QString prest_sfx = "";
-        std::optional<std::string> lut_preset = getPresetfromName(fileNames[i], &settings); // std::string or std::nullopt
-        if (lut_preset.has_value()) {
-            prest_sfx = lut_preset.value().c_str();
-        }
-        else {
-            LOG(info) << "No suitable LUT preset was found from file name" << std::endl;
-        }
-
-        if (settings.lutMode > 0) {
-            // If LUT mode set to Force than use Default LUT preset
-            // find lut_preset by dLutPreset name
-            auto lut_preset_it = settings.lut_Preset.find(settings.dLutPreset);
-            if (lut_preset_it != settings.lut_Preset.end()) { // if the preset was found in the map
-                lut_preset = lut_preset_it->first; 
-                prest_sfx = lut_preset.value().c_str();
-            }
-            else
-            {
-                // lut_preset remains empty or has the value from file name
-                LOG(error) << "LUT preset " << settings.dLutPreset << " not found" << std::endl;
-            }
-        }
-        else if (settings.lutMode == 0 && lut_preset.has_value()) {
-            // LUT mode set to auto and file or path contains LUT preset name
-            prest_sfx = lut_preset.value().c_str();
-        }
-
-        QString outName = getOutName(fileNames[i], prest_sfx, &settings);
-        
-        std::string infile = fileNames[i].toStdString();
-        std::string outfile = outName.toStdString();
-
-        ProcessingParams params;
-        params.srcFile = infile;
-        params.outFile = outfile;
-        params.lut_preset = lut_preset.value_or("");
-
-        QString DebugText = "Source: " + QFileInfo(fileNames[i]).fileName() +
-                          "\nTarget: " + QFileInfo(outName).fileName();
-
-        mainWindow->emitUpdateTextSignal(DebugText);
-        // check if outName folder exists
-        QDir dir(QFileInfo(outName).absolutePath());
-        if (!dir.exists()) {
-			// make it
-            dir.mkpath(".");
-		}
-        results.emplace_back(pool.enqueue(unrawer_main, infile, outfile, &ocio_conf, &lut_preset.value_or(""), progressBar, mainWindow));
-    }
-    for (auto&& result : results) {
-        result.get();
-    }
-*/
     mainWindow->emitUpdateTextSignal("Everything Done!");
     std::cout << "Total processing time : " << f_timer.nowText() << " for " << fileNames.size() << " files." << std::endl;
     bool ok = m_progress_callback(progressBar, 0.0f);

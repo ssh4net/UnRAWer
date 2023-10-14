@@ -89,7 +89,7 @@ xcopy /y e:\DVR\bin\yaml-cpp.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\zstd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\jasper.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\bin\OpenColorIO_2_1.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenColorIO_2_4.dll "$(TargetDir)"
 
 xcopy /y e:\DVR\bin\OpenEXRUtil-3_2.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenEXR-3_2.dll "$(TargetDir)"
@@ -179,7 +179,7 @@ xcopy /y e:\DVR\bin\yaml-cppd.dll "$(TargetDir)"
 xcopy /y e:\DVR\debug\bin\zstd.dll "$(TargetDir)"
 xcopy /y e:\DVR\debug\bin\jasper.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\bin\OpenColorIO_d_2_1.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenColorIO_d_2_4.dll "$(TargetDir)"
 
 xcopy /y e:\DVR\bin\OpenEXRUtil-3_2_d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenEXR-3_2_d.dll "$(TargetDir)"

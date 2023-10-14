@@ -26,7 +26,7 @@ std::string toLower(const std::string& str) {
 
 void getWritableExt(QString* ext, Settings* settings) {
     std::unique_ptr<ImageOutput> probe;
-    QString fn = "probename." + *ext;
+    QString fn = "probename" + *ext;
     probe = ImageOutput::create(fn.toStdString());
     if (probe) {
         LOG(info) << ext->toStdString() << " is writable" << std::endl;
@@ -58,8 +58,10 @@ QString getExtension(QString& extension, Settings* settings) {
     case 5:
         return ".ppm";
     }
-    getWritableExt(&extension, settings);
-
+    //Only RAW fils are supported
+    //No need to check if extension is writable
+    //getWritableExt(&extension, settings);
+    extension = "." + QString::fromStdString(settings->out_formats[settings->defFormat]);
     return extension;
 }
 
