@@ -114,22 +114,25 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
     //myPools.emplace("OProcessor", std::make_unique<ThreadPool>(processThreads, process_size));   // Processor pool
     myPools.emplace("processor", std::make_unique<ThreadPool>(processThreads, process_size));   // Processor pool
     myPools.emplace("writer", std::make_unique<ThreadPool>(writeThreads, write_size));          // Writer pool
-    myPools.emplace("dummy", std::make_unique<ThreadPool>(1, 1));                               // Dummy "Benchmark" pool
+    //myPools.emplace("dummy", std::make_unique<ThreadPool>(1, 1));                               // Dummy "Benchmark" pool
 
     std::vector<std::shared_ptr<ProcessingParams>> processingList(fileNames.size());            // Initialize the list
 //
     fileCntr = fileNames.size() * 6; 
     // 6 queues: sorter, reader, unpacker, demosaic, processor, writer
     QString processText = "Processing steps : Load -> ";
-    if (settings.dDemosaic > -1) {
-		processText += "Demosaic -> ";
-        if (settings.lutMode > -1) {
-            processText += "Lut -> ";
+    if (settings.denoise_mode > 0) {
+        processText += "Denoise -> ";
+        if (settings.dDemosaic > -1) {
+            processText += "Demosaic -> ";
+            if (settings.lutMode > -1) {
+                processText += "Lut -> ";
+            }
+            if (settings.sharp_mode > -1) {
+                processText += "Unsharp -> ";
+            }
         }
-        if (settings.sharp_mode > -1) {
-			processText += "Unsharp -> ";
-		}
-	}
+    }
     processText += "Export";
     QString progressText = QString("Processing %1 files...\n").arg(fileNames.size()) + processText;
     
@@ -152,7 +155,7 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
     myPools["processor"]->waitForAllTasks();
     //myPools["OProcessor"]->waitForAllTasks();
     myPools["writer"]->waitForAllTasks();
-    myPools["dummy"]->waitForAllTasks();
+    //myPools["dummy"]->waitForAllTasks();
     myPools["progress"]->waitForAllTasks();
 
 
