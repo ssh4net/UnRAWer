@@ -44,8 +44,11 @@ void Reader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 void oReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 			 std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
 
-void lReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+void LReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 			 std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
+
+void LUnpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+			   std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
 
 void Unpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry, std::shared_ptr<std::vector<char>> raw_buffer_ptr,
 		      std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
@@ -53,13 +56,19 @@ void Unpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry, st
 void Demosaic(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 			  std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
 
+void Dcraw(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+	       std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
+
 void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 			   std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
 
-void tProcessor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+void OProcessor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 	std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
 
 void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 	        std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
+
+void Dummy(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+		   std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
 
 #endif // !PROCESSORS_H

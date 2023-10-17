@@ -79,7 +79,7 @@ void Sorter(int index, QString fileName, std::shared_ptr<ProcessingParams>& proc
     processing_entry = processing;
     processing->setStatus(ProcessingStatus::Prepared);
 //
-    (*myPools)["reader"]->enqueue(Reader, index, processing_entry, fileCntr, myPools);
+    (*myPools)["LReader"]->enqueue(LReader, index, processing_entry, fileCntr, myPools);
 }
 
 bool read_chunk(std::ifstream* file, std::vector<char>& raw_buffer, std::streamoff start, std::streamoff end) {
@@ -93,6 +93,7 @@ bool read_chunk(std::ifstream* file, std::vector<char>& raw_buffer, std::streamo
     return true;
 }
 
+// oiio file reader
 void oReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
             std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
 
@@ -120,7 +121,7 @@ void oReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         // LOG(info) << "ProPhoto color space" << std::endl;
         //
         config["raw:ColorSpace"] = settings.rawCspace[settings.rawSpace]; // raw, sRGB, sRGB-linear (sRGB primaries, but a linear transfer function), Adobe, Wide, ProPhoto, ProPhoto-linear, XYZ, ACES (only supported by LibRaw >= 0.18), DCI-P3 (LibRaw >= 0.21), Rec2020 (LibRaw >= 0.2). (Default: sRGB)
-        config["raw:Demosaic"] = settings.demosaic[settings.dDemosaic]; // linear, VNG, PPG, AHD (default), DCB, AHD-Mod, AFD, VCD, Mixed, LMMSE, AMaZE, DHT, AAHD, none
+        config["raw:Demosaic"] = settings.demosaic[settings.dDemosaic + 1]; // linear, VNG, PPG, AHD (default), DCB, AHD-Mod, AFD, VCD, Mixed, LMMSE, AMaZE, DHT, AAHD, none
         //
         config["raw:use_camera_wb"] = settings.rawParms.use_camera_wb;     // If 1, use libraw camera white balance adjustment.
         config["raw:use_camera_matrix"] = settings.rawParms.use_camera_matrix; // 0 = never, 1 (default) = only for DNG files, 3 = always.
@@ -128,6 +129,19 @@ void oReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         config["raw:aber"] = (settings.rawParms.aber[0], settings.rawParms.aber[1]);   //The default (1,1) means to perform no correction. This is an overall spatial scale, sensible values will be very close to 1.0.
         config["raw:Exposure"] = 1.0f;       // Exposure correction in stops before demosaic. Default: 1.0f
 
+        config["raw:half_size"] = settings.rawParms.half_size; // If nonzero, use half-size color image (but return full size bayer image). Default: 0
+        
+        // required OIIO 2.6 with libraw demosaic PR
+        // reset to defaults
+        config["raw:threshold"] = 0.0f; 
+        config["raw:fbdd_noiserd"] = 0;
+
+        if (settings.denoise_mode == 1 || settings.denoise_mode == 3) {
+			config["raw:threshold"] = settings.rawParms.denoise_thr; // Threshold for wavelet denoising (default: 0.0f)
+		}
+        if (settings.denoise_mode == 2 || settings.denoise_mode == 3) {
+            config["raw:fbdd_noiserd"] = settings.rawParms.fbdd_noiserd; // FBDD noise threshold (default: 0)
+        }
 
         ImageBuf inBuf(processing->srcFile, 0, 0, nullptr, &config, nullptr);
 
@@ -164,6 +178,8 @@ void oReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
             break;
         }
 
+        (*fileCntr)--;
+
         bool read_ok = inBuf.read(0, 0, 0, last_channel, true, o_format, nullptr, nullptr);
         if (!read_ok) {
             LOG(error) << "READ: Error! Could not read input image\n";
@@ -190,7 +206,7 @@ void oReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         //return { true, {std::make_shared<OIIO::ImageBuf>(outBuf), orig_format} };
         processing->image = std::make_shared<OIIO::ImageBuf>(inBuf);
         (*fileCntr)--;
-        (*myPools)["tProcessor"]->enqueue(tProcessor, index, processing_entry, fileCntr, myPools);
+        (*myPools)["OProcessor"]->enqueue(OProcessor, index, processing_entry, fileCntr, myPools);
 }
 
 // LibRaw buffer reader
@@ -252,7 +268,7 @@ void Reader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 }
 
 // Libraw disk reader
-void lReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+void LReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto processing = processing_entry;
 
@@ -299,12 +315,16 @@ void lReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     //int ret = raw->open_buffer(raw_buffer->data(), raw_buffer->size());
     int ret = raw->open_file(processing->srcFile.c_str());
     if (ret != LIBRAW_SUCCESS) {
-        LOG(error) << "Unpack: Cannot read buffer: " << processing->srcFile << std::endl;
+        LOG(error) << "Reader: Cannot read file: " << processing->srcFile << std::endl;
         return;
     }
 
+    (*fileCntr)--;
+    
+    (*myPools)["LUnpacker"]->enqueue(LUnpacker, index, processing_entry, fileCntr, myPools);
+/*
     LOG(info) << "Unpack: file " << processing->srcFile << std::endl;
-
+  
     ret = raw->unpack();
     if (ret != LIBRAW_SUCCESS) {
         LOG(error) << "Unpack: Cannot unpack data from file: " << processing->srcFile << std::endl;
@@ -321,10 +341,43 @@ void lReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     else {
         (*fileCntr)--; // no demosaic, so we can skip the processor
         (*fileCntr)--; // no demosaic, so we can skip the writer
-        (*myPools)["processor"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
+        (*myPools)["writer"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
+    }
+*/
+}
+
+// Libraw disk unpacker
+void LUnpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+               std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+    auto processing = processing_entry;
+    LOG(info) << "Unpack: file " << processing->srcFile << std::endl;
+
+    //LibRaw& raw = processing->raw_data;
+    //std::shared_ptr<LibRaw> raw_ptr = std::make_shared<LibRaw>();
+    //processing->raw_data = raw_ptr;
+    //LibRaw* raw = raw_ptr.get();
+
+    auto raw = processing->raw_data;
+
+    int ret = raw->unpack();
+    if (ret != LIBRAW_SUCCESS) {
+        LOG(error) << "Unpack: Cannot unpack data from file: " << processing->srcFile << std::endl;
+        return;
+    }
+
+    processing->setStatus(ProcessingStatus::Unpacked);
+
+    if (settings.dDemosaic > -2) {
+        (*fileCntr)--;
+        (*myPools)["demosaic"]->enqueue(Demosaic, index, processing_entry, fileCntr, myPools);
+    }
+    else {
+        (*fileCntr) -= 4; // can skip the writer
+        (*myPools)["writer"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
     }
 }
 
+// Libraw buffer unpacker
 void Unpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry, std::shared_ptr<std::vector<char>> raw_buffer,
               std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto processing = processing_entry;
@@ -402,53 +455,77 @@ void Demosaic(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         raw_parms.no_interpolation = 1;
 
         if (raw->dcraw_process() != LIBRAW_SUCCESS) {
-            LOG(error) << "Unpack: Cannot process data from file" << processing->srcFile << std::endl;
+            LOG(error) << "Demosaic: Cannot process data from file" << processing->srcFile << std::endl;
             return;
         }
         processing->setStatus(ProcessingStatus::Demosaiced);
 
-        (*fileCntr)--;
-        (*fileCntr)--;
+        (*fileCntr) -= 3;
         (*myPools)["writer"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
     }
     else if (settings.dDemosaic > -1) {
         raw_parms.output_bps = 16;
         raw_parms.user_qual = settings.dDemosaic;
-        auto x = raw->imgdata.rawparams.p4shot_order;
+        //auto x = raw->imgdata.rawparams.p4shot_order;
 
         if (raw->dcraw_process() != LIBRAW_SUCCESS) {
-            LOG(error) << "Unpack: Cannot process data from file" << processing->srcFile << std::endl;
+            LOG(error) << "Demosaic: Cannot process data from file" << processing->srcFile << std::endl;
             return;
         }
         processing->setStatus(ProcessingStatus::Demosaiced);
 
         (*fileCntr)--;
-        (*myPools)["processor"]->enqueue(Processor, index, processing_entry, fileCntr, myPools);
+        (*myPools)["dcraw"]->enqueue(Dcraw, index, processing_entry, fileCntr, myPools);
 	}
     else {
-        LOG(error) << "Unpack: Unknown demosaic mode" << std::endl;
+        LOG(error) << "Demosaic: Unknown demosaic mode" << std::endl;
         return;
     }
 }
 
-void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
-               std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+// libraw dcraw dcraw_make_mem_image()
+void Dcraw(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+           std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto processing = processing_entry;
+
     std::shared_ptr<LibRaw> raw = processing->raw_data;
 
-    LOG(debug) << "Processor: Processing data from file: " << processing->srcFile << std::endl;
+    LOG(debug) << "Dcraw: Processing data from file: " << processing->srcFile << std::endl;
 
     auto& raw_parms = raw->imgdata.params;
     raw_parms.output_bps = 16;
 
     //libraw_processed_image_t* image = raw->dcraw_make_mem_image();
     processing->raw_image = raw->dcraw_make_mem_image();
-    libraw_processed_image_t* image = processing->raw_image;
 
-    if (!image) {
-        LOG(error) << "Processor: Cannot process data from buffer: " << processing->srcFile << std::endl;
+    if (!processing->raw_image) {
+        LOG(error) << "Dcraw: Cannot process data from file: " << processing->srcFile << std::endl;
         return;
     }
+
+    (*fileCntr)--;
+    (*myPools)["processor"]->enqueue(Processor, index, processing_entry, fileCntr, myPools);
+}
+
+void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+               std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+
+    auto processing = processing_entry;
+    std::shared_ptr<LibRaw> raw = processing->raw_data;
+
+    LOG(debug) << "Processor: Processing data from file: " << processing->srcFile << std::endl;
+
+    //auto& raw_parms = raw->imgdata.params;
+    //raw_parms.output_bps = 16;
+
+    ////libraw_processed_image_t* image = raw->dcraw_make_mem_image();
+    //processing->raw_image = raw->dcraw_make_mem_image();
+    libraw_processed_image_t* image = processing->raw_image;
+
+    //if (!image) {
+    //    LOG(error) << "Processor: Cannot process data from fiel: " << processing->srcFile << std::endl;
+    //    return;
+    //}
 
     //raw_parms.output_color = 1;
 
@@ -478,8 +555,8 @@ void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     (*myPools)["writer"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
 }
 
-void tProcessor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
-    std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+void OProcessor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+               std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto processing = processing_entry;
 
     LOG(debug) << "Processor: Processing data from file: " << processing->srcFile << std::endl;
@@ -526,6 +603,7 @@ void tProcessor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         lut_buf_ptr = &*input_buf;
     }
 
+    (*fileCntr)--;
     // Apply denoise
     // Apply unsharp mask
 
@@ -670,6 +748,18 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     processing->setStatus(ProcessingStatus::Written);
     LOG(debug) << "Writer: Finished writing data to file: " << outFilePath << std::endl;
     processing->raw_data.reset();
+
+    (*fileCntr)--;
+}
+
+void Dummy(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+    std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+    auto processing = processing_entry;
+
+    if (!processing->rawCleared) {
+        processing->raw_data->dcraw_clear_mem(processing->raw_image);
+        processing->rawCleared = true;
+    }
 
     (*fileCntr)--;
 }

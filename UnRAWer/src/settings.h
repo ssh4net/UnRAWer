@@ -98,7 +98,7 @@ struct Settings {
 		
 		rawRot = -1;		// Raw rotation: -1 - Auto EXIF, 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CW Vertical, 6 - 90 CCW Vertical
 		rawSpace = 1;
-		dDemosaic = 3;
+		dDemosaic = 5;
 		
 		ocioConfigPath = "";
 

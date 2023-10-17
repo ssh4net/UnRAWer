@@ -97,25 +97,29 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
 
     int pre_size = 10000;
     int read_size = readThreads;        // 10
-    int unpack_size = unpackThreads;    // 36;
-    int demosaic_size = demosaicThreads;// 36;
-    int process_size = processThreads;  // 10;
+    int unpack_size = unpackThreads;    // 36
+    int demosaic_size = demosaicThreads;// 36
+    int process_size = processThreads;  // 10
     int write_size = writeThreads;      // 10
 
     myPools.emplace("progress", std::make_unique<ThreadPool>(1, 1));                            // Progress pool
     myPools.emplace("sorter", std::make_unique<ThreadPool>(preThreads, pre_size));              // Preprocessor pool
-    myPools.emplace("reader", std::make_unique<ThreadPool>(readThreads, read_size));            // Reader pool
-    myPools.emplace("lReader", std::make_unique<ThreadPool>(readThreads, read_size));            // Reader pool
-    myPools.emplace("oReader", std::make_unique<ThreadPool>(readThreads, read_size));            // Reader pool
-    myPools.emplace("unpacker", std::make_unique<ThreadPool>(unpackThreads, unpack_size));      // Unpacker pool
+    //myPools.emplace("reader", std::make_unique<ThreadPool>(readThreads, read_size));          // Reader pool
+    myPools.emplace("LReader", std::make_unique<ThreadPool>(readThreads, read_size));           // Libraw Reader pool
+    //myPools.emplace("oReader", std::make_unique<ThreadPool>(readThreads, read_size));         // Reader pool
+    //myPools.emplace("unpacker", std::make_unique<ThreadPool>(unpackThreads, unpack_size));    // Unpacker pool
+    myPools.emplace("LUnpacker", std::make_unique<ThreadPool>(unpackThreads, unpack_size));    // Unpacker pool
     myPools.emplace("demosaic", std::make_unique<ThreadPool>(demosaicThreads, demosaic_size));  // Demosaic pool
-    myPools.emplace("tProcessor", std::make_unique<ThreadPool>(processThreads, process_size));   // Processor pool
+    myPools.emplace("dcraw", std::make_unique<ThreadPool>(demosaicThreads, demosaic_size));     // dcraw Libraw pool
+    //myPools.emplace("OProcessor", std::make_unique<ThreadPool>(processThreads, process_size));   // Processor pool
     myPools.emplace("processor", std::make_unique<ThreadPool>(processThreads, process_size));   // Processor pool
     myPools.emplace("writer", std::make_unique<ThreadPool>(writeThreads, write_size));          // Writer pool
+    myPools.emplace("dummy", std::make_unique<ThreadPool>(1, 1));                               // Dummy "Benchmark" pool
 
     std::vector<std::shared_ptr<ProcessingParams>> processingList(fileNames.size());            // Initialize the list
 //
-    fileCntr = fileNames.size() * 5; // 5 queues
+    fileCntr = fileNames.size() * 6; 
+    // 6 queues: sorter, reader, unpacker, demosaic, processor, writer
     QString processText = "Processing steps : Load -> ";
     if (settings.dDemosaic > -1) {
 		processText += "Demosaic -> ";
@@ -138,14 +142,17 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
     }
 
     myPools["sorter"]->waitForAllTasks();
-    myPools["oReader"]->waitForAllTasks();
-    myPools["reader"]->waitForAllTasks();
-    myPools["unpacker"]->waitForAllTasks();
-    myPools["lReader"]->waitForAllTasks();
+    //myPools["oReader"]->waitForAllTasks();
+    //myPools["reader"]->waitForAllTasks();
+    myPools["LReader"]->waitForAllTasks();
+    //myPools["unpacker"]->waitForAllTasks();
+    myPools["LUnpacker"]->waitForAllTasks();
     myPools["demosaic"]->waitForAllTasks();
+    myPools["dcraw"]->waitForAllTasks();
     myPools["processor"]->waitForAllTasks();
-    myPools["tProcessor"]->waitForAllTasks();
+    //myPools["OProcessor"]->waitForAllTasks();
     myPools["writer"]->waitForAllTasks();
+    myPools["dummy"]->waitForAllTasks();
     myPools["progress"]->waitForAllTasks();
 
 
