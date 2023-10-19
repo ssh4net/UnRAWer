@@ -515,37 +515,90 @@ void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 
     LOG(debug) << "Processor: Processing data from file: " << processing->srcFile << std::endl;
 
-    //auto& raw_parms = raw->imgdata.params;
-    //raw_parms.output_bps = 16;
-
-    ////libraw_processed_image_t* image = raw->dcraw_make_mem_image();
-    //processing->raw_image = raw->dcraw_make_mem_image();
     libraw_processed_image_t* image = processing->raw_image;
-
-    //if (!image) {
-    //    LOG(error) << "Processor: Cannot process data from fiel: " << processing->srcFile << std::endl;
-    //    return;
-    //}
-
-    //raw_parms.output_color = 1;
 
     OIIO::ImageSpec image_spec(image->width, image->height, image->colors, OIIO::TypeDesc::UINT16);
     OIIO::ImageBuf image_buf(image_spec, image->data);
 
-    //OIIO::ColorConfig ocio_conf(settings.ocioConfigPath);
+    //auto [process_ok, out_buf] = imgProcessor(std::ref<ImageBuf>(image_buf), procGlobals.ocio_conf_ptr.get(), &settings.dLutPreset, processing_entry, image, nullptr, nullptr);
+    //if (!process_ok) {
+    //    LOG(error) << "Error processing " << processing->srcFile << std::endl;
+    //    //mainWindow->emitUpdateTextSignal("Error! Check console for details");
+    //    return;
+    //}
+    ImageBuf out_buf; // result_buf, rgba_buf, original_alpha, bit_alpha_buf;
+    ImageBuf lut_buf;
+    ImageBuf uns_buf;
+    ImageBuf* out_buf_ptr = &out_buf;
+    ImageBuf* lut_buf_ptr = &lut_buf;
+    ImageBuf* uns_buf_ptr = &uns_buf;
+    // LUT Transform
+    bool lutValid = false;
+    // check if lut_preset is not nullptr set lutValid to true
+    if (settings.dLutPreset != "") {
+        lutValid = true;
+    }
+    //auto test = input_buf.spec();
+    //std::cout << test.width << " " << test.height << " " << test.nchannels << std::endl;
+    LOG(trace) << "Input image: " << image_buf.spec().width << "x" << image_buf.spec().height << "x" << image_buf.spec().nchannels << std::endl;
+    LOG(trace) << "Input image: " << image_buf.spec().format << std::endl;
 
-    auto [process_ok, out_buf] = imgProcessor(std::ref<ImageBuf>(image_buf), procGlobals.ocio_conf_ptr.get(), &settings.dLutPreset, processing_entry, image, nullptr, nullptr);
-    if (!process_ok) {
-        LOG(error) << "Error processing " << processing->srcFile << std::endl;
-        //mainWindow->emitUpdateTextSignal("Error! Check console for details");
-        return;
+    if (settings.lutMode >= 0 && lutValid) {
+        auto lutPreset = settings.lut_Preset[settings.dLutPreset];
+        if (ImageBufAlgo::ociofiletransform(*lut_buf_ptr, image_buf, lutPreset, false, false, procGlobals.ocio_conf_ptr.get())) {
+            LOG(info) << "LUT preset " << settings.dLutPreset << " <" << lutPreset << "> " << " applied" << std::endl;
+            processing_entry->setStatus(ProcessingStatus::Graded);
+            image_buf.clear();
+            if (!processing_entry->rawCleared) {
+                processing_entry->raw_data->dcraw_clear_mem(image);
+                processing_entry->rawCleared = true;
+            }
+        }
+        else {
+            LOG(error) << "LUT not applied: " << lut_buf.geterror() << std::endl;
+            lut_buf_ptr = &image_buf;
+        }
+    }
+    else {
+        LOG(debug) << "LUT transformation disabled" << std::endl;
+        lut_buf_ptr = &image_buf;
+    }
+    
+    (*fileCntr)--;
+    
+    // Apply unsharp mask
+
+    if (settings.sharp_mode != -1) {
+        string_view kernel = settings.sharp_kerns[settings.sharp_kernel];
+        float width = settings.sharp_width;
+        float contrast = settings.sharp_contrast;
+        float threshold = settings.sharp_tresh;
+        if (ImageBufAlgo::unsharp_mask(*uns_buf_ptr, *lut_buf_ptr, kernel, width, contrast, threshold)) {
+            LOG(debug) << "Unsharp mask applied: <" << kernel.c_str() << ">" << std::endl;
+            processing_entry->setStatus(ProcessingStatus::Unsharped);
+            lut_buf_ptr->clear();
+            if (!processing_entry->rawCleared) {
+                processing_entry->raw_data->dcraw_clear_mem(image);
+                processing_entry->rawCleared = true;
+            }
+        }
+        else {
+            LOG(error) << "Unsharp mask not applied: " << uns_buf.geterror() << std::endl;
+            uns_buf_ptr = lut_buf_ptr;
+        }
+    }
+    else
+    {
+        LOG(debug) << "Unsharp mask disabled" << std::endl;
+        uns_buf_ptr = lut_buf_ptr;
     }
 
-    //raw->dcraw_clear_mem(image);
-    //raw->recycle();
-    //image_buf.clear();
+    // temp copy for saving
+    out_buf_ptr = uns_buf_ptr;
 
-    processing->image = out_buf;
+///    return { true, std::make_shared<ImageBuf>(*out_buf_ptr) };
+    ///
+    processing->image = std::make_shared<ImageBuf>(*out_buf_ptr);
     processing->outSpec = std::make_shared<OIIO::ImageSpec>(image_spec);
 
     processing->setStatus(ProcessingStatus::Processed);

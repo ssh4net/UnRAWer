@@ -118,8 +118,8 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
 
     std::vector<std::shared_ptr<ProcessingParams>> processingList(fileNames.size());            // Initialize the list
 //
-    fileCntr = fileNames.size() * 6; 
-    // 6 queues: sorter, reader, unpacker, demosaic, processor, writer
+    fileCntr = fileNames.size() * 7; 
+    // 6+1 queues: sorter, reader, unpacker, demosaic, processor (lut, unsharp), writer
     QString processText = "Processing steps : Load -> ";
     if (settings.denoise_mode > 0) {
         processText += "Denoise -> ";
