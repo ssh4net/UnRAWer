@@ -123,13 +123,13 @@ bool loadSettings(Settings& settings, const std::string& filename) {
         // Export
         if (!check("Export", "DefaultFormat")) return false;
         settings.defFormat = parsed["Export"]["DefaultFormat"].as_integer();
-        if (settings.defFormat < 0 || settings.defFormat > 5) {
+        if (settings.defFormat < 0 || settings.defFormat > 6) {
             LOG(error) << "Error parsing settings file: [Export] section: \"DefaultFormat\" key value is out of range." << std::endl;
             return false;
         }
         if (!check("Export", "FileFormat")) return false;
         settings.fileFormat = parsed["Export"]["FileFormat"].as_integer();// .value_or(-1);
-        if (settings.fileFormat < -1 || settings.fileFormat > 5) {
+        if (settings.fileFormat < -1 || settings.fileFormat > 6) {
             LOG(error) << "Error parsing settings file: [Export] section: \"FileFormat\" key value is out of range." << std::endl;
             return false;
         }

@@ -200,7 +200,7 @@ MainWindow::MainWindow() {
 	}
     // File Formats
     std::vector<std::pair<const QString, int>> frmtMenu = {
-		{"Original", -1}, {"TIFF", 0}, {"OpenEXR", 1}, {"PNG", 2}, {"JPEG", 3}, {"JPEG-2000", 4}, {"PPM", 5} };
+		{"Original", -1}, {"TIFF", 0}, {"OpenEXR", 1}, {"PNG", 2}, {"JPEG", 3}, {"JPEG-2000", 4}, {"HEIC", 5}, {"PPM", 6} };
     for (auto& [title, value] : frmtMenu) {
         QAction* action = createAction(title, FrmtGroup, fmt_submenu, true, (settings.fileFormat == value));
         frmtActions.push_back(action);
@@ -436,7 +436,8 @@ void MainWindow::frmtSettings() {
 		{"PNG",      2},
 		{"JPEG",     3},
 		{"JPEG2000", 4},
-		{"PPM",      5}
+        {"HEIC",     5},
+		{"PPM",      6}
 	};
 
     QAction* action = qobject_cast<QAction*>(sender());

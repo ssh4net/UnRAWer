@@ -39,7 +39,7 @@
 #include "process.h"
 
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 45
+#define VERSION_MINOR 46
 
 void setPBarColor(QProgressBar* progressBar, const QColor& color = QColor("#05B8CC"));
 

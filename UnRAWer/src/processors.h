@@ -21,6 +21,7 @@
 
 #include "threadpool.h"
 #include "fileProcessor.h"
+#include "libraw_oiio.h"
 
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/imagebuf.h>

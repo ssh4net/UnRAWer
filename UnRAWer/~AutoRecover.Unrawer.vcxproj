@@ -56,14 +56,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_85;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_84;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
     <LinkIncremental>true</LinkIncremental>
     <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_85;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_84;e:\GH\toml11\build\RELEASE\include</IncludePath>
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
     <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
@@ -73,6 +73,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <PreprocessorDefinitions />
+      <AdditionalOptions>-DBOOST_USE_WINAPI_VERSION=BOOST_WINAPI_VERSION_WIN7 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <QtMoc>
       <PrependInclude>$(ProjectDir)src\stdafx.h;%(PrependInclude)</PrependInclude>
@@ -99,17 +100,6 @@ xcopy /y e:\DVR\bin\Iex-3_2.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\raw_r.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\raw.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\bin\heif.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libde265.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libx265.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\kvazaar.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotlidec.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotlicommon.dll "$(TargetDir)"
-
-xcopy /fy e:\DVR\lib\bz2.dll "$(TargetDir)bz2-1.dll"*
-
-xcopy /y e:\DVR\bin\freetype.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\Ptex.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\liblzma.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\turbojpeg.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\jpeg62.dll "$(TargetDir)"
@@ -120,16 +110,16 @@ xcopy /y e:\DVR\bin\openjp2.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\libexpat.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\gif.dll "$(TargetDir)"
 
-xcopy /y e:\GH\Little-CMS\RELEASE\bin\lcms2.dll "$(TargetDir)"
+xcopy /y e:\GH\Little-CMS\bin\lcms2.dll "$(TargetDir)"
 
 xcopy /y e:\DVR\bin\OpenImageIO.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenImageIO_Util.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\lib\boost_atomic-vc143-mt-x64-1_85.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_filesystem-vc143-mt-x64-1_85.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-x64-1_85.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_log-vc143-mt-x64-1_85.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_thread-vc143-mt-x64-1_85.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_atomic-vc143-mt-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_filesystem-vc143-mt-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log-vc143-mt-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_thread-vc143-mt-x64-1_84.dll "$(TargetDir)"
 
 xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Core.dll "$(TargetDir)"
 xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Gui.dll "$(TargetDir)"
@@ -167,6 +157,7 @@ xcopy /y e:\DVR\bin\libwebpmux.dll "$(TargetDir)"</Command>
     <ClCompile>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <AdditionalOptions>-DBOOST_USE_WINAPI_VERSION=BOOST_WINAPI_VERSION_WIN7 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <QtMoc>
       <PrependInclude>$(ProjectDir)src\stdafx.h;%(PrependInclude)</PrependInclude>
@@ -199,21 +190,6 @@ xcopy /y e:\DVR\bin\Iex-3_2_d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\raw_rd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\rawd.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\bin\freetyped.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\heifd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libde265d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libx265d.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\lib\bz2d.dll "$(TargetDir)bz2-1.dll"*
-
-xcopy /y e:\DVR\bin\kvazaard.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotliencd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotlidecd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotlicommond.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\freetyped.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\Ptex_d.dll "$(TargetDir)"
 xcopy /y e:\DVR\debug\bin\liblzma.dll "$(TargetDir)"
 xcopy /y e:\DVR\debug\bin\turbojpeg.dll "$(TargetDir)"
 xcopy /y e:\DVR\debug\bin\jpeg62.dll "$(TargetDir)"
@@ -224,16 +200,16 @@ xcopy /y e:\DVR\bin\openjp2d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\libexpatd.dll "$(TargetDir)"
 xcopy /y e:\DVR\debug\bin\gif.dll "$(TargetDir)"
 
-xcopy /y e:\GH\Little-CMS\DEBUG\bin\lcms2.dll "$(TargetDir)"
+xcopy /y e:\GH\Little-CMS\debug\lcms2.dll "$(TargetDir)"
 
 xcopy /y e:\DVR\bin\OpenImageIO_d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenImageIO_Util_d.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\lib\boost_atomic-vc143-mt-gd-x64-1_85.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_filesystem-vc143-mt-gd-x64-1_85.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-gd-x64-1_85.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_log-vc143-mt-gd-x64-1_85.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_thread-vc143-mt-gd-x64-1_85.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_atomic-vc143-mt-gd-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_filesystem-vc143-mt-gd-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-gd-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log-vc143-mt-gd-x64-1_84.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_thread-vc143-mt-gd-x64-1_84.dll "$(TargetDir)"
 
 xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Cored.dll "$(TargetDir)"
 xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Guid.dll "$(TargetDir)"
@@ -318,10 +294,10 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
     <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\fileProcessor.h" />
     <ClInclude Include="src\imageio.h" />
-    <ClInclude Include="src\libraw_oiio.h" />
     <ClInclude Include="src\LOG.H" />
     <ClInclude Include="src\process.h" />
     <ClInclude Include="src\processors.h" />
+    <ClInclude Include="src\rawinport.h" />
     <ClInclude Include="src\settings.h" />
     <ClInclude Include="src\Unrawer.h" />
     <ClInclude Include="src\stdafx.h" />

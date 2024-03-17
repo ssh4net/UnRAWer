@@ -40,7 +40,8 @@ RangeMode = 0
 # 2 - PNG
 # 3 - JPEG
 # 4 - JPEG-2000
-# 5 - PPM
+# 5 - HEIC
+# 6 - PPM
 DefaultFormat = 3
 FileFormat = -1
 # Bit depth: 

@@ -97,6 +97,9 @@
     <ClInclude Include="src\processors.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\libraw_oiio.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="src\ui.h">

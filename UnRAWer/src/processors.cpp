@@ -318,7 +318,11 @@ void LReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         LOG(error) << "Reader: Cannot read file: " << processing->srcFile << std::endl;
         return;
     }
+//////////////////////////////
 
+//
+// 
+//
     (*fileCntr)--;
     
     (*myPools)["LUnpacker"]->enqueue(LUnpacker, index, processing_entry, fileCntr, myPools);
@@ -758,7 +762,7 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
             if (settings.defFormat == 0) {
                 raw->imgdata.params.output_tiff = 1; // TIF
             }
-            else if (settings.defFormat == 5) {
+            else if (settings.defFormat == 6) {
                 raw->imgdata.params.output_tiff = 0; // PPM
             }
             else {

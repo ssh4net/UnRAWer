@@ -310,8 +310,32 @@ bool img_write(std::shared_ptr<ImageBuf> out_buf, const std::string& outputFileN
     ospec.attribute("pnm:binary", 1);
     ospec.attribute("oiio:UnassociatedAlpha", 1);
     ospec.attribute("jpeg:subsampling", "4:4:4");
-    ospec.attribute("Compression", "jpeg:100");
     ospec.attribute("png:compressionLevel", 4);
+
+    switch (settings.fileFormat) {
+        case 0:
+			ospec.attribute("Compression", "zip");
+			break;
+        case 1:
+            ospec.attribute("Compression", "piz");
+            break;
+        case 2:
+            ospec.attribute("Compression", "zip");
+			break;
+        case 3:
+            ospec.attribute("Compression", "jpeg:100");
+            break;
+        case 4:
+			ospec.attribute("Compression", "jpeg2000:100"); // Not used
+			break;
+        case 5:
+            ospec.attribute("Compression", "heic:100");
+			break;
+        default:
+            ospec.attribute("Compression", "zip");
+			break;
+    }
+
     //rspec.attribute("tiff:bigtiff", 1);
     //rspec.set_format(TypeDesc::FLOAT); // temporary
     //LOG(info) << "Channels: " << rspec.nchannels << " Alpha channel: " << rspec.alpha_channel << std::endl;
