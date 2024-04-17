@@ -40,8 +40,9 @@ RangeMode = 0
 # 2 - PNG
 # 3 - JPEG
 # 4 - JPEG-2000
-# 5 - HEIC
-# 6 - PPM
+# 5 - JPEG XL
+# 6 - HEIC
+# 7 - PPM
 DefaultFormat = 3
 FileFormat = -1
 # Bit depth: 
@@ -146,11 +147,11 @@ LutDefault = "_linear"
 [LUT_Preset]
 # Presets
 # For relative path the root folder is a OCIO_Config path
-_linear = "w:/Linear.csp"
-_texture = "w:/3D_LUT.csp"
-_geometry = "w:/TestLUT.csp"
-_cross = "w:/TestLUT.csp"
-_parallel = "w:/TestLUT.csp"
+_linear = "../../LUTs/Linear.csp"
+_texture = "../../LUTs/Linear.csp"
+_geometry = "../../LUTs/Linear.csp"
+_cross = "../../LUTs/Linear.csp"
+_parallel = "../../LUTs/Linear.csp"
 
 [Unsharp]
 # Unsharp mask
