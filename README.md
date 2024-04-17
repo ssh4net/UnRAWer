@@ -12,7 +12,7 @@
  - Half Resolution camera raws import
  - Export as raw sensor data (bw), Bayers pattern (RGB) and different demosaic methods (supported in libraw)
  - Smart (per folder_suffix/filename_suffix) 3D Lut grading presets (via OpenColorIO)
- - Export as 8/16/32bit Tiff/jpeg/jpeg2000/PPM/PNG
+ - Export as 8/16/32bit int/float tiff/jpeg/jpeg2000/jpegxl/heic/PPM/PNG
  - tool configuration via TOML config file
 
 ![UnRAWer](https://github.com/ssh4net/UnRAWer/assets/3924000/c8414525-ab87-4ce7-8110-f7a18161a658)
@@ -25,6 +25,8 @@ between libraw and OpenImageIO is not implemented yet.
 
 User Manual
 -------
+Check unrw_config.toml file for different app settings.
+...
 TODO
 
 ### Required dependencies
@@ -32,8 +34,9 @@ TODO
 * LibRAW
 * OpenImageIO
 * libTIFF
-* OpenJpeg
-* libJpeg-turbo
+* OpenJpeg (jpeg2000)
+* libJpeg-turbo (jpeg)
+* libjxl (jpeg xl)
 * zlib-ng
 * QT6
 * etc.
