@@ -762,7 +762,7 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
             if (settings.defFormat == 0) {
                 raw->imgdata.params.output_tiff = 1; // TIF
             }
-            else if (settings.defFormat == 6) {
+            else if (settings.defFormat == 7) {
                 raw->imgdata.params.output_tiff = 0; // PPM
             }
             else {

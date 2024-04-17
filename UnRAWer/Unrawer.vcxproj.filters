@@ -17,6 +17,9 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>qml;cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="headers">
+      <UniqueIdentifier>{0a9acd6a-c149-4d31-8333-40925a835eff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="src\gui.qrc">
@@ -61,50 +64,45 @@
     </QtUic>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\process.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Unrawer.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Timer.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\stdafx.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\imageio.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\settings.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\threadpool.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\LOG.H">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Common.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\fileProcessor.h">
-      <Filter>src</Filter>
+    <ClInclude Include="src\libraw_oiio.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imageio.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\process.h">
+      <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="src\processors.h">
-      <Filter>src</Filter>
+      <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="src\libraw_oiio.h">
-      <Filter>src</Filter>
+    <ClInclude Include="src\settings.h">
+      <Filter>headers</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <QtMoc Include="src\ui.h">
-      <Filter>src</Filter>
-    </QtMoc>
+    <ClInclude Include="src\stdafx.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Timer.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Unrawer.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LOG.H">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\fileProcessor.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Common.h">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="src\unrw_config.toml">
@@ -115,5 +113,10 @@
     <ResourceCompile Include="Unrawer.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="src\ui.h">
+      <Filter>headers</Filter>
+    </QtMoc>
   </ItemGroup>
 </Project>

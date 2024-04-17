@@ -312,29 +312,32 @@ bool img_write(std::shared_ptr<ImageBuf> out_buf, const std::string& outputFileN
     ospec.attribute("jpeg:subsampling", "4:4:4");
     ospec.attribute("png:compressionLevel", 4);
 
-    switch (settings.fileFormat) {
-        case 0:
-			ospec.attribute("Compression", "zip");
-			break;
-        case 1:
-            ospec.attribute("Compression", "piz");
-            break;
-        case 2:
-            ospec.attribute("Compression", "zip");
-			break;
-        case 3:
-            ospec.attribute("Compression", "jpeg:100");
-            break;
-        case 4:
-			ospec.attribute("Compression", "jpeg2000:100"); // Not used
-			break;
-        case 5:
-            ospec.attribute("Compression", "heic:100");
-			break;
-        default:
-            ospec.attribute("Compression", "zip");
-			break;
-    }
+	switch (settings.fileFormat) {
+	case 0: // TIFF
+		ospec.attribute("Compression", "zip");
+		break;
+	case 1: // OpenEXR
+		ospec.attribute("Compression", "piz");
+		break;
+	case 2: // PNG
+		ospec.attribute("Compression", "zip");
+		break;
+	case 3: // JPEG
+		ospec.attribute("Compression", "jpeg:" + std::to_string(settings.quality));
+		break;
+	case 4: // JPEG-2000
+		ospec.attribute("Compression", "jpeg2000:" + std::to_string(settings.quality)); // Not used
+		break;
+	case 5: // JPEG-XL
+		ospec.attribute("Compression", "jpegxl:" + std::to_string(settings.quality));
+		break;
+	case 6: // HEIC
+		ospec.attribute("Compression", "heic:" + std::to_string(settings.quality));
+		break;
+	default:
+		ospec.attribute("Compression", "zip");
+		break;
+	}
 
     //rspec.attribute("tiff:bigtiff", 1);
     //rspec.set_format(TypeDesc::FLOAT); // temporary

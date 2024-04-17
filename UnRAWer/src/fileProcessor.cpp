@@ -56,8 +56,10 @@ QString getExtension(QString& extension, Settings* settings) {
     case 4:
         return ".jp2";
     case 5:
-        return ".heic";
+		return ".jxl";
     case 6:
+        return ".heic";
+    case 7:
         return ".ppm";
     }
     //Only RAW fils are supported

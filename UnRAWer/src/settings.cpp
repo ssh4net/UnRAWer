@@ -129,7 +129,7 @@ bool loadSettings(Settings& settings, const std::string& filename) {
         }
         if (!check("Export", "FileFormat")) return false;
         settings.fileFormat = parsed["Export"]["FileFormat"].as_integer();// .value_or(-1);
-        if (settings.fileFormat < -1 || settings.fileFormat > 6) {
+        if (settings.fileFormat < -1 || settings.fileFormat > 7) {
             LOG(error) << "Error parsing settings file: [Export] section: \"FileFormat\" key value is out of range." << std::endl;
             return false;
         }
@@ -145,6 +145,12 @@ bool loadSettings(Settings& settings, const std::string& filename) {
             LOG(error) << "Error parsing settings file: [Export] section: \"BitDepth\" key value is out of range." << std::endl;
             return false;
         }
+        if (!check("Export", "Quality")) return false;
+        settings.quality = parsed["Export"]["Quality"].as_integer();
+        if (settings.quality < 0 || settings.quality > 100) {
+			LOG(error) << "Error parsing settings file: [Export] section: \"Quality\" key value is out of range." << std::endl;
+			return false;
+		}
         // CameraRaw
         if (!check("CameraRaw", "RawRotation")) return false;
         settings.rawRot = parsed["CameraRaw"]["RawRotation"].as_integer();
@@ -310,6 +316,10 @@ void printSettings(Settings& settings) {
         case 4:
             return QString("JPEG-2000");
         case 5:
+            return QString("JPEG-XL");
+        case 6:
+			return QString("HEIC");
+        case 7:
             return QString("PPM");
         default:
             return QString("Same as input");
@@ -341,6 +351,7 @@ void printSettings(Settings& settings) {
 	};
     qDebug() << qPrintable(QString("Export Bit Depth: %1").arg(getBitDepth(settings.bitDepth)));
     qDebug() << qPrintable(QString("Default Export Bit Depth: %1").arg(getBitDepth(settings.defBDepth)));
+    qDebug() << qPrintable(QString("Export Quality: %1").arg(settings.quality));
 
     auto getRawRotation = [](int rawRot) {
         switch (rawRot)

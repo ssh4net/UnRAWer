@@ -55,6 +55,11 @@ FileFormat = -1
 # 6 - double (64bit float) !! most file formats have not support double precision
 DefaultBit = 1
 BitDepth = -1
+# Quality
+# 100 - lossless or best quality
+# 0 - worst quality
+Quality = 95
+
 
 [CameraRaw]
 # Raw rotation:

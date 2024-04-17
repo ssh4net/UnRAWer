@@ -38,13 +38,14 @@ struct Settings {
 	uint denoise_mode;
 	int fileFormat, defFormat;
 	int bitDepth, defBDepth;
+	int quality;
 	int rawRot;
 	uint rawSpace, numThreads;
 	int dDemosaic;
 	float mltThreads;
 	uint verbosity;
 
-	std::vector<std::string> out_formats = { "tif", "exr", "png", "jpg", "jp2", "heic", "ppm"};
+	std::vector<std::string> out_formats = { "tif", "exr", "png", "jpg", "jp2", "jxl", "heic", "ppm"};
 	std::string ocioConfigPath, dLutPreset;
 	
 	std::map<std::string, std::string> lut_Preset;
@@ -91,10 +92,11 @@ struct Settings {
 
 		numThreads = 5;		// Number of threads: 0 - auto, >0 - number of threads
 		rangeMode = 0;		// Float type: 0 - unsigned, 1 - signed, 2 - unsigned -> signed, 3 - signed -> unsigned
-		fileFormat = -1;	// File format: -1 - original, 0 - TIFF, 1 - OpenEXR, 2 - PNG, 3 - JPEG, 4 - JPEG-2000, 5 - HEIC, 6 - PPM
+		fileFormat = -1;	// File format: -1 - original, 0 - TIFF, 1 - OpenEXR, 2 - PNG, 3 - JPEG, 4 - JPEG-2000, 5 - JPEG-XL, 6 - HEIC, 7 - PPM
 		defFormat = 0;		// Default file format = TIFF
 		bitDepth = -1;		// Bit depth: -1 - Original, 0 - uint8, 1 - uint16, 2 - uint32, 3 - uint64, 4 - half, 5 - float, 6 - double
 		defBDepth = 1;		// Default bit depth = uint16
+		quality = 100;		// JPEG quality
 		
 		rawRot = -1;		// Raw rotation: -1 - Auto EXIF, 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CW Vertical, 6 - 90 CCW Vertical
 		rawSpace = 1;
