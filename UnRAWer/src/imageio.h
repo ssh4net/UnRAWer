@@ -47,8 +47,8 @@ void formatFromBuff(ImageBuf& buf);
 std::pair<bool, std::pair<std::shared_ptr<ImageBuf>, TypeDesc>> 
     img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow* mainWindow);
 
-bool img_write(std::shared_ptr<ImageBuf> out_buf, const std::string& outputFileName, TypeDesc out_format, TypeDesc orig_format,
-    QProgressBar* progressBar, MainWindow* mainWindow);
+bool img_write(std::shared_ptr<ImageBuf> out_buf, std::shared_ptr<ImageSpec> out_spec, const std::string& outputFileName,
+    TypeDesc out_format, TypeDesc orig_format, QProgressBar* progressBar, MainWindow* mainWindow);
 
 bool makePath(const std::string& out_path);
 

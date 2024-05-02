@@ -19,6 +19,7 @@
 #include "imageio.h"
 #include "settings.h"
 #include "Log.h"
+#include "exif_parser.h"
 
 int hue = 186;
 //void pbar_color_rand(QProgressBar* progressBar) {
@@ -289,10 +290,11 @@ bool makePath(const std::string& out_path) {
     return true;
 }
 
-bool img_write(std::shared_ptr<ImageBuf> out_buf, const std::string& outputFileName, TypeDesc out_format, TypeDesc orig_format,
-               QProgressBar* progressBar, MainWindow* mainWindow) {
+bool img_write(std::shared_ptr<ImageBuf> out_buf, std::shared_ptr<ImageSpec> out_spec, const std::string& outputFileName,
+               TypeDesc out_format, TypeDesc orig_format, QProgressBar* progressBar, MainWindow* mainWindow) {
     
-    ImageSpec& ospec = out_buf->specmod();
+    //ImageSpec& ospec = ;
+    // out_buf->specmod();
 
     //rspec.attribute("oiio:BitsPerSample", bits);
     /*
@@ -306,52 +308,53 @@ bool img_write(std::shared_ptr<ImageBuf> out_buf, const std::string& outputFileN
     "GammaX.Y" : Color values have been gamma corrected (raised to the power ). The X.Y is the numeric value of the gamma exponent.
     arbitrary : The name of any color space known to OpenColorIO (if OCIO support is present).
     */
-    // ospec.attribute("oiio:ColorSpace", "lin_srgb");
-    ospec.attribute("pnm:binary", 1);
-    ospec.attribute("oiio:UnassociatedAlpha", 1);
-    ospec.attribute("jpeg:subsampling", "4:4:4");
-    ospec.attribute("png:compressionLevel", 4);
+    // out_spec->attribute("oiio:ColorSpace", "lin_srgb");
+    out_spec->attribute("pnm:binary", 1);
+    out_spec->attribute("pnm:pfmflip", 0);
+    out_spec->attribute("oiio:UnassociatedAlpha", 1);
+    out_spec->attribute("jpeg:subsampling", "4:4:4");
+    out_spec->attribute("png:compressionLevel", 4);
 
-	switch (settings.fileFormat) {
-	case 0: // TIFF
-		ospec.attribute("Compression", "zip");
-		break;
-	case 1: // OpenEXR
-		ospec.attribute("Compression", "piz");
-		break;
-	case 2: // PNG
-		ospec.attribute("Compression", "zip");
-		break;
-	case 3: // JPEG
-		ospec.attribute("Compression", "jpeg:" + std::to_string(settings.quality));
-		break;
-	case 4: // JPEG-2000
-		ospec.attribute("Compression", "jpeg2000:" + std::to_string(settings.quality)); // Not used
-		break;
-	case 5: // JPEG-XL
-		ospec.attribute("Compression", "jpegxl:" + std::to_string(settings.quality));
-		break;
-	case 6: // HEIC
-		ospec.attribute("Compression", "heic:" + std::to_string(settings.quality));
-		break;
-	default:
-		ospec.attribute("Compression", "zip");
-		break;
-	}
+    switch (settings.fileFormat) {
+    case 0: // TIFF
+        out_spec->attribute("Compression", "zip");
+        break;
+    case 1: // OpenEXR
+        out_spec->attribute("Compression", "piz");
+        break;
+    case 2: // PNG
+        out_spec->attribute("Compression", "zip");
+        break;
+    case 3: // JPEG
+        out_spec->attribute("Compression", "jpeg:" + std::to_string(settings.quality));
+        break;
+    case 4: // JPEG-2000
+        out_spec->attribute("Compression", "jpeg2000:" + std::to_string(settings.quality)); // Not used
+        break;
+    case 5: // JPEG-XL
+        out_spec->attribute("Compression", "jpegxl:" + std::to_string(settings.quality));
+        break;
+    case 6: // HEIC
+        out_spec->attribute("Compression", "heic:" + std::to_string(settings.quality));
+        break;
+    default:
+        out_spec->attribute("Compression", "zip");
+        break;
+    }
 
     //rspec.attribute("tiff:bigtiff", 1);
     //rspec.set_format(TypeDesc::FLOAT); // temporary
     //LOG(info) << "Channels: " << rspec.nchannels << " Alpha channel: " << rspec.alpha_channel << std::endl;
 //
-    //ospec.format = getTypeDesc(settings.bitDepth);
+    //out_spec->format = getTypeDesc(settings.bitDepth);
     if (getTypeDesc(settings.bitDepth) == TypeDesc::UNKNOWN) {
-        ospec.set_format(orig_format);
+        out_spec->set_format(orig_format);
     }
     else {
-        ospec.set_format(TypeDesc::UINT16); //getTypeDesc(settings.bitDepth));
+        out_spec->set_format(TypeDesc::UINT16); //getTypeDesc(settings.bitDepth));
     }
 
-    LOG(info) << "Output file format: " << formatText(ospec.format) << std::endl;
+    LOG(info) << "Output file format: " << formatText(out_spec->format) << std::endl;
 
     auto out = ImageOutput::create(outputFileName);
     if (!out) {
@@ -359,7 +362,7 @@ bool img_write(std::shared_ptr<ImageBuf> out_buf, const std::string& outputFileN
         mainWindow->emitUpdateTextSignal("Error! Check console for details");
         return false;
     }
-    out->open(outputFileName, ospec, ImageOutput::Create);
+    out->open(outputFileName, *out_spec, ImageOutput::Create);
 
     QMetaObject::invokeMethod(progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, 0));
 

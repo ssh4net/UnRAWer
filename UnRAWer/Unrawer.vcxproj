@@ -308,6 +308,7 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
     <QtRcc Include="src\gui.qrc" />
     <QtUic Include="src\gui.ui" />
     <QtMoc Include="src\ui.h" />
+    <ClCompile Include="src\exif_parser.cpp" />
     <ClCompile Include="src\fileProcessor.cpp" />
     <ClCompile Include="src\imageio.cpp" />
     <ClCompile Include="src\Log.cpp" />
@@ -325,9 +326,9 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\Common.h" />
+    <ClInclude Include="src\exif_parser.h" />
     <ClInclude Include="src\fileProcessor.h" />
     <ClInclude Include="src\imageio.h" />
-    <ClInclude Include="src\libraw_oiio.h" />
     <ClInclude Include="src\LOG.H" />
     <ClInclude Include="src\process.h" />
     <ClInclude Include="src\processors.h" />

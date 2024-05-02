@@ -17,6 +17,7 @@
 
 #include "processors.h"
 #include "Unrawer.h"
+#include "exif_parser.h"
 
 OutPaths outpaths;
 
@@ -518,11 +519,14 @@ void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     std::shared_ptr<LibRaw> raw = processing->raw_data;
 
     LOG(debug) << "Processor: Processing data from file: " << processing->srcFile << std::endl;
-
+    
     libraw_processed_image_t* image = processing->raw_image;
 
     OIIO::ImageSpec image_spec(image->width, image->height, image->colors, OIIO::TypeDesc::UINT16);
     OIIO::ImageBuf image_buf(image_spec, image->data);
+
+	//EXIF Parser
+	EXIF::get_exif(processing->raw_data, image_spec);
 
     //auto [process_ok, out_buf] = imgProcessor(std::ref<ImageBuf>(image_buf), procGlobals.ocio_conf_ptr.get(), &settings.dLutPreset, processing_entry, image, nullptr, nullptr);
     //if (!process_ok) {
@@ -783,9 +787,9 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     else { // Write processed image using oiio
         //////////////////////////////////////////////////
         /// Image saving
-        /// 
+        ///
 
-        bool write_ok = img_write(processing->image, outFilePath, TypeDesc::UINT16, TypeDesc::UINT16, nullptr, nullptr);
+        bool write_ok = img_write(processing->image, processing->outSpec, outFilePath, TypeDesc::UINT16, TypeDesc::UINT16, nullptr, nullptr);
         if (!write_ok) {
             LOG(error) << "Error writing " << outFilePath << std::endl;
             //mainWindow->emitUpdateTextSignal("Error! Check console for details");
