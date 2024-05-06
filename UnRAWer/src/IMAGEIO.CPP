@@ -290,7 +290,7 @@ bool makePath(const std::string& out_path) {
     return true;
 }
 
-bool img_write(std::shared_ptr<ImageBuf> out_buf, std::shared_ptr<ImageSpec> out_spec, const std::string& outputFileName,
+bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& out_spec, const std::string& outputFileName,
                TypeDesc out_format, TypeDesc orig_format, QProgressBar* progressBar, MainWindow* mainWindow) {
     
     //ImageSpec& ospec = ;

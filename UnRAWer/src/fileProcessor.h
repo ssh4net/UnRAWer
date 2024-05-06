@@ -100,7 +100,7 @@ enum class ProcessingStatus {
 
 struct ProcessingParams {
     
-    std::shared_ptr<OIIO::ImageBuf> image;
+    std::unique_ptr<OIIO::ImageBuf> image;
     // File paths:
     std::string srcFile; // Source file full path name
     int outPathIdx;      // Index of the output path in the vector of output paths
@@ -109,14 +109,14 @@ struct ProcessingParams {
     // RAW image pointer
     
     //LibRaw raw_data;
-    std::shared_ptr<LibRaw> raw_data;
+    std::unique_ptr<LibRaw> raw_data;
     libraw_processed_image_t* raw_image;
     // source settings:
-    std::shared_ptr<OIIO::ImageSpec> srcSpec;
+    std::unique_ptr<OIIO::ImageSpec> srcSpec;
     
     // output settings:
     OIIO::TypeDesc outType;
-    std::shared_ptr<OIIO::ImageSpec> outSpec;
+    std::unique_ptr<OIIO::ImageSpec> outSpec;
     
     // Color config:
     std::string srcCSpace;
@@ -157,7 +157,7 @@ struct ProcessingParams {
 };
 
 struct ProcessGlobals {
-    std::shared_ptr<OIIO::ColorConfig> ocio_conf_ptr; // per session color config load
+    std::unique_ptr<OIIO::ColorConfig> ocio_conf_ptr; // per session color config load
 };
 
 extern ProcessGlobals procGlobals;

@@ -222,7 +222,7 @@ xcopy /y e:\DVR\bin\brotliencd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\brotlicommond.dll "$(TargetDir)"
 
 xcopy /y e:\DVR\bin\freetyped.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\Ptex_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\Ptexd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\liblzmad.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\turbojpegd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\jpeg62d.dll "$(TargetDir)"

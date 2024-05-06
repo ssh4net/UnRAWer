@@ -80,7 +80,7 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
 
     //OIIO::ColorConfig ocio_conf(settings.ocioConfigPath); // load ocio config once
 
-    procGlobals.ocio_conf_ptr = std::make_shared<OIIO::ColorConfig>(settings.ocioConfigPath);
+    procGlobals.ocio_conf_ptr = std::make_unique<OIIO::ColorConfig>(settings.ocioConfigPath);
 
     std::vector<std::future<bool>> results;
 

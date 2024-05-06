@@ -205,7 +205,7 @@ void oReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         LOG(info) << "READ: Channels: " << inBuf.nchannels() << " Alpha channel index: " << inBuf.spec().alpha_channel << std::endl;
 
         //return { true, {std::make_shared<OIIO::ImageBuf>(outBuf), orig_format} };
-        processing->image = std::make_shared<OIIO::ImageBuf>(inBuf);
+        processing->image = std::make_unique<OIIO::ImageBuf>(inBuf);
         (*fileCntr)--;
         (*myPools)["OProcessor"]->enqueue(OProcessor, index, processing_entry, fileCntr, myPools);
 }
@@ -281,9 +281,8 @@ void LReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     }
 
     //LibRaw& raw = processing->raw_data;
-    std::shared_ptr<LibRaw> raw_ptr = std::make_shared<LibRaw>();
-    processing->raw_data = raw_ptr;
-    LibRaw* raw = raw_ptr.get();
+    processing->raw_data = std::make_unique<LibRaw>();
+    LibRaw* raw = processing->raw_data.get();
 
     raw->imgdata.params.use_camera_wb = settings.rawParms.use_camera_wb;
     raw->imgdata.params.use_camera_matrix = settings.rawParms.use_camera_matrix;
@@ -362,7 +361,7 @@ void LUnpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     //processing->raw_data = raw_ptr;
     //LibRaw* raw = raw_ptr.get();
 
-    auto raw = processing->raw_data;
+    auto& raw = processing->raw_data;
 
     int ret = raw->unpack();
     if (ret != LIBRAW_SUCCESS) {
@@ -389,9 +388,8 @@ void Unpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry, st
     LOG(info) << "Unpack: file " << processing->srcFile << std::endl;
 
     //LibRaw& raw = processing->raw_data;
-    std::shared_ptr<LibRaw> raw_ptr = std::make_shared<LibRaw>();
-    processing->raw_data = raw_ptr;
-    LibRaw* raw = raw_ptr.get();
+    processing->raw_data = std::make_unique<LibRaw>();
+	LibRaw* raw = processing->raw_data.get();
 
     raw->imgdata.params.use_camera_wb = settings.rawParms.use_camera_wb;
     raw->imgdata.params.use_camera_matrix = settings.rawParms.use_camera_matrix;
@@ -448,7 +446,7 @@ void Unpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry, st
 void Demosaic(int index, std::shared_ptr<ProcessingParams>& processing_entry,
               std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto processing = processing_entry;
-    std::shared_ptr<LibRaw> raw = processing->raw_data;
+    auto& raw = processing->raw_data;
     LOG(info) << "Demosaic: file " << processing->srcFile << std::endl;
 
     auto& raw_parms = raw->imgdata.params;
@@ -493,7 +491,7 @@ void Dcraw(int index, std::shared_ptr<ProcessingParams>& processing_entry,
            std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto processing = processing_entry;
 
-    std::shared_ptr<LibRaw> raw = processing->raw_data;
+    auto& raw = processing->raw_data;
 
     LOG(debug) << "Dcraw: Processing data from file: " << processing->srcFile << std::endl;
 
@@ -516,7 +514,7 @@ void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
                std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
 
     auto processing = processing_entry;
-    std::shared_ptr<LibRaw> raw = processing->raw_data;
+    std::unique_ptr<LibRaw>& raw = processing->raw_data;
 
     LOG(debug) << "Processor: Processing data from file: " << processing->srcFile << std::endl;
     
@@ -606,8 +604,8 @@ void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 
 ///    return { true, std::make_shared<ImageBuf>(*out_buf_ptr) };
     ///
-    processing->image = std::make_shared<ImageBuf>(*out_buf_ptr);
-    processing->outSpec = std::make_shared<OIIO::ImageSpec>(image_spec);
+    processing->image = std::make_unique<ImageBuf>(*out_buf_ptr);
+    processing->outSpec = std::make_unique<OIIO::ImageSpec>(image_spec);
 
     processing->setStatus(ProcessingStatus::Processed);
 
@@ -695,8 +693,8 @@ void OProcessor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     //raw->recycle();
     //image_buf.clear();
 
-    processing->image = std::make_shared<ImageBuf>(*out_buf_ptr);
-    processing->outSpec = std::make_shared<OIIO::ImageSpec>(out_buf_ptr->spec());
+    processing->image = std::make_unique<ImageBuf>(*out_buf_ptr);
+    processing->outSpec = std::make_unique<OIIO::ImageSpec>(out_buf_ptr->spec());
 
     processing->setStatus(ProcessingStatus::Processed);
 
@@ -709,7 +707,7 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
             std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto processing = processing_entry;
     //LibRaw& raw = processing->raw_data;
-    std::shared_ptr<LibRaw> raw = processing->raw_data;
+    std::unique_ptr<LibRaw>& raw = processing->raw_data;
 
     // Check if the output path exists and create it if not
     std::string outDir = outpaths.get_path(processing->outPathIdx);
