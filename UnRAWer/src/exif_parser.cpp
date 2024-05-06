@@ -124,6 +124,10 @@ void add(OIIO::string_view prefix, std::string name, OIIO::cspan<double> data,
 
 bool get_soft(std::shared_ptr<LibRaw>& m_processor, OIIO::ImageSpec& m_spec) {
 	LOG(trace) << "EXIF::get_soft()" << std::endl;
+
+    const libraw_image_sizes_t& sizes(m_processor->imgdata.sizes);
+    m_spec.attribute("PixelAspectRatio", (float)sizes.pixel_aspect);
+
     const libraw_iparams_t& idata(m_processor->imgdata.idata);
     const libraw_colordata_t& color(m_processor->imgdata.color);
 
@@ -210,8 +214,8 @@ bool EXIF::get_exif(std::shared_ptr<LibRaw>& m_processor, OIIO::ImageSpec& inp_s
 		return false;
 
     EXIF::get_lensinfo(m_processor, m_make);
-    //EXIF::get_shootinginfo(m_processor_unique, m_make);
-    //EXIF::get_colorinfo(m_processor_unique, m_make);
+    EXIF::get_shootinginfo(m_processor, m_make);
+    EXIF::get_colorinfo(m_processor);
     EXIF::get_makernotes(m_processor, m_make);
 
 #if _DEBUG
