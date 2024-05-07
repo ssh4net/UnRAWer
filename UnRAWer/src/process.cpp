@@ -116,8 +116,7 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
     myPools.emplace("writer", std::make_unique<ThreadPool>(writeThreads, write_size));          // Writer pool
     //myPools.emplace("dummy", std::make_unique<ThreadPool>(1, 1));                               // Dummy "Benchmark" pool
 
-    std::vector<std::shared_ptr<ProcessingParams>> processingList(fileNames.size());            // Initialize the list
-//
+	std::vector<std::unique_ptr<ProcessingParams>> processingList(fileNames.size());
     fileCntr = fileNames.size() * 7; 
     // 6+1 queues: sorter, reader, unpacker, demosaic, processor (lut, unsharp), writer
     QString processText = "Processing steps : Load -> ";

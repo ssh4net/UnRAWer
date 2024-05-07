@@ -2,7 +2,7 @@
 # Global app settings
 Console = true
 # Threads count for read and write
-Threads = 20
+Threads = 10
 # Threads multiplier for processing 1.0 equal all cores/threads
 ThredsMult = 1.0
 # Export into subfolders
@@ -134,7 +134,7 @@ fbdd_noiserd = 2
 # OCIO config file
 # If empty, OpenColorIO library will use $OCIO environment variable
 # If $OCIO is not set, app will give an error
-OCIO_Config = "c:/aces_1.2/config.ocio"
+OCIO_Config = "aces_1.2/config.ocio"
 
 [Transform]
 # Transform image
@@ -147,11 +147,11 @@ LutDefault = "_linear"
 [LUT_Preset]
 # Presets
 # For relative path the root folder is a OCIO_Config path
-_linear = "../../LUTs/Linear.csp"
-_texture = "../../LUTs/Linear.csp"
-_geometry = "../../LUTs/Linear.csp"
-_cross = "../../LUTs/Linear.csp"
-_parallel = "../../LUTs/Linear.csp"
+_linear = "../../LUTs/test.csp"
+_texture = "../../LUTs/test.csp"
+_geometry = "../../LUTs/test.csp"
+_cross = "../../LUTs/test.csp"
+_parallel = "../../LUTs/test.csp"
 
 [Unsharp]
 # Unsharp mask

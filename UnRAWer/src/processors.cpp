@@ -31,10 +31,12 @@ bool isRaw(QString file, const std::unordered_set<std::string>& raw_ext_set) {
     return false;
 }
 
-void Sorter(int index, QString fileName, std::shared_ptr<ProcessingParams>& processing_entry, 
-            std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+void Sorter(int index, QString fileName, std::unique_ptr<ProcessingParams>& processing_entry,
+	std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
 
-    auto processing = std::make_shared<ProcessingParams>();
+    //processing_entry = std::make_unique<ProcessingParams>();
+	processing_entry.reset(new ProcessingParams());
+    auto& processing = processing_entry;
     processing->srcFile = fileName.toStdString();
 
     QString prest_sfx = "";
@@ -77,10 +79,9 @@ void Sorter(int index, QString fileName, std::shared_ptr<ProcessingParams>& proc
     processing->lut_preset = lut_preset.value_or("");
     LOG(debug) << "PRE: Preprocessing file " << processing->srcFile << " > " << outpaths.get_path(path_idx) + "/" + processing->outFile + processing->outExt << std::endl;
 
-    processing_entry = processing;
     processing->setStatus(ProcessingStatus::Prepared);
 //
-    (*myPools)["LReader"]->enqueue(LReader, index, processing_entry, fileCntr, myPools);
+    (*myPools)["LReader"]->enqueue(LReader, index, std::ref(processing_entry), fileCntr, myPools);
 }
 
 bool read_chunk(std::ifstream* file, std::vector<char>& raw_buffer, std::streamoff start, std::streamoff end) {
@@ -95,12 +96,12 @@ bool read_chunk(std::ifstream* file, std::vector<char>& raw_buffer, std::streamo
 }
 
 // oiio file reader
-void oReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+void oReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
             std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
 
         TypeDesc out_format;
 
-        auto processing = processing_entry;
+        auto& processing = processing_entry;
 
         LOG(info) << "Reader: file " << processing->srcFile << std::endl;
 
@@ -207,13 +208,13 @@ void oReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         //return { true, {std::make_shared<OIIO::ImageBuf>(outBuf), orig_format} };
         processing->image = std::make_unique<OIIO::ImageBuf>(inBuf);
         (*fileCntr)--;
-        (*myPools)["OProcessor"]->enqueue(OProcessor, index, processing_entry, fileCntr, myPools);
+        (*myPools)["OProcessor"]->enqueue(OProcessor, index, std::ref(processing_entry), fileCntr, myPools);
 }
 
 // LibRaw buffer reader
-void Reader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+void Reader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
             std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
-    auto processing = processing_entry;
+    auto& processing = processing_entry;
 
     LOG(info) << "Reader: file " << processing->srcFile << std::endl;
 
@@ -258,20 +259,19 @@ void Reader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         throw std::runtime_error("Reader: Could not read file: " + processing->srcFile);
     }
 #endif
-    std::shared_ptr<std::vector<char>> raw_buffer_ptr = std::make_shared<std::vector<char>>(raw_buffer);
+    std::unique_ptr<std::vector<char>> raw_buffer_ptr = std::make_unique<std::vector<char>>(raw_buffer);
 
     processing->setStatus(ProcessingStatus::Loaded);
     file.close();
 
     (*fileCntr)--;
-
-    (*myPools)["unpacker"]->enqueue(Unpacker, index, processing_entry, raw_buffer_ptr, fileCntr, myPools);
+    (*myPools)["unpacker"]->enqueue(Unpacker, index, std::ref(processing_entry), std::ref(raw_buffer_ptr), fileCntr, myPools);
 }
 
 // Libraw disk reader
-void LReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+void LReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
-    auto processing = processing_entry;
+    auto& processing = processing_entry;
 
     QFileInfo fileInfo(processing->srcFile.c_str());
     if (fileInfo.isSymLink()) {
@@ -318,14 +318,8 @@ void LReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         LOG(error) << "Reader: Cannot read file: " << processing->srcFile << std::endl;
         return;
     }
-//////////////////////////////
-
-//
-// 
-//
     (*fileCntr)--;
-    
-    (*myPools)["LUnpacker"]->enqueue(LUnpacker, index, processing_entry, fileCntr, myPools);
+    (*myPools)["LUnpacker"]->enqueue(LUnpacker, index, std::ref(processing_entry), fileCntr, myPools);
 /*
     LOG(info) << "Unpack: file " << processing->srcFile << std::endl;
   
@@ -351,9 +345,9 @@ void LReader(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 }
 
 // Libraw disk unpacker
-void LUnpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+void LUnpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry,
                std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
-    auto processing = processing_entry;
+    auto& processing = processing_entry;
     LOG(info) << "Unpack: file " << processing->srcFile << std::endl;
 
     //LibRaw& raw = processing->raw_data;
@@ -373,18 +367,18 @@ void LUnpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 
     if (settings.dDemosaic > -2) {
         (*fileCntr)--;
-        (*myPools)["demosaic"]->enqueue(Demosaic, index, processing_entry, fileCntr, myPools);
+        (*myPools)["demosaic"]->enqueue(Demosaic, index, std::ref(processing_entry), fileCntr, myPools);
     }
     else {
         (*fileCntr) -= 4; // can skip the writer
-        (*myPools)["writer"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
+        (*myPools)["writer"]->enqueue(Writer, index, std::ref(processing_entry), fileCntr, myPools);
     }
 }
 
 // Libraw buffer unpacker
-void Unpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry, std::shared_ptr<std::vector<char>> raw_buffer,
+void Unpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::unique_ptr<std::vector<char>>& raw_buffer,
               std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
-    auto processing = processing_entry;
+    auto& processing = processing_entry;
     LOG(info) << "Unpack: file " << processing->srcFile << std::endl;
 
     //LibRaw& raw = processing->raw_data;
@@ -434,18 +428,18 @@ void Unpacker(int index, std::shared_ptr<ProcessingParams>& processing_entry, st
     (*fileCntr)--;
 
     if (settings.dDemosaic > -2) {
-        (*myPools)["demosaic"]->enqueue(Demosaic, index, processing_entry, fileCntr, myPools);
+        (*myPools)["demosaic"]->enqueue(Demosaic, index, std::ref(processing_entry), fileCntr, myPools);
     }
     else {
         (*fileCntr)--; // no demosaic, so we can skip the processor
         (*fileCntr)--; // no demosaic, so we can skip the writer
-        (*myPools)["processor"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
+        (*myPools)["processor"]->enqueue(Writer, index, std::ref(processing_entry), fileCntr, myPools);
     }
 }
 
-void Demosaic(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+void Demosaic(int index, std::unique_ptr<ProcessingParams>& processing_entry,
               std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
-    auto processing = processing_entry;
+    auto& processing = processing_entry;
     auto& raw = processing->raw_data;
     LOG(info) << "Demosaic: file " << processing->srcFile << std::endl;
 
@@ -464,7 +458,7 @@ void Demosaic(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         processing->setStatus(ProcessingStatus::Demosaiced);
 
         (*fileCntr) -= 3;
-        (*myPools)["writer"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
+        (*myPools)["writer"]->enqueue(Writer, index, std::ref(processing_entry), fileCntr, myPools);
     }
     else if (settings.dDemosaic > -1) {
         raw_parms.output_bps = 16;
@@ -478,7 +472,7 @@ void Demosaic(int index, std::shared_ptr<ProcessingParams>& processing_entry,
         processing->setStatus(ProcessingStatus::Demosaiced);
 
         (*fileCntr)--;
-        (*myPools)["dcraw"]->enqueue(Dcraw, index, processing_entry, fileCntr, myPools);
+        (*myPools)["dcraw"]->enqueue(Dcraw, index, std::ref(processing_entry), fileCntr, myPools);
 	}
     else {
         LOG(error) << "Demosaic: Unknown demosaic mode" << std::endl;
@@ -487,9 +481,9 @@ void Demosaic(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 }
 
 // libraw dcraw dcraw_make_mem_image()
-void Dcraw(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+void Dcraw(int index, std::unique_ptr<ProcessingParams>& processing_entry,
            std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
-    auto processing = processing_entry;
+    auto& processing = processing_entry;
 
     auto& raw = processing->raw_data;
 
@@ -507,13 +501,13 @@ void Dcraw(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     }
 
     (*fileCntr)--;
-    (*myPools)["processor"]->enqueue(Processor, index, processing_entry, fileCntr, myPools);
+    (*myPools)["processor"]->enqueue(Processor, index, std::ref(processing_entry), fileCntr, myPools);
 }
 
-void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
-               std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
+	std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
 
-    auto processing = processing_entry;
+    auto& processing = processing_entry;
     std::unique_ptr<LibRaw>& raw = processing->raw_data;
 
     LOG(debug) << "Processor: Processing data from file: " << processing->srcFile << std::endl;
@@ -611,12 +605,12 @@ void Processor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 
     (*fileCntr)--;
 
-    (*myPools)["writer"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
+    (*myPools)["writer"]->enqueue(Writer, index, std::ref(processing_entry), fileCntr, myPools);
 }
 
-void OProcessor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
+void OProcessor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
                std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
-    auto processing = processing_entry;
+    auto& processing = processing_entry;
 
     LOG(debug) << "Processor: Processing data from file: " << processing->srcFile << std::endl;
 
@@ -700,12 +694,12 @@ void OProcessor(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 
     (*fileCntr)--;
 
-    (*myPools)["writer"]->enqueue(Writer, index, processing_entry, fileCntr, myPools);
+    (*myPools)["writer"]->enqueue(Writer, index, std::ref(processing_entry), fileCntr, myPools);
 }
 
-void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
-            std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
-    auto processing = processing_entry;
+void Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry,
+	std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
+    auto& processing = processing_entry;
     //LibRaw& raw = processing->raw_data;
     std::unique_ptr<LibRaw>& raw = processing->raw_data;
 
@@ -801,19 +795,24 @@ void Writer(int index, std::shared_ptr<ProcessingParams>& processing_entry,
 
         processing->image->reset();
         processing->image.reset();
+
+		processing->outSpec.reset();
+		processing->srcSpec.reset();
         //////////////////////////////////////////////////
     }
 
     processing->setStatus(ProcessingStatus::Written);
     LOG(debug) << "Writer: Finished writing data to file: " << outFilePath << std::endl;
     processing->raw_data.reset();
+	processing->raw_image = nullptr;
+	processing.reset();
 
     (*fileCntr)--;
 }
 
 void Dummy(int index, std::shared_ptr<ProcessingParams>& processing_entry,
     std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
-    auto processing = processing_entry;
+    auto& processing = processing_entry;
 
     if (!processing->rawCleared) {
         processing->raw_data->dcraw_clear_mem(processing->raw_image);
