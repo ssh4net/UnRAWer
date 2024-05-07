@@ -6,11 +6,11 @@
 ![UnRAWer2](https://github.com/ssh4net/UnRAWer/assets/3924000/798b24ff-bdac-451c-aebc-47256d0fff7a)
 
  ## Core features
- - Support all camera raws supported in Libraw library including ProRAW DNG.
+ - Support all camera raws supported in Libraw library, including ProRAW DNG.
  - Multithreaded and asynchronous batch processing
  - Drag and drop interface with recursive subfolders support
  - Half Resolution camera raws import
- - Export as raw sensor data (bw), Bayers pattern (RGB) and different demosaic methods (supported in libraw)
+ - Export as raw sensor data (bw), Bayers pattern (RGB), and different demosaic methods (supported in libraw)
  - Smart (per folder_suffix/filename_suffix) 3D Lut grading presets (via OpenColorIO)
  - Export as 8/16/32bit int/float tiff/jpeg/jpeg2000/jpegxl/heic/PPM/PNG
  - tool configuration via TOML config file
@@ -19,9 +19,7 @@
 
 Limitations
 -------
-For this moment all EXIF meta-data are lost on output files. To speed up (up to 10%) the process, UnRAWer 
-uses libraw buffer reading directly, that not supported in OpenImageIO libraw plugin, and metadata conversion
-between libraw and OpenImageIO is not implemented yet. 
+For this moment, all EXIF meta-data is not supported in Jpeg XL output files. 
 
 User Manual
 -------
@@ -54,4 +52,4 @@ License
 Copyright © 2023 Erium Vladlen.
 
 UnRAWer is licensed under the GNU General Public License, Version 3.
-Individual files may have a different, but compatible license.
+Individual files may have a different but compatible license.
