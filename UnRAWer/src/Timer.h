@@ -24,10 +24,10 @@
 
 using std::chrono::high_resolution_clock;
 
-class Timer {
+class mTimer {
 public:
-    Timer() : start_(high_resolution_clock::now()) {};
-    ~Timer() {};
+    mTimer() : start_(high_resolution_clock::now()) {};
+    ~mTimer() {};
 
     template <typename T>
     T now(const bool reset = true)

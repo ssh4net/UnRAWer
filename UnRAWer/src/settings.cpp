@@ -213,6 +213,12 @@ bool loadSettings(Settings& settings, const std::string& filename) {
             LOG(error) << "Error parsing settings file: [CameraRaw] section: \"fbdd_noiserd\" key value is out of range." << std::endl;
             return false;
         }
+		if (!check("CameraRaw", "exif_crop")) return false;
+		settings.crop_mode = parsed["CameraRaw"]["exif_crop"].as_integer();
+		if (settings.crop_mode < -1 || settings.crop_mode > 1) {
+			LOG(error) << "Error parsing settings file: [CameraRaw] section: \"exif_crop\" key value is out of range." << std::endl;
+			return false;
+		}
 
         // OCIO
         if (!check("OCIO", "OCIO_Config")) return false;
@@ -247,6 +253,8 @@ bool loadSettings(Settings& settings, const std::string& filename) {
 				return false;
             }
         }
+		if (!check("Transform", "exif_lut")) return false;
+		settings.perCamera = parsed["Transform"]["exif_lut"].as_boolean();
         // Unsharp
         if (!check("Unsharp", "sharp_mode")) return false;
         settings.sharp_mode = parsed["Unsharp"]["sharp_mode"].as_integer();
@@ -294,101 +302,129 @@ bool loadSettings(Settings& settings, const std::string& filename) {
 }
 
 void printSettings(Settings& settings) {
-    QString mode;
+
     qDebug() << "--------- Settings ---------";
+///
+	qDebug() << "[Global]";
 
-    qDebug() << "Parallel Threads: " << settings.numThreads;
-    qDebug() << "Threads multiplier: " << settings.mltThreads;
+	qDebug() << " Console enabled: " << (settings.conEnable ? "true" : "false");
+    qDebug() << " Parallel Threads: " << settings.numThreads;
+    qDebug() << " Threads multiplier: " << settings.mltThreads;
 
-    qDebug() << qPrintable(QString("Range Mode: %1").arg(mode));
+    if (settings.pathPrefix != "") {
+        qDebug() << qPrintable(QString(" Processed images will be saved to subfolder: %1").arg(settings.pathPrefix.c_str()));
+    }
+    
+	qDebug() << " Path Prefix: " << settings.pathPrefix.c_str();
+	qDebug() << qPrintable(QString(" Verbosity: %1").arg(settings.verbosity));
+///
+	qDebug() << "[Range]";
+	qDebug() << qPrintable(QString(" Range Mode: %1").arg(settings.rangeMode));
 
+///
+	qDebug() << "[Export]";
     auto getMode = [](int fileFormat) {
         switch (fileFormat)
         {
         case 0:
-            return QString("TIFF");
+            return QString(" TIFF");
         case 1:
-            return QString("OpenEXR");
+            return QString(" OpenEXR");
         case 2:
-            return QString("PNG");
+            return QString(" PNG");
         case 3:
-            return QString("JPEG");
+            return QString(" JPEG");
         case 4:
-            return QString("JPEG-2000");
+            return QString(" JPEG-2000");
         case 5:
-            return QString("JPEG-XL");
+            return QString(" JPEG-XL");
         case 6:
-			return QString("HEIC");
+			return QString(" HEIC");
         case 7:
-            return QString("PPM");
+            return QString(" PPM");
         default:
-            return QString("Same as input");
+            return QString(" Same as input");
         }
     };
-    qDebug() << qPrintable(QString("File Format: %1").arg(getMode(settings.fileFormat)));
-    qDebug() << qPrintable(QString("Default File Format: %1").arg(getMode(settings.defFormat)));
+    qDebug() << qPrintable(QString(" Default File Format: %1").arg(getMode(settings.defFormat)));
+    qDebug() << qPrintable(QString(" File Format: %1").arg(getMode(settings.fileFormat)));
 
     auto getBitDepth = [](int bitDepth) {
 		switch (bitDepth)
 		{
 		case 0:
-			return QString("uint8");
+			return QString(" uint8");
 		case 1:
-			return QString("uint16");
+			return QString(" uint16");
 		case 2:
-			return QString("uint32");
+			return QString(" uint32");
 		case 3:
-			return QString("uint64");
+			return QString(" uint64");
 		case 4:
-			return QString("16bit (half) float");
+			return QString(" 16bit (half) float");
 		case 5:
-			return QString("32bit float");
+			return QString(" 32bit float");
 		case 6:
-			return QString("64bit (double) float");
+			return QString(" 64bit (double) float");
 		default:
-            return QString("Same as input");
+            return QString(" Same as input");
 		}
 	};
-    qDebug() << qPrintable(QString("Export Bit Depth: %1").arg(getBitDepth(settings.bitDepth)));
-    qDebug() << qPrintable(QString("Default Export Bit Depth: %1").arg(getBitDepth(settings.defBDepth)));
-    qDebug() << qPrintable(QString("Export Quality: %1").arg(settings.quality));
+    qDebug() << qPrintable(QString(" Default Export Bit Depth: %1").arg(getBitDepth(settings.defBDepth)));
+    qDebug() << qPrintable(QString(" Export Bit Depth: %1").arg(getBitDepth(settings.bitDepth)));
+    qDebug() << qPrintable(QString(" Export Quality: %1").arg(settings.quality));
 
+///
+	qDebug() << "[CameraRaw]";
     auto getRawRotation = [](int rawRot) {
         switch (rawRot)
         {
         case 0:
-            return QString("Unrotated/Horisontal");
+            return QString(" Unrotated/Horisontal");
         case 3:
-            return QString("180 Horisontal");
+            return QString(" 180 Horisontal");
         case 5:
-            return QString("90 CW Vertical");
+            return QString(" 90 CCW Vertical");
         case 6:
-            return QString("90 CCW Vertical");
+            return QString(" 90 CW Vertical");
         default:
-            return QString("Auto EXIF");
+            return QString(" Auto EXIF");
         }
     };
 
-    qDebug() << qPrintable(QString("Raw Rotation: %1").arg(getRawRotation(settings.rawRot)));
-    qDebug() << qPrintable(QString("Half -size raw image: %1").arg(settings.rawParms.half_size == 0 ? "disabled" : "enabled"));
-    qDebug() << qPrintable(QString("Use auto white balance: %1").arg(settings.rawParms.use_auto_wb == 0 ? "disabled" : "enabled"));
-    qDebug() << qPrintable(QString("Use camera white balance: %1").arg(settings.rawParms.use_camera_wb == 0 ? "disabled" : "enabled"));
-    qDebug() << qPrintable(QString("Use camera matrix: %1").arg(settings.rawParms.use_camera_matrix));
-    qDebug() << qPrintable(QString("Highlight mode: %1").arg(settings.rawParms.highlight));
-    qDebug() << qPrintable(QString("Aberrations: %1, %2")
+    qDebug() << qPrintable(QString(" Raw Rotation: %1").arg(getRawRotation(settings.rawRot)));
+    qDebug() << qPrintable(QString(" Raw Color Space: %1").arg(settings.rawSpace));
+	qDebug() << qPrintable(QString(" Demosaic: %1").arg(settings.demosaic[settings.dDemosaic+2].c_str()));
+    qDebug() << qPrintable(QString(" Half -size raw image: %1").arg(settings.rawParms.half_size == 0 ? "disabled" : "enabled"));
+    qDebug() << qPrintable(QString(" Use auto white balance: %1").arg(settings.rawParms.use_auto_wb == 0 ? "disabled" : "enabled"));
+    qDebug() << qPrintable(QString(" Use camera white balance: %1").arg(settings.rawParms.use_camera_wb == 0 ? "disabled" : "enabled"));
+    qDebug() << qPrintable(QString(" Use camera matrix: %1").arg(settings.rawParms.use_camera_matrix));
+    qDebug() << qPrintable(QString(" Highlight mode: %1").arg(settings.rawParms.highlight));
+    qDebug() << qPrintable(QString(" Aberrations: %1, %2")
         .arg(QString::number(settings.rawParms.aber[0], 'f', 2))
         .arg(QString::number(settings.rawParms.aber[1], 'f', 2)));
-    qDebug() << qPrintable(QString("Denoise mode: %1").arg(settings.denoise_mode));
-    qDebug() << qPrintable(QString("Denoise threshold: %1").arg(QString::number(settings.rawParms.denoise_thr, 'f', 2)));
-    qDebug() << qPrintable(QString("FBDD noise reduction: %1").arg(settings.rawParms.fbdd_noiserd));
+    qDebug() << qPrintable(QString(" Denoise mode: %1").arg(settings.denoise_mode));
+    qDebug() << qPrintable(QString(" Denoise threshold: %1").arg(QString::number(settings.rawParms.denoise_thr, 'f', 2)));
+    qDebug() << qPrintable(QString(" FBDD noise reduction: %1").arg(settings.rawParms.fbdd_noiserd));
+	qDebug() << qPrintable(QString(" Crop by EXIF: %1").arg(settings.crop_mode == -1 ? "disabled" : (settings.crop_mode == 0 ? "auto" : "enabled")));
 
-    qDebug() << qPrintable(QString("Raw Color Space: %1").arg(settings.rawSpace));
+    qDebug() << qPrintable(QString(" OCIO Config: %1").arg(settings.ocioConfigPath.c_str()));
+	qDebug() << qPrintable(QString(" Per Camera LUT: %1").arg(settings.perCamera ? "enabled" : "disabled"));
 
-    if (settings.pathPrefix != "") {
-        qDebug() << qPrintable(QString("Processed images will be saved to subfolder: %1").arg(settings.pathPrefix.c_str()));
-    }
+	qDebug() << "[Transform]";
+	qDebug() << qPrintable(QString(" LUT Transform: %1").arg(settings.lutMode == -1 ? "disabled" : (settings.lutMode == 0 ? "smart" : "force")));
+	qDebug() << qPrintable(QString(" Default LUT Preset: %1").arg(settings.dLutPreset.c_str()));
+	qDebug() << qPrintable(QString(" Per Camera LUT: %1").arg(settings.perCamera ? "enabled" : "disabled"));
+	for (const auto& [key, value] : settings.lut_Preset) {
+		qDebug() << qPrintable(QString(" LUT Preset: %1 - %2").arg(key.c_str()).arg(value.c_str()));
+	}
 
-    qDebug() << qPrintable(QString("OCIO Config: %1").arg(settings.ocioConfigPath.c_str()));
+	qDebug() << "[Unsharp]";
+	qDebug() << qPrintable(QString(" Sharpening mode: %1").arg(settings.sharp_mode == -1 ? "disabled" : (settings.sharp_mode == 0 ? "smart" : "force")));
+	qDebug() << qPrintable(QString(" Sharpening kernel: %1").arg(settings.sharp_kerns[settings.sharp_kernel].c_str()));
+	qDebug() << qPrintable(QString(" Sharpening width: %1").arg(QString::number(settings.sharp_width, 'f', 2)));
+	qDebug() << qPrintable(QString(" Sharpening contrast: %1").arg(QString::number(settings.sharp_contrast, 'f', 2)));
+	qDebug() << qPrintable(QString(" Sharpening threshold: %1").arg(QString::number(settings.sharp_tresh, 'f', 2)));
 
     qDebug() << "----------------------------";
 }

@@ -39,7 +39,7 @@
 #include "process.h"
 
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 51
+#define VERSION_MINOR 59
 
 void setPBarColor(QProgressBar* progressBar, const QColor& color = QColor("#05B8CC"));
 
@@ -61,7 +61,8 @@ class MainWindow : public QMainWindow {
     Q_OBJECT  // Macro needed to handle signals and slots
 public:
     MainWindow();
-    void emitUpdateTextSignal(const QString& text) { emit updateTextSignal(text); }  // Public method to emit the signal
+    //explicit MainWindow(const QStringList& args, QWidget* parent = nullptr);
+    virtual void emitUpdateTextSignal(const QString& text) { emit updateTextSignal(text); }  // Public method to emit the signal
 
 signals:
     void updateTextSignal(const QString& text);
@@ -87,6 +88,8 @@ private slots:
     void halfSizeSettings(bool checked);
     void demSettings();
     void rclrSettings();
+    void cropSettings();
+    void lutCameraSettings();
     void lutSettings();
     void lutPSettings();
     void denoiseSettings();
@@ -96,6 +99,8 @@ private slots:
     void prntSettings();
 
 private:
+    QStringList commandLineArgs;
+
     QFutureWatcher<bool> processingWatcher;
     QProgressBar* progressBar;
 
@@ -107,6 +112,7 @@ private:
     QList<QAction*> frmtActions;
     QList<QAction*> bitActions;
     QList<QAction*> rawActions;
+	QList<QAction*> cropActions;
     QList<QAction*> lutActions;
     QList<QAction*> lutPActions;
     QList<QAction*> denoiseActions;
@@ -115,3 +121,16 @@ private:
     QList<QAction*> rclrActions;
 };
 
+
+class DummyWindow : public MainWindow {
+    Q_OBJECT  // Macro needed to handle signals and slots
+public:
+    DummyWindow() : MainWindow() {};
+    void emitUpdateTextSignal(const QString& text) override {};  // Public method to emit the signal
+};
+
+class DummyProgressBar : public QProgressBar {
+    Q_OBJECT  // Macro needed to handle signals and slots
+public:
+    DummyProgressBar() : QProgressBar() {};
+};

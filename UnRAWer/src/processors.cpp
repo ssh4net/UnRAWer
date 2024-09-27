@@ -95,6 +95,7 @@ bool read_chunk(std::ifstream* file, std::vector<char>& raw_buffer, std::streamo
     return true;
 }
 
+/*
 // oiio file reader
 void oReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
             std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
@@ -210,6 +211,7 @@ void oReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
         (*fileCntr)--;
         (*myPools)["OProcessor"]->enqueue(OProcessor, index, std::ref(processing_entry), fileCntr, myPools);
 }
+*/
 
 // LibRaw buffer reader
 void Reader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
@@ -385,7 +387,6 @@ void Unpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry, st
     processing->raw_data = std::make_unique<LibRaw>();
 	LibRaw* raw = processing->raw_data.get();
 
-    raw->imgdata.params.use_camera_wb = settings.rawParms.use_camera_wb;
     raw->imgdata.params.use_camera_matrix = settings.rawParms.use_camera_matrix;
     raw->imgdata.params.highlight = settings.rawParms.highlight;
     raw->imgdata.params.aber[0] = settings.rawParms.aber[0];
@@ -514,11 +515,74 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     
     libraw_processed_image_t* image = processing->raw_image;
 
+	LOG(trace) << "Processor: RAW Image buffer: " << &image->data << std::endl;
+
     OIIO::ImageSpec image_spec(image->width, image->height, image->colors, OIIO::TypeDesc::UINT16);
     OIIO::ImageBuf image_buf(image_spec, image->data);
 
 	//EXIF Parser
 	EXIF::get_exif(processing->raw_data, image_spec);
+
+	// Estimate Crop for ImageBuf w.r.t. orientation
+    auto crops = processing->raw_data->imgdata.sizes.raw_inset_crops;
+    LOG(trace) << std::format("Exif crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}", crops->ctop, crops->cleft, crops->cwidth, crops->cheight);
+
+	LOG(trace) << std::format("Make: {}", processing->raw_data->imgdata.idata.make);
+	LOG(trace) << std::format("Model: {}", processing->raw_data->imgdata.idata.model);
+	LOG(trace) << std::format("Orientation: {}", processing->raw_data->imgdata.sizes.flip);
+
+	processing->m_exif.make = processing->raw_data->imgdata.idata.make;
+	processing->m_exif.model = processing->raw_data->imgdata.idata.model;
+
+    processing->m_crops.width = image->width;
+    processing->m_crops.height = image->height;
+    processing->m_crops.left = 0;
+    processing->m_crops.top = 0;
+    // 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CCW Vertical, 6 - 90 CW Vertical
+    //           top        width
+    //            |          |
+    //    left  --+----------+-
+	//            |          |
+	//            |          |
+	//  heigth  --+----------+-
+	//            |          |
+    if (settings.crop_mode != -1) {
+		switch (processing->raw_data->imgdata.sizes.flip) {
+		case 0: // Unrotated/Horisontal
+			LOG(trace) << "Processor: Unrotated/Horisontal\n";
+			processing->m_crops.left = crops->cleft;
+			processing->m_crops.top = crops->ctop;
+			processing->m_crops.width = crops->cwidth;
+			processing->m_crops.height = crops->cheight;
+			break;
+		case 3: // 180 Horisontal
+			LOG(trace) << "Processor: 180 Horisontal\n";
+			processing->m_crops.left = image->width - crops->cleft - crops->cwidth;
+			processing->m_crops.top = image->height - crops->ctop - crops->cheight;
+			processing->m_crops.width = crops->cwidth;
+			processing->m_crops.height = crops->cheight;
+			break;
+		case 5: // 90 CCW Vertical
+			LOG(trace) << "Processor: 90 CCW Vertical\n";
+			processing->m_crops.left = crops->ctop;
+			processing->m_crops.top = image->height - crops->cleft - crops->cwidth;
+			processing->m_crops.width = crops->cheight;
+			processing->m_crops.height = crops->cwidth;
+			break;
+		case 6: // 90 CW Vertical
+			LOG(trace) << "Processor: 90 CW Vertical\n";
+			processing->m_crops.left = image->width - crops->ctop - crops->cheight;
+			processing->m_crops.top = crops->cleft;
+			processing->m_crops.width = crops->cheight;
+			processing->m_crops.height = crops->cwidth;
+			break;
+		default:
+			LOG(error) << "Processor: Unsupported orientation" << std::endl;
+			break;
+		}
+        LOG(trace) << std::format("Crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}\n",
+            processing->m_crops.top, processing->m_crops.left, processing->m_crops.width, processing->m_crops.height);
+	}
 
     //auto [process_ok, out_buf] = imgProcessor(std::ref<ImageBuf>(image_buf), procGlobals.ocio_conf_ptr.get(), &settings.dLutPreset, processing_entry, image, nullptr, nullptr);
     //if (!process_ok) {
@@ -535,18 +599,26 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     // LUT Transform
     bool lutValid = false;
     // check if lut_preset is not nullptr set lutValid to true
-    if (settings.dLutPreset != "") {
+    //if (settings.dLutPreset != "") {
+    if (processing->lut_preset != "") {
         lutValid = true;
     }
     //auto test = input_buf.spec();
     //std::cout << test.width << " " << test.height << " " << test.nchannels << std::endl;
     LOG(trace) << "Input image: " << image_buf.spec().width << "x" << image_buf.spec().height << "x" << image_buf.spec().nchannels << std::endl;
     LOG(trace) << "Input image: " << image_buf.spec().format << std::endl;
-
+	LOG(trace) << "LUT: Input image buffer " << image_buf.localpixels() << std::endl;
     if (settings.lutMode >= 0 && lutValid) {
-        auto lutPreset = settings.lut_Preset[settings.dLutPreset];
+		auto lutPreset = settings.lut_Preset.at(processing->lut_preset);
+
+        if (settings.perCamera) {
+            // trim .scp extension
+			lutPreset = lutPreset.substr(0, lutPreset.size() - 4);
+            lutPreset += "_" + processing->m_exif.make + "_" + processing->m_exif.model + ".csp";
+        }
+
         if (ImageBufAlgo::ociofiletransform(*lut_buf_ptr, image_buf, lutPreset, false, false, procGlobals.ocio_conf_ptr.get())) {
-            LOG(info) << "LUT preset " << settings.dLutPreset << " <" << lutPreset << "> " << " applied" << std::endl;
+            LOG(info) << "LUT preset " << processing->lut_preset << " <" << lutPreset << "> " << " applied" << std::endl;
             processing_entry->setStatus(ProcessingStatus::Graded);
             image_buf.clear();
             if (!processing_entry->rawCleared) {
@@ -565,7 +637,7 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     }
     
     (*fileCntr)--;
-    
+	LOG(trace) << "LUT: Out Image buffer: " << lut_buf_ptr->localpixels() << std::endl;
     // Apply unsharp mask
 
     if (settings.sharp_mode != -1) {
@@ -575,6 +647,8 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
         float threshold = settings.sharp_tresh;
         if (ImageBufAlgo::unsharp_mask(*uns_buf_ptr, *lut_buf_ptr, kernel, width, contrast, threshold)) {
             LOG(debug) << "Unsharp mask applied: <" << kernel.c_str() << ">" << std::endl;
+			LOG(trace) << "Unsharp: Out Image buffer: " << uns_buf_ptr->localpixels() << std::endl;
+			LOG(debug) << "Unsharp: kernel: " << kernel << " width: " << width << " contrast: " << contrast << " threshold: " << threshold << std::endl;
             processing_entry->setStatus(ProcessingStatus::Unsharped);
             lut_buf_ptr->clear();
             if (!processing_entry->rawCleared) {
@@ -595,7 +669,8 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 
     // temp copy for saving
     out_buf_ptr = uns_buf_ptr;
-
+	LOG(trace) << "Unsharp: Unsh Image buffer: " << uns_buf_ptr->localpixels() << std::endl;
+	LOG(trace) << "Unsharp: Out Image buffer: " << out_buf_ptr->localpixels() << std::endl;
 ///    return { true, std::make_shared<ImageBuf>(*out_buf_ptr) };
     ///
     processing->image = std::make_unique<ImageBuf>(*out_buf_ptr);
@@ -607,7 +682,7 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 
     (*myPools)["writer"]->enqueue(Writer, index, std::ref(processing_entry), fileCntr, myPools);
 }
-
+/*
 void OProcessor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
                std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto& processing = processing_entry;
@@ -696,12 +771,17 @@ void OProcessor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 
     (*myPools)["writer"]->enqueue(Writer, index, std::ref(processing_entry), fileCntr, myPools);
 }
+*/
 
 void Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 	std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto& processing = processing_entry;
+	std::array<int, 4> crops = { processing->m_crops.left, processing->m_crops.top, processing->m_crops.width, processing->m_crops.height };
     //LibRaw& raw = processing->raw_data;
     std::unique_ptr<LibRaw>& raw = processing->raw_data;
+
+	LOG(trace) << "Writer: raw image buffer: " << &raw->imgdata.image << std::endl;
+	LOG(trace) << "Writer: Inp Image buffer: " << processing->image->localpixels() << std::endl;
 
     // Check if the output path exists and create it if not
     std::string outDir = outpaths.get_path(processing->outPathIdx);
@@ -780,8 +860,8 @@ void Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry,
         //////////////////////////////////////////////////
         /// Image saving
         ///
-
-        bool write_ok = img_write(processing->image, processing->outSpec, outFilePath, TypeDesc::UINT16, TypeDesc::UINT16, nullptr, nullptr);
+		LOG(trace) << "Writer: Inp Image Buffer: " << processing->image->localpixels() << std::endl;
+        bool write_ok = img_write(processing->image, processing->outSpec, outFilePath, TypeDesc::UINT16, TypeDesc::UINT16, nullptr, nullptr, crops);
         if (!write_ok) {
             LOG(error) << "Error writing " << outFilePath << std::endl;
             //mainWindow->emitUpdateTextSignal("Error! Check console for details");

@@ -41,8 +41,8 @@ void Sorter( int index, QString fileName, std::unique_ptr<ProcessingParams>& pro
 void Reader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 	        std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
 
-void oReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
-			 std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
+//void oReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
+//			 std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
 
 void LReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 			 std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
@@ -63,8 +63,8 @@ void Dcraw(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 			   std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
 
-void OProcessor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
-	std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
+//void OProcessor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
+//	std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
 
 void Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 	        std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);

@@ -39,12 +39,14 @@ bool doProgress(std::atomic_size_t* fileCntr, size_t files, QProgressBar* progre
 
 bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainWindow) {
     std::vector<QString> fileNames;
-    Timer f_timer;
+    mTimer f_timer;
 
 // todo: add support for user defined raw formats and move to global scope?
     auto raw_ext = OIIO::get_extension_map()["raw"];
     const std::unordered_set<std::string> raw_ext_set(raw_ext.begin(), raw_ext.end());
 // end todo
+
+	int count = 0;
 
     for (const QUrl& url : urls) {
         QString fileString = url.toLocalFile();
@@ -58,6 +60,7 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
                     QString file = it.next();
                     if (isRaw(file, raw_ext_set)) {
                         fileNames.push_back(file);
+						count++;
                     }
                     else {
                         LOG(error) << "SORT: Not a raw file: " << file.toStdString() << std::endl;
@@ -69,6 +72,7 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
 			else {
                 if (isRaw(fileString, raw_ext_set)) {
                     fileNames.push_back(fileString);
+					count++;
                 }
                 else {
                     LOG(error) << "SORT: Not a raw file: " << fileString.toStdString() << std::endl;
@@ -77,6 +81,11 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
 			}
         }
     }
+
+	if (count == 0) {
+        qDebug() << "No raw files found!";
+		return false;
+	}
 
     //OIIO::ColorConfig ocio_conf(settings.ocioConfigPath); // load ocio config once
 

@@ -70,7 +70,7 @@
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <PreprocessorDefinitions />
     </ClCompile>
@@ -168,7 +168,7 @@ xcopy /y e:\DVR\bin\libwebpmux.dll "$(TargetDir)"</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <QtMoc>
@@ -305,6 +305,7 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
     <QtRcc Include="src\gui.qrc" />
     <QtUic Include="src\gui.ui" />
     <QtMoc Include="src\ui.h" />
+    <ClCompile Include="src\cli.cpp" />
     <ClCompile Include="src\exif_parser.cpp" />
     <ClCompile Include="src\fileProcessor.cpp" />
     <ClCompile Include="src\imageio.cpp" />
@@ -322,6 +323,7 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\cli.h" />
     <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\exif_parser.h" />
     <ClInclude Include="src\fileProcessor.h" />

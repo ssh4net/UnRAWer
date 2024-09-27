@@ -30,11 +30,11 @@ typedef unsigned int uint;
 typedef unsigned long ulong;
 
 struct Settings {
-	bool conEnable, useSbFldr;
+	bool conEnable, useSbFldr, perCamera;
 	std::string pathPrefix;
 
 	uint rangeMode;
-	int lutMode, sharp_mode;
+	int crop_mode, lutMode, sharp_mode;
 	uint denoise_mode;
 	int fileFormat, defFormat;
 	int bitDepth, defBDepth;
@@ -88,6 +88,7 @@ struct Settings {
 		pathPrefix = "";	// Path prefix for output
 		verbosity = 3;		// Verbosity level: 0 - none, 1 - errors, 2 - warnings, 3 - info, 4 - debug, 5 - trace
 		lutMode = 0;		// LUT mode: -1 - disabled, 0 - Smart, 1 - Force
+		crop_mode = 0;		// Crop mode: -1 - disabled, 0 - Smart, 1 - Force
 		dLutPreset = "";	// Default LUT preset, top one
 
 		numThreads = 5;		// Number of threads: 0 - auto, >0 - number of threads
@@ -98,7 +99,7 @@ struct Settings {
 		defBDepth = 1;		// Default bit depth = uint16
 		quality = 100;		// JPEG quality
 		
-		rawRot = -1;		// Raw rotation: -1 - Auto EXIF, 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CW Vertical, 6 - 90 CCW Vertical
+		rawRot = -1;		// Raw rotation: -1 - Auto EXIF, 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CCW Vertical, 6 - 90 CW Vertical
 		rawSpace = 1;
 		dDemosaic = 5;
 		

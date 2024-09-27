@@ -50,6 +50,8 @@ void DropArea::dropEvent(QDropEvent* event) {
     }
 }
 
+//MainWindow::MainWindow();
+
 MainWindow::MainWindow() {
     this->setStyleSheet(" color: #E0E0E0; background-color: #101010; ");
 
@@ -141,26 +143,31 @@ MainWindow::MainWindow() {
     useSubfldr->setChecked(settings.useSbFldr);
 
     QAction* halfSizeRaw = new QAction("Half Resolution", r_menu);
-    halfSizeRaw->setCheckable(true);
-    halfSizeRaw->setChecked(settings.rawParms.half_size == 0 ? false : true);
+	halfSizeRaw->setCheckable(true);
+	halfSizeRaw->setChecked(settings.rawParms.half_size == 0 ? false : true);
 
-    // Submenu
-    QMenu* rng_submenu = new QMenu("Floats type", o_menu);
-    QMenu* fmt_submenu = new QMenu("Formats", o_menu);
-    QMenu* bit_submenu = new QMenu("Bits Depth", o_menu);
-    QMenu* raw_submenu = new QMenu("RAW Rotation", r_menu);
-    QMenu* dem_submenu = new QMenu("Demosaic", r_menu);
-    QMenu* denoise_submenu = new QMenu("Denoise", r_menu);
-    QMenu* rclr_submenu = new QMenu("RAW ColorSpace", r_menu);
-    QMenu* lut_submenu = new QMenu("LUT transform", p_menu);
-    
-    QMenu* lut_p_submenu = new QMenu("LUT Presets", lut_submenu);
+	// Submenu
+	QMenu* rng_submenu = new QMenu("Floats type", o_menu);
+	QMenu* fmt_submenu = new QMenu("Formats", o_menu);
+	QMenu* bit_submenu = new QMenu("Bits Depth", o_menu);
+	QMenu* raw_submenu = new QMenu("RAW Rotation", r_menu);
+	QMenu* dem_submenu = new QMenu("Demosaic", r_menu);
+	QMenu* denoise_submenu = new QMenu("Denoise", r_menu);
+	QMenu* rclr_submenu = new QMenu("RAW ColorSpace", r_menu);
 
-    QMenu* sharp_submenu = new QMenu("Unsharp", p_menu);
-    QMenu* sharp_k_submenu = new QMenu("Unsharp kernel", p_menu);
+	QAction* lut_exif = new QAction("Per Camera", p_menu);
+	lut_exif->setCheckable(true);
+	lut_exif->setChecked(settings.perCamera);
 
-    QMenu* verb_submenu = new QMenu("Verbosity", s_menu);
-    
+	QMenu* lut_submenu = new QMenu("LUT transform", p_menu);
+	QMenu* lut_p_submenu = new QMenu("LUT Presets", p_menu);
+
+	QMenu* sharp_submenu = new QMenu("Unsharp", p_menu);
+	QMenu* sharp_k_submenu = new QMenu("Unsharp kernel", p_menu);
+	QMenu* crop_submenu = new QMenu("Crop", p_menu);
+
+	QMenu* verb_submenu = new QMenu("Verbosity", s_menu);
+
     QActionGroup* RangeGroup = new QActionGroup(rng_submenu);
     QActionGroup* FrmtGroup = new QActionGroup(fmt_submenu);
     QActionGroup* BitsGroup = new QActionGroup(bit_submenu);
@@ -172,6 +179,7 @@ MainWindow::MainWindow() {
     QActionGroup* SharpGroup = new QActionGroup(sharp_submenu);
     QActionGroup* SharpKGroup = new QActionGroup(sharp_k_submenu);
     QActionGroup* LutPresetGroup = new QActionGroup(lut_p_submenu);
+	QActionGroup* CropGroup = new QActionGroup(crop_submenu);
 
     QActionGroup* VerbGroup = new QActionGroup(verb_submenu);
 
@@ -216,8 +224,8 @@ MainWindow::MainWindow() {
 	}
     // camera raw rotation
     std::vector<std::pair<const QString, int>> rawMenu = {
-		{"Auto EXIF", -1}, {"0 Horizontal", 0}, {"-90 Vertical", 3},
-		{"+90 Vertical", 5}, {"180 Horizontal", 6} };
+		{"Auto EXIF", -1}, {"0 Horizontal", 0}, {"180 Horisontal", 3},
+		{"-90 Vertical", 5}, {"+90 Vertical", 6} };
     for (auto& [title, value] : rawMenu) {
         QAction* action = createAction(title, RawGroup, raw_submenu, true, (settings.rawRot == value));
         rawActions.push_back(action);
@@ -250,6 +258,13 @@ MainWindow::MainWindow() {
 		QAction* action = createAction(title, RclrGroup, rclr_submenu, true, (settings.rawSpace == value));
 		rclrActions.push_back(action);
 	}
+    // crop
+	std::vector<std::pair<const QString, int>> cropMenu = {
+		{"Disabled", -1}, {"Auto", 0}, {"Forced", 1} };
+    for (auto& [title, value] : cropMenu) {
+        QAction* action = createAction(title, CropGroup, crop_submenu, true, (settings.crop_mode == value));
+        cropActions.push_back(action);
+    }
     // lut transform
     std::vector<std::pair<const QString, int>> lutMenu = {
         {"Disabled", -1}, {"Smart", 0}, {"Forced", 1} };
@@ -297,6 +312,9 @@ MainWindow::MainWindow() {
     r_menu->addAction(halfSizeRaw);
     r_menu->addSeparator();
     //
+	p_menu->addMenu(crop_submenu);
+	p_menu->addSeparator();
+	p_menu->addAction(lut_exif);
     p_menu->addMenu(lut_submenu);
     p_menu->addMenu(lut_p_submenu);
     p_menu->addSeparator();
@@ -350,6 +368,12 @@ MainWindow::MainWindow() {
     for (QAction* action : rclrActions) {
 		connect(action, &QAction::triggered, this, &MainWindow::rclrSettings);
 	}
+	for (QAction* action : cropActions) {
+		connect(action, &QAction::triggered, this, &MainWindow::cropSettings);
+	}
+
+	connect(lut_exif, &QAction::triggered, this, &MainWindow::lutCameraSettings);
+    
     for (QAction* action : lutActions) {
         connect(action, &QAction::triggered, this, &MainWindow::lutSettings);
     }
@@ -491,13 +515,13 @@ void MainWindow::rawSettings() {
     }
     else if (action == rawActions[2]) {
 		settings.rawRot = settings.raw_rot[3];
-        emit updateTextSignal("Camera Raw rotation - 90 CW (Vertical)");
-		qDebug() << "Camera Raw rotation set to 90 degree CW - Vertical";
+        emit updateTextSignal("Camera Raw rotation - 180 (Horisontal)");
+		qDebug() << "Camera Raw rotation set to 180 degree (Horizontal)";
 	}
     else if (action == rawActions[3]) {
 		settings.rawRot = settings.raw_rot[2];
-		emit updateTextSignal("Camera Raw rotation - 180 (Horizontal)");
-        qDebug() << "Camera Raw rotation set to 180 degree (Horizontal)";
+		emit updateTextSignal("Camera Raw rotation - 90 CCW (Vertical)");
+        qDebug() << "Camera Raw rotation set to 90 degree CCW (Vertical)";
 	}
     else if (action == rawActions[4]) {
 		settings.rawRot = settings.raw_rot[4];
@@ -563,6 +587,33 @@ void MainWindow::rclrSettings() {
             qDebug() << qPrintable(QString("Raw color space - %1 ").arg(actionMap[i].first));
         }
     }
+}
+
+void MainWindow::cropSettings() {
+	std::vector<std::pair<QString, int>> actionMap = { {"Disabled", -1}, {"Auto", 0}, {"Forced", 1} };
+
+	QAction* action = qobject_cast<QAction*>(sender());
+	for (int i = 0; i < cropActions.size() && i < actionMap.size(); ++i) {
+		if (action == cropActions[i]) {
+			settings.crop_mode = actionMap[i].second;
+			emit updateTextSignal(QString("Crop - %1 ").arg(actionMap[i].first));
+			qDebug() << qPrintable(QString("Crop - %1 ").arg(actionMap[i].first));
+			break;
+		}
+	}
+}
+
+void MainWindow::lutCameraSettings() {
+	QAction* action = qobject_cast<QAction*>(sender());
+	settings.perCamera = action->isChecked();
+	emit updateTextSignal(QString("LUT per camera - %1").arg(settings.perCamera ? "On" : "Off"));
+	qDebug() << qPrintable(QString("Per Camera Model LUT - %1").arg(settings.perCamera ? "On" : "Off"));
+    if (settings.perCamera) {
+		qDebug() << "LUT will be load as path_to/lut_preset_Make_Model.scp";
+	}
+	else {
+		qDebug() << "LUT will be load as path_to/lut_preset.scp";
+	}
 }
 
 void MainWindow::lutSettings() {

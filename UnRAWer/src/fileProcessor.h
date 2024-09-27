@@ -138,6 +138,16 @@ struct ProcessingParams {
         float sigma;
     } denoise;
 
+    struct raw_crop {
+        int left, top, width, height;
+    } m_crops;
+
+	struct exif {
+		std::string make, model, lens, serial, software, date, time;
+		float fnumber, focal, iso, shutter;
+		int width, height;
+	} m_exif;
+
     ProcessingStatus status = ProcessingStatus::NotStarted;
     // TODO: maybe add mutex for raw clear status
     bool rawCleared = false;

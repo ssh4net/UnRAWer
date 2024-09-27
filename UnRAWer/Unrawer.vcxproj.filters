@@ -60,6 +60,9 @@
     <ClCompile Include="src\exif_parser.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\cli.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="src\gui.ui">
@@ -106,6 +109,7 @@
     <ClInclude Include="src\exif_parser.h">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="src\cli.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="src\unrw_config.toml">

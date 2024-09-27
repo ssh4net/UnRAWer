@@ -291,7 +291,7 @@ bool makePath(const std::string& out_path) {
 }
 
 bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& out_spec, const std::string& outputFileName,
-               TypeDesc out_format, TypeDesc orig_format, QProgressBar* progressBar, MainWindow* mainWindow) {
+               TypeDesc out_format, TypeDesc orig_format, QProgressBar* progressBar, MainWindow* mainWindow, std::array<int, 4> crops) {
     
     //ImageSpec& ospec = ;
     // out_buf->specmod();
@@ -345,7 +345,8 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
     //rspec.attribute("tiff:bigtiff", 1);
     //rspec.set_format(TypeDesc::FLOAT); // temporary
     //LOG(info) << "Channels: " << rspec.nchannels << " Alpha channel: " << rspec.alpha_channel << std::endl;
-//
+
+
     //out_spec->format = getTypeDesc(settings.bitDepth);
     if (getTypeDesc(settings.bitDepth) == TypeDesc::UNKNOWN) {
         out_spec->set_format(orig_format);
@@ -354,7 +355,13 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
         out_spec->set_format(TypeDesc::UINT16); //getTypeDesc(settings.bitDepth));
     }
 
-    LOG(info) << "Output file format: " << formatText(out_spec->format) << std::endl;
+	ImageSpec write_spec = *out_spec.get();
+
+    if (settings.crop_mode != -1) {
+        write_spec.width =  crops[2]; // .width;
+        write_spec.height = crops[3]; // .height;
+    }
+    LOG(info) << "Output file format: " << formatText(write_spec.format) << std::endl;
 
     auto out = ImageOutput::create(outputFileName);
     if (!out) {
@@ -362,16 +369,28 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
         mainWindow->emitUpdateTextSignal("Error! Check console for details");
         return false;
     }
-    out->open(outputFileName, *out_spec, ImageOutput::Create);
+    out->open(outputFileName, write_spec, ImageOutput::Create);
 
     QMetaObject::invokeMethod(progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, 0));
 
     LOG(info) << "Writing " << outputFileName << std::endl;
 
-    auto ou_px = out_buf->localpixels();
-    auto ou_pst = out_buf->pixel_stride();
-    auto ou_bst = out_buf->scanline_stride();
-    auto ou_zst = out_buf->z_stride();
+	ImageBuf write_buf(write_spec);
+
+	if (settings.crop_mode != -1) {
+		LOG(debug) << "Cropping image" << std::endl;
+		write_buf = OIIO::ImageBufAlgo::cut(*out_buf, 
+            ROI(crops[0], crops[0] + crops[2],
+                crops[1], crops[1] + crops[3]));
+    }
+    else {
+		write_buf = *out_buf.get();
+    }
+
+    auto ou_px =  write_buf.localpixels();
+    auto ou_pst = write_buf.pixel_stride();
+    auto ou_bst = write_buf.scanline_stride();
+    auto ou_zst = write_buf.z_stride();
 
     out->write_image(out_format, ou_px, ou_pst, ou_bst, ou_zst, *m_progress_callback, progressBar);
     out->close();

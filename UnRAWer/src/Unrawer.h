@@ -28,7 +28,7 @@ bool unrawer_main(const std::string& inputFileName, const std::string& outputFil
 	ColorConfig* colorconfig, std::string* lut_preset,
 	QProgressBar* progressBar, MainWindow* mainWindow);
 
-std::pair<bool, std::shared_ptr<ImageBuf>>
-imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* lut_preset,
-	std::shared_ptr<ProcessingParams>& processing_entry, libraw_processed_image_t* raw_image,
-	QProgressBar* progressBar, MainWindow* mainWindow);
+//std::pair<bool, std::shared_ptr<ImageBuf>>
+//imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* lut_preset,
+//	std::shared_ptr<ProcessingParams>& processing_entry, libraw_processed_image_t* raw_image,
+//	QProgressBar* progressBar, MainWindow* mainWindow);

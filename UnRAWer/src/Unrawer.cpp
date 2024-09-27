@@ -33,6 +33,7 @@
 
 using namespace OIIO;
 
+/*
 std::pair<bool, std::shared_ptr<ImageBuf>> 
 imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* c_lut_preset, 
              std::shared_ptr<ProcessingParams>& processing_entry, libraw_processed_image_t* raw_image,
