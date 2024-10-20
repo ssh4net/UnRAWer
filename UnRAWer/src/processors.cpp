@@ -549,6 +549,10 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     processing->m_crops.left = 0;
     processing->m_crops.top = 0;
 
+	int m_cwidth = image->width;
+	int m_cheight = image->height;
+    int m_cleft = 0;
+	int m_ctop = 0;
     // 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CCW Vertical, 6 - 90 CW Vertical
     //           top        width
     //            |          |
@@ -568,7 +572,6 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 
 	bool ok = cw_ok && ch_ok && cl_ok && ct_ok;
 
-	int m_cleft, m_ctop, m_cwidth, m_cheight;
 
 	if (!ok) {
 		LOG(error) << "Processor: Invalid crop values" << std::endl;
