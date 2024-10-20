@@ -193,11 +193,11 @@ xcopy /y e:\DVR\bin\jasperd.dll "$(TargetDir)"
 
 xcopy /y e:\DVR\bin\OpenColorIO_d_2_4.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\bin\OpenEXRUtil-3_3_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\OpenEXR-3_3_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\OpenEXRCore-3_3_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\IlmThread-3_3_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\Iex-3_3_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenEXRUtil-3_4_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenEXR-3_4_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenEXRCore-3_4_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\IlmThread-3_4_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\Iex-3_4_d.dll "$(TargetDir)"
 
 xcopy /y e:\DVR\bin\raw_rd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\rawd.dll "$(TargetDir)"

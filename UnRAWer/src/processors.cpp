@@ -526,6 +526,16 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 	// Estimate Crop for ImageBuf w.r.t. orientation
     auto crops = processing->raw_data->imgdata.sizes.raw_inset_crops;
     LOG(trace) << std::format("Exif crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}", crops->ctop, crops->cleft, crops->cwidth, crops->cheight);
+    
+    unsigned short th_width = processing->raw_data->imgdata.thumbnail.twidth;
+    unsigned short th_heigth = processing->raw_data->imgdata.thumbnail.theight;
+
+	LOG(trace) << std::format("\n\tThumbnail width: {}\n\tThumbnail heigth: {}", th_width, th_heigth);
+
+    unsigned short iheigth = processing->raw_data->imgdata.sizes.iheight;
+    unsigned short iwidth = processing->raw_data->imgdata.sizes.iwidth;
+
+	LOG(trace) << std::format("\n\tImage half width: {}\n\tImage half heigth: {}", iwidth, iheigth);
 
 	LOG(trace) << std::format("Make: {}", processing->raw_data->imgdata.idata.make);
 	LOG(trace) << std::format("Model: {}", processing->raw_data->imgdata.idata.model);
@@ -538,6 +548,7 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     processing->m_crops.height = image->height;
     processing->m_crops.left = 0;
     processing->m_crops.top = 0;
+
     // 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CCW Vertical, 6 - 90 CW Vertical
     //           top        width
     //            |          |
@@ -546,42 +557,92 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 	//            |          |
 	//  heigth  --+----------+-
 	//            |          |
-    if (settings.crop_mode != -1) {
-		switch (processing->raw_data->imgdata.sizes.flip) {
-		case 0: // Unrotated/Horisontal
-			LOG(trace) << "Processor: Unrotated/Horisontal\n";
-			processing->m_crops.left = crops->cleft;
-			processing->m_crops.top = crops->ctop;
-			processing->m_crops.width = crops->cwidth;
-			processing->m_crops.height = crops->cheight;
-			break;
-		case 3: // 180 Horisontal
-			LOG(trace) << "Processor: 180 Horisontal\n";
-			processing->m_crops.left = image->width - crops->cleft - crops->cwidth;
-			processing->m_crops.top = image->height - crops->ctop - crops->cheight;
-			processing->m_crops.width = crops->cwidth;
-			processing->m_crops.height = crops->cheight;
-			break;
-		case 5: // 90 CCW Vertical
-			LOG(trace) << "Processor: 90 CCW Vertical\n";
-			processing->m_crops.left = crops->ctop;
-			processing->m_crops.top = image->height - crops->cleft - crops->cwidth;
-			processing->m_crops.width = crops->cheight;
-			processing->m_crops.height = crops->cwidth;
-			break;
-		case 6: // 90 CW Vertical
-			LOG(trace) << "Processor: 90 CW Vertical\n";
-			processing->m_crops.left = image->width - crops->ctop - crops->cheight;
-			processing->m_crops.top = crops->cleft;
-			processing->m_crops.width = crops->cheight;
-			processing->m_crops.height = crops->cwidth;
-			break;
-		default:
-			LOG(error) << "Processor: Unsupported orientation" << std::endl;
-			break;
+    bool cw_ok = crops->cwidth > 0;
+	bool ch_ok = crops->cheight > 0;
+
+	cw_ok &= crops->cwidth <= image->width;
+	ch_ok &= crops->cheight <= image->height;
+	
+    bool cl_ok = crops->cleft + crops->cwidth <= image->width;
+	bool ct_ok = crops->ctop + crops->cheight <= image->height;
+
+	bool ok = cw_ok && ch_ok && cl_ok && ct_ok;
+
+	int m_cleft, m_ctop, m_cwidth, m_cheight;
+
+	if (!ok) {
+		LOG(error) << "Processor: Invalid crop values" << std::endl;
+		if (cw_ok && ch_ok) { // if crop width and height are valid
+			m_cleft = iwidth - crops->cwidth / 2;
+			m_ctop = iheigth - crops->cheight / 2;
+			m_cwidth = crops->cwidth;
+			m_cheight = crops->cheight;
+			ok = true;
+		} 
+		else if (th_width > 0 && th_heigth > 0) { // if thumbnail width and height are valid
+            if (processing->raw_data->imgdata.sizes.flip == 0 || processing->raw_data->imgdata.sizes.flip == 3) {
+                if (image->width / float(th_width) < 1.25f && image->height / float(th_heigth) < 1.25f) {
+                    LOG(debug) << "Processor: Thumbnail is full-size" << std::endl;
+                    m_cleft = iwidth - th_width / 2;
+                    m_ctop = iheigth - th_heigth / 2;
+                    m_cwidth = th_width;
+                    m_cheight = th_heigth;
+                    ok = true;
+                }
+			}
+			else if (processing->raw_data->imgdata.sizes.flip == 5 || processing->raw_data->imgdata.sizes.flip == 6) {
+				if (image->width / float(th_heigth) < 1.25f && image->height / float(th_width) < 1.25f) {
+					LOG(debug) << "Processor: Thumbnail is full-size" << std::endl;
+					m_cleft = iwidth - th_width / 2;
+					m_ctop = iheigth - th_heigth / 2;
+					m_cwidth = th_width;
+					m_cheight = th_heigth;
+					ok = true;
+				}
+			}
 		}
-        LOG(trace) << std::format("Crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}\n",
-            processing->m_crops.top, processing->m_crops.left, processing->m_crops.width, processing->m_crops.height);
+		else {
+			LOG(error) << "Processor: No valid crop values" << std::endl;
+		}
+	};
+
+	if (settings.crop_mode != -1 && ok) {
+			LOG(debug) << "Processor: Crop valid" << std::endl;
+			switch (processing->raw_data->imgdata.sizes.flip) {
+			case 0: // Unrotated/Horisontal
+				LOG(trace) << "Processor: Unrotated/Horisontal\n";
+				processing->m_crops.left = m_cleft;
+				processing->m_crops.top = m_ctop;
+				processing->m_crops.width = m_cwidth;
+				processing->m_crops.height = m_cheight;
+				break;
+			case 3: // 180 Horisontal
+				LOG(trace) << "Processor: 180 Horisontal\n";
+				processing->m_crops.left = image->width - m_cleft - m_cwidth;
+				processing->m_crops.top = image->height - m_ctop - m_cheight;
+				processing->m_crops.width = m_cwidth;
+				processing->m_crops.height = m_cheight;
+				break;
+			case 5: // 90 CCW Vertical
+				LOG(trace) << "Processor: 90 CCW Vertical\n";
+				processing->m_crops.left = m_ctop;
+				processing->m_crops.top = image->height - m_cleft - m_cwidth;
+				processing->m_crops.width = m_cheight;
+				processing->m_crops.height = m_cwidth;
+				break;
+			case 6: // 90 CW Vertical
+				LOG(trace) << "Processor: 90 CW Vertical\n";
+				processing->m_crops.left = image->width - m_ctop - m_cheight;
+				processing->m_crops.top = m_cleft;
+				processing->m_crops.width = m_cheight;
+				processing->m_crops.height = m_cwidth;
+				break;
+			default:
+				LOG(error) << "Processor: Unsupported orientation" << std::endl;
+				break;
+			}
+			LOG(trace) << std::format("Crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}\n",
+				processing->m_crops.top, processing->m_crops.left, processing->m_crops.width, processing->m_crops.height);
 	}
 
     //auto [process_ok, out_buf] = imgProcessor(std::ref<ImageBuf>(image_buf), procGlobals.ocio_conf_ptr.get(), &settings.dLutPreset, processing_entry, image, nullptr, nullptr);
@@ -609,16 +670,20 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     LOG(trace) << "Input image: " << image_buf.spec().format << std::endl;
 	LOG(trace) << "LUT: Input image buffer " << image_buf.localpixels() << std::endl;
     if (settings.lutMode >= 0 && lutValid) {
-		auto lutPreset = settings.lut_Preset.at(processing->lut_preset);
+        std::filesystem::path lutPreset = settings.lut_Preset.at(processing->lut_preset);
 
         if (settings.perCamera) {
-            // trim .scp extension
-			lutPreset = lutPreset.substr(0, lutPreset.size() - 4);
-            lutPreset += "_" + processing->m_exif.make + "_" + processing->m_exif.model + ".csp";
+            std::filesystem::path lut_ext = lutPreset.extension();
+            std::filesystem::path lut_file = lutPreset.stem();
+			std::filesystem::path lut_dir = lutPreset.parent_path();
+
+            //lutPreset += "_" + processing->m_exif.make + "_" + processing->m_exif.model + ".csp";
+			std::filesystem::path new_lut = lut_dir / (lut_file.string() + "_" + processing->m_exif.make + "_" + processing->m_exif.model + lut_ext.string());
+			lutPreset = new_lut;
         }
 
-        if (ImageBufAlgo::ociofiletransform(*lut_buf_ptr, image_buf, lutPreset, false, false, procGlobals.ocio_conf_ptr.get())) {
-            LOG(info) << "LUT preset " << processing->lut_preset << " <" << lutPreset << "> " << " applied" << std::endl;
+        if (ImageBufAlgo::ociofiletransform(*lut_buf_ptr, image_buf, lutPreset.string(), false, false, procGlobals.ocio_conf_ptr.get())) {
+            LOG(info) << "LUT preset " << processing->lut_preset << " <" << lutPreset.string() << "> " << " applied" << std::endl;
             processing_entry->setStatus(ProcessingStatus::Graded);
             image_buf.clear();
             if (!processing_entry->rawCleared) {

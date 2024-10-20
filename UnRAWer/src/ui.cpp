@@ -609,10 +609,10 @@ void MainWindow::lutCameraSettings() {
 	emit updateTextSignal(QString("LUT per camera - %1").arg(settings.perCamera ? "On" : "Off"));
 	qDebug() << qPrintable(QString("Per Camera Model LUT - %1").arg(settings.perCamera ? "On" : "Off"));
     if (settings.perCamera) {
-		qDebug() << "LUT will be load as path_to/lut_preset_Make_Model.scp";
+		qDebug() << "LUT will be load as path_to/lut_preset_Make_Model.csp";
 	}
 	else {
-		qDebug() << "LUT will be load as path_to/lut_preset.scp";
+		qDebug() << "LUT will be load as path_to/lut_preset.csp";
 	}
 }
 
