@@ -394,6 +394,10 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
 
     out->write_image(out_format, ou_px, ou_pst, ou_bst, ou_zst, *m_progress_callback, progressBar);
     out->close();
+
+    if (settings.crop_mode != -1) {
+		write_buf.reset();
+    }
     return true;
 }
 
