@@ -32,7 +32,9 @@ int main(int argc, char* argv[]) {
     Log_Init();
     Log_SetVerbosity(3);
 
-	qDebug() << qPrintable(QString("UnRAWer %1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR)) << "Debug output:";
+    qDebug() << qPrintable(QString("UnRAWer %1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR));
+    qDebug() << qPrintable(QString("Build from: %1, %2").arg(__DATE__).arg(__TIME__));
+    qDebug() << "Debug output:";
 
     // check if arguments are passed
     if (argc == 1) {
