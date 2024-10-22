@@ -360,6 +360,8 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
     if (settings.crop_mode != -1) {
         write_spec.width =  crops[2]; // .width;
         write_spec.height = crops[3]; // .height;
+		write_spec.full_width = crops[2]; // .width;
+		write_spec.full_height = crops[3]; // .height;
     }
     LOG(info) << "Output file format: " << formatText(write_spec.format) << std::endl;
 
