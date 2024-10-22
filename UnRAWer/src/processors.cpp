@@ -564,14 +564,13 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     bool cw_ok = crops->cwidth > 0;
 	bool ch_ok = crops->cheight > 0;
 
-	cw_ok &= crops->cwidth <= image->width;
-	ch_ok &= crops->cheight <= image->height;
+	cw_ok &= crops->cwidth <= processing->raw_data->imgdata.sizes.raw_width;
+	ch_ok &= crops->cheight <= processing->raw_data->imgdata.sizes.raw_height;
 	
-    bool cl_ok = crops->cleft + crops->cwidth <= image->width;
-	bool ct_ok = crops->ctop + crops->cheight <= image->height;
+	bool cl_ok = crops->cleft + crops->cwidth <= processing->raw_data->imgdata.sizes.raw_width;
+	bool ct_ok = crops->ctop + crops->cheight <= processing->raw_data->imgdata.sizes.raw_height;
 
 	bool ok = cw_ok && ch_ok && cl_ok && ct_ok;
-
 
 	if (!ok) {
 		LOG(error) << "Processor: Invalid crop values" << std::endl;
@@ -607,54 +606,54 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 		else {
 			LOG(error) << "Processor: No valid crop values" << std::endl;
 		}
-	};
+    }
+    else {
+		m_cwidth = crops->cwidth;
+		m_cheight = crops->cheight;
+		m_cleft = crops->cleft;
+		m_ctop = crops->ctop;
+    };
 
 	if (settings.crop_mode != -1 && ok) {
-			LOG(debug) << "Processor: Crop valid" << std::endl;
-			switch (processing->raw_data->imgdata.sizes.flip) {
-			case 0: // Unrotated/Horisontal
-				LOG(trace) << "Processor: Unrotated/Horisontal\n";
-				processing->m_crops.left = m_cleft;
-				processing->m_crops.top = m_ctop;
-				processing->m_crops.width = m_cwidth;
-				processing->m_crops.height = m_cheight;
-				break;
-			case 3: // 180 Horisontal
-				LOG(trace) << "Processor: 180 Horisontal\n";
-				processing->m_crops.left = image->width - m_cleft - m_cwidth;
-				processing->m_crops.top = image->height - m_ctop - m_cheight;
-				processing->m_crops.width = m_cwidth;
-				processing->m_crops.height = m_cheight;
-				break;
-			case 5: // 90 CCW Vertical
-				LOG(trace) << "Processor: 90 CCW Vertical\n";
-				processing->m_crops.left = m_ctop;
-				processing->m_crops.top = image->height - m_cleft - m_cwidth;
-				processing->m_crops.width = m_cheight;
-				processing->m_crops.height = m_cwidth;
-				break;
-			case 6: // 90 CW Vertical
-				LOG(trace) << "Processor: 90 CW Vertical\n";
-				processing->m_crops.left = image->width - m_ctop - m_cheight;
-				processing->m_crops.top = m_cleft;
-				processing->m_crops.width = m_cheight;
-				processing->m_crops.height = m_cwidth;
-				break;
-			default:
-				LOG(error) << "Processor: Unsupported orientation" << std::endl;
-				break;
-			}
-			LOG(trace) << std::format("Crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}\n",
-				processing->m_crops.top, processing->m_crops.left, processing->m_crops.width, processing->m_crops.height);
+		LOG(debug) << "Processor: Crop valid" << std::endl;
+		switch (processing->raw_data->imgdata.sizes.flip) {
+		case 0: // Unrotated/Horisontal
+			LOG(trace) << "Processor: Unrotated/Horisontal\n";
+			processing->m_crops.left = m_cleft;
+			processing->m_crops.top = m_ctop;
+			processing->m_crops.width = m_cwidth;
+			processing->m_crops.height = m_cheight;
+			break;
+		case 3: // 180 Horisontal
+			LOG(trace) << "Processor: 180 Horisontal\n";
+			processing->m_crops.left = processing->raw_data->imgdata.sizes.raw_width - m_cleft - m_cwidth;
+			processing->m_crops.top = processing->raw_data->imgdata.sizes.raw_height - m_ctop - m_cheight;
+			processing->m_crops.width = m_cwidth;
+			processing->m_crops.height = m_cheight;
+			break;
+		case 5: // 90 CCW Vertical
+			LOG(trace) << "Processor: 90 CCW Vertical\n";
+			processing->m_crops.left = m_ctop;
+			processing->m_crops.top = processing->raw_data->imgdata.sizes.raw_width - m_cleft - m_cwidth;
+			processing->m_crops.width = m_cheight;
+			processing->m_crops.height = m_cwidth;
+			break;
+		case 6: // 90 CW Vertical
+			LOG(trace) << "Processor: 90 CW Vertical\n";
+			processing->m_crops.left = processing->raw_data->imgdata.sizes.raw_height - m_ctop - m_cheight;
+			processing->m_crops.top = m_cleft;
+			processing->m_crops.width = m_cheight;
+			processing->m_crops.height = m_cwidth;
+			break;
+		default:
+			LOG(error) << "Processor: Unsupported orientation" << std::endl;
+			break;
+		}
+		LOG(trace) << std::format("Crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}\n",
+			processing->m_crops.top, processing->m_crops.left, processing->m_crops.width, processing->m_crops.height);
 	}
 
-    //auto [process_ok, out_buf] = imgProcessor(std::ref<ImageBuf>(image_buf), procGlobals.ocio_conf_ptr.get(), &settings.dLutPreset, processing_entry, image, nullptr, nullptr);
-    //if (!process_ok) {
-    //    LOG(error) << "Error processing " << processing->srcFile << std::endl;
-    //    //mainWindow->emitUpdateTextSignal("Error! Check console for details");
-    //    return;
-    //}
-    ImageBuf out_buf; // result_buf, rgba_buf, original_alpha, bit_alpha_buf;
+    ImageBuf out_buf;
     ImageBuf lut_buf;
     ImageBuf uns_buf;
     ImageBuf* out_buf_ptr = &out_buf;
@@ -689,6 +688,7 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
             LOG(info) << "LUT preset " << processing->lut_preset << " <" << lutPreset.string() << "> " << " applied" << std::endl;
             processing_entry->setStatus(ProcessingStatus::Graded);
             image_buf.clear();
+            image_buf.reset();
             if (!processing_entry->rawCleared) {
                 processing_entry->raw_data->dcraw_clear_mem(image);
                 processing_entry->rawCleared = true;
@@ -719,6 +719,7 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 			LOG(debug) << "Unsharp: kernel: " << kernel << " width: " << width << " contrast: " << contrast << " threshold: " << threshold << std::endl;
             processing_entry->setStatus(ProcessingStatus::Unsharped);
             lut_buf_ptr->clear();
+			lut_buf_ptr->reset();
             if (!processing_entry->rawCleared) {
                 processing_entry->raw_data->dcraw_clear_mem(image);
                 processing_entry->rawCleared = true;
@@ -750,96 +751,6 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 
     (*myPools)["writer"]->enqueue(Writer, index, std::ref(processing_entry), fileCntr, myPools);
 }
-/*
-void OProcessor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
-               std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
-    auto& processing = processing_entry;
-
-    LOG(debug) << "Processor: Processing data from file: " << processing->srcFile << std::endl;
-
-    ImageBuf* input_buf = processing->image.get();
-
-    //auto [process_ok, out_buf] = imgProcessor(*image_buf, procGlobals.ocio_conf_ptr.get(), &settings.dLutPreset, processing_entry, image, nullptr, nullptr);
-    //if (!process_ok) {
-    //    LOG(error) << "Error processing " << processing->srcFile << std::endl;
-    //    //mainWindow->emitUpdateTextSignal("Error! Check console for details");
-    //    return;
-    //}
-    ImageBuf out_buf; // result_buf, rgba_buf, original_alpha, bit_alpha_buf;
-    ImageBuf lut_buf;
-    ImageBuf uns_buf;
-    ImageBuf* out_buf_ptr = &out_buf;
-    ImageBuf* lut_buf_ptr = &lut_buf;
-    ImageBuf* uns_buf_ptr = &uns_buf;
-    // LUT Transform
-    bool lutValid = false;
-    // check if lut_preset is not nullptr set lutValid to true
-    if (settings.dLutPreset != "") {
-        lutValid = true;
-    }
-    //auto test = input_buf.spec();
-    //std::cout << test.width << " " << test.height << " " << test.nchannels << std::endl;
-    LOG(trace) << "Input image: " << input_buf->spec().width << "x" << input_buf->spec().height << "x" << input_buf->spec().nchannels << std::endl;
-    LOG(trace) << "Input image: " << input_buf->spec().format << std::endl;
-
-    if (settings.lutMode >= 0 && lutValid) {
-        auto lutPreset = settings.lut_Preset[settings.dLutPreset];
-        if (ImageBufAlgo::ociofiletransform(*lut_buf_ptr, *input_buf, lutPreset, false, false, procGlobals.ocio_conf_ptr.get())) {
-            LOG(info) << "LUT preset " << settings.dLutPreset << " <" << lutPreset << "> " << " applied" << std::endl;
-            processing_entry->setStatus(ProcessingStatus::Graded);
-            input_buf->clear();
-        }
-        else {
-            LOG(error) << "LUT not applied: " << lut_buf.geterror() << std::endl;
-            lut_buf_ptr = &*input_buf;
-        }
-    }
-    else {
-        LOG(debug) << "LUT transformation disabled" << std::endl;
-        lut_buf_ptr = &*input_buf;
-    }
-
-    (*fileCntr)--;
-    // Apply denoise
-    // Apply unsharp mask
-
-    if (settings.sharp_mode != -1) {
-        string_view kernel = settings.sharp_kerns[settings.sharp_kernel];
-        float width = settings.sharp_width;
-        float contrast = settings.sharp_contrast;
-        float threshold = settings.sharp_tresh;
-        if (ImageBufAlgo::unsharp_mask(*uns_buf_ptr, *lut_buf_ptr, kernel, width, contrast, threshold)) {
-            LOG(debug) << "Unsharp mask applied: <" << kernel.c_str() << ">" << std::endl;
-            processing_entry->setStatus(ProcessingStatus::Unsharped);
-            lut_buf_ptr->clear();
-        }
-        else {
-            LOG(error) << "Unsharp mask not applied: " << uns_buf.geterror() << std::endl;
-            uns_buf_ptr = lut_buf_ptr;
-        }
-    }
-    else
-    {
-        LOG(debug) << "Unsharp mask disabled" << std::endl;
-        uns_buf_ptr = lut_buf_ptr;
-    }
-
-    // temp copy for saving
-    out_buf_ptr = uns_buf_ptr;
-    //raw->dcraw_clear_mem(image);
-    //raw->recycle();
-    //image_buf.clear();
-
-    processing->image = std::make_unique<ImageBuf>(*out_buf_ptr);
-    processing->outSpec = std::make_unique<OIIO::ImageSpec>(out_buf_ptr->spec());
-
-    processing->setStatus(ProcessingStatus::Processed);
-
-    (*fileCntr)--;
-
-    (*myPools)["writer"]->enqueue(Writer, index, std::ref(processing_entry), fileCntr, myPools);
-}
-*/
 
 void Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 	std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
