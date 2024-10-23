@@ -372,7 +372,7 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
 	write_spec.set_format(format);
 	LOG(debug) << "Writer: Output file bit depth: " << formatText(format) << std::endl;
 
-	ImageBuf write_buf(write_spec);
+	//ImageBuf write_buf(write_spec);
 
     auto out = ImageOutput::create(outputFileName);
 
@@ -381,34 +381,42 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
         mainWindow->emitUpdateTextSignal("Error! Check console for details");
         return false;
     }
-    out->open(outputFileName, write_spec, ImageOutput::Create);
+
+    if (settings.crop_mode != -1) {
+        out->open(outputFileName, write_spec, ImageOutput::Create);
+	}
+	else {
+		out->open(outputFileName, *out_spec.get(), ImageOutput::Create);
+	}
 
     QMetaObject::invokeMethod(progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, 0));
 
     LOG(info) << "Writing " << outputFileName << std::endl;
 
 
-	if (settings.crop_mode != -1) {
-		LOG(debug) << "Cropping image" << std::endl;
-		write_buf = OIIO::ImageBufAlgo::cut(*out_buf, 
-            ROI(crops[0], crops[0] + crops[2],
-                crops[1], crops[1] + crops[3]));
-    }
-    else {
-		write_buf = *out_buf.get();
-    }
+	//if (settings.crop_mode != -1) {
+	//	LOG(debug) << "Cropping image" << std::endl;
+	//	write_buf = OIIO::ImageBufAlgo::cut(*out_buf, 
+ //           ROI(crops[0], crops[0] + crops[2],
+ //               crops[1], crops[1] + crops[3]));
+ //   }
+ //   else {
+	//	write_buf = *out_buf.get();
+ //   }
 
-    auto ou_px =  write_buf.localpixels();
-    auto ou_pst = write_buf.pixel_stride();
-    auto ou_bst = write_buf.scanline_stride();
-    auto ou_zst = write_buf.z_stride();
+	//auto ou_px = write_buf.localpixels();
+	//auto ou_pst = write_buf.pixel_stride();
+	//auto ou_bst = write_buf.scanline_stride();
+	//auto ou_zst = write_buf.z_stride();
 
-    out->write_image(format, ou_px, ou_pst, ou_bst, ou_zst, *m_progress_callback, progressBar);
+    //out->write_image(format, ou_px, ou_pst, ou_bst, ou_zst, *m_progress_callback, progressBar);
+	out->write_image(format, out_buf->pixeladdr(crops[0], crops[1], 0),
+        out_buf->pixel_stride(), out_buf->scanline_stride(), out_buf->z_stride(), m_progress_callback, progressBar);
     out->close();
 
-    if (settings.crop_mode != -1) {
-		write_buf.reset();
-    }
+  //  if (settings.crop_mode != -1) {
+		//write_buf.reset();
+  //  }
     return true;
 }
 
