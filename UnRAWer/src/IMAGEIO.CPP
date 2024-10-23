@@ -290,9 +290,10 @@ bool makePath(const std::string& out_path) {
     return true;
 }
 
-bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& out_spec, const std::string& outputFileName,
-               TypeDesc out_format, TypeDesc orig_format, QProgressBar* progressBar, MainWindow* mainWindow, std::array<int, 4> crops) {
-    
+//bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& out_spec, const std::string& outputFileName,
+//	TypeDesc out_format, TypeDesc orig_format, QProgressBar* progressBar, MainWindow* mainWindow, std::array<int, 4> crops)
+bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& out_spec, const std::string& outputFileName, QProgressBar* progressBar, MainWindow* mainWindow, std::array<int, 4> crops)
+{
     //ImageSpec& ospec = ;
     // out_buf->specmod();
 
@@ -348,12 +349,12 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
 
 
     //out_spec->format = getTypeDesc(settings.bitDepth);
-    if (getTypeDesc(settings.bitDepth) == TypeDesc::UNKNOWN) {
-        out_spec->set_format(orig_format);
-    }
-    else {
-        out_spec->set_format(TypeDesc::UINT16); //getTypeDesc(settings.bitDepth));
-    }
+	//if (getTypeDesc(settings.bitDepth) == TypeDesc::UNKNOWN) {
+	//	out_spec->set_format(orig_format);
+	//}
+	//else {
+	//	out_spec->set_format(TypeDesc::UINT16); //getTypeDesc(settings.bitDepth));
+	//}
 
 	ImageSpec write_spec = *out_spec.get();
 
@@ -365,7 +366,16 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
     }
     LOG(info) << "Output file format: " << formatText(write_spec.format) << std::endl;
 
+	TypeDesc format = getTypeDesc(
+		(settings.bitDepth != -1) ? settings.bitDepth : settings.defBDepth
+    );
+	write_spec.set_format(format);
+	LOG(debug) << "Writer: Output file bit depth: " << formatText(format) << std::endl;
+
+	ImageBuf write_buf(write_spec);
+
     auto out = ImageOutput::create(outputFileName);
+
     if (!out) {
         LOG(error) << "Could not create output file: " << outputFileName << std::endl;
         mainWindow->emitUpdateTextSignal("Error! Check console for details");
@@ -377,7 +387,6 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
 
     LOG(info) << "Writing " << outputFileName << std::endl;
 
-	ImageBuf write_buf(write_spec);
 
 	if (settings.crop_mode != -1) {
 		LOG(debug) << "Cropping image" << std::endl;
@@ -394,7 +403,7 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
     auto ou_bst = write_buf.scanline_stride();
     auto ou_zst = write_buf.z_stride();
 
-    out->write_image(out_format, ou_px, ou_pst, ou_bst, ou_zst, *m_progress_callback, progressBar);
+    out->write_image(format, ou_px, ou_pst, ou_bst, ou_zst, *m_progress_callback, progressBar);
     out->close();
 
     if (settings.crop_mode != -1) {

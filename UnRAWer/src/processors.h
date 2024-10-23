@@ -44,7 +44,7 @@ void Reader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 //void oReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 //			 std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
 
-void LReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
+void rawReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 			 std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools);
 
 void LUnpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry,

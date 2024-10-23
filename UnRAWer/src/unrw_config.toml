@@ -152,11 +152,10 @@ exif_lut = false
 [LUT_Preset]
 # Presets
 # For relative path the root folder is a OCIO_Config path
-_linear = "../../LUTs/test.csp"
+_linear = "../../LUTs/linear.clf"
+_hdr = "../../LUTs/hdr.clf"
 _texture = "../../LUTs/test.csp"
 _geometry = "../../LUTs/test.csp"
-_cross = "../../LUTs/test.csp"
-_parallel = "../../LUTs/test.csp"
 
 [Unsharp]
 # Unsharp mask
