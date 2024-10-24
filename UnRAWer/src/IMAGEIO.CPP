@@ -409,9 +409,14 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
 	//auto ou_bst = write_buf.scanline_stride();
 	//auto ou_zst = write_buf.z_stride();
 
-    //out->write_image(format, ou_px, ou_pst, ou_bst, ou_zst, *m_progress_callback, progressBar);
-	out->write_image(format, out_buf->pixeladdr(crops[0], crops[1], 0),
-        out_buf->pixel_stride(), out_buf->scanline_stride(), out_buf->z_stride(), m_progress_callback, progressBar);
+    auto ou_px = out_buf->pixeladdr(crops[0], crops[1], 0);
+	auto ou_pst = out_buf->pixel_stride();
+	auto ou_bst = out_buf->scanline_stride();
+	auto ou_zst = out_buf->z_stride();
+
+	LOG(trace) << "Writing image: " << outputFileName << "\n\tPixel address: " << ou_px << "\n\tPixel stride: " << ou_pst << "\n\tScanline stride: " << ou_bst << "\n\tZ stride: " << ou_zst << std::endl;
+    
+	out->write_image(format, ou_px, ou_pst, ou_bst, ou_zst, m_progress_callback, progressBar);
     out->close();
 
   //  if (settings.crop_mode != -1) {

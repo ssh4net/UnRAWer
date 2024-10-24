@@ -65,22 +65,15 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
     int m_cheight = im_height;
     int m_cleft = 0;
     int m_ctop = 0;
-    // 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CCW Vertical, 6 - 90 CW Vertical
-    //           top        width
-    //            |          |
-    //    left  --+----------+-
-    //            |          |
-    //            |          |
-    //  heigth  --+----------+-
-    //            |          |
+
     bool cw_ok = crops->cwidth > 0;
     bool ch_ok = crops->cheight > 0;
 
-    cw_ok &= crops->cwidth <= processing->raw_data->imgdata.sizes.raw_width;
-    ch_ok &= crops->cheight <= processing->raw_data->imgdata.sizes.raw_height;
+    cw_ok &= crops->cwidth <= processing->raw_data->imgdata.sizes.width;
+    ch_ok &= crops->cheight <= processing->raw_data->imgdata.sizes.height;
 
-    bool cl_ok = crops->cleft + crops->cwidth <= processing->raw_data->imgdata.sizes.raw_width;
-    bool ct_ok = crops->ctop + crops->cheight <= processing->raw_data->imgdata.sizes.raw_height;
+    bool cl_ok = crops->cleft + crops->cwidth <= processing->raw_data->imgdata.sizes.width;
+    bool ct_ok = crops->ctop + crops->cheight <= processing->raw_data->imgdata.sizes.height;
 
     bool ok = cw_ok && ch_ok && cl_ok && ct_ok;
 
@@ -93,27 +86,25 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
             m_cheight = crops->cheight;
             ok = true;
         }
-        else if (th_width > 0 && th_height > 0) { // if thumbnail width and height are valid
-            if (processing->raw_data->imgdata.sizes.flip == 0 || processing->raw_data->imgdata.sizes.flip == 3) {
-                if (im_width / float(th_width) < 1.25f && im_height / float(th_height) < 1.25f) {
-                    LOG(debug) << "SetCrop: Thumbnail is full-size" << std::endl;
-                    m_cleft = iwidth - th_width / 2;
-                    m_ctop = iheigth - th_height / 2;
-                    m_cwidth = th_width;
-                    m_cheight = th_height;
-                    ok = true;
-                }
-            }
-            else if (processing->raw_data->imgdata.sizes.flip == 5 || processing->raw_data->imgdata.sizes.flip == 6) {
-                if (im_width / float(th_height) < 1.25f && im_height / float(th_width) < 1.25f) {
-                    LOG(debug) << "setCrops: Thumbnail is full-size" << std::endl;
-                    m_cleft = iwidth - th_width / 2;
-                    m_ctop = iheigth - th_height / 2;
-                    m_cwidth = th_width;
-                    m_cheight = th_height;
-                    ok = true;
-                }
-            }
+		else if (th_width > 0 && th_height > 0) { // if thumbnail width and height are valid
+			if (im_width / float(th_width) < 1.25f && im_height / float(th_height) < 1.25f) {
+				if (processing->raw_data->imgdata.sizes.flip == 0 || processing->raw_data->imgdata.sizes.flip == 3) {
+					LOG(debug) << "SetCrop: Thumbnail is full-size" << std::endl;
+					m_cleft = iwidth - th_width / 2;
+					m_ctop = iheigth - th_height / 2;
+					m_cwidth = th_width;
+					m_cheight = th_height;
+					ok = true;
+				}
+				else if (processing->raw_data->imgdata.sizes.flip == 5 || processing->raw_data->imgdata.sizes.flip == 6) {
+					LOG(debug) << "setCrops: Thumbnail is full-size" << std::endl;
+					m_cleft = iwidth - th_width / 2;
+					m_ctop = iheigth - th_height / 2;
+					m_cwidth = th_width;
+					m_cheight = th_height;
+					ok = true;
+				}
+			}
         }
         else {
             LOG(error) << "setCrops: No valid crop values" << std::endl;
@@ -123,38 +114,50 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
     else {
         m_cwidth = crops->cwidth;
         m_cheight = crops->cheight;
-        m_cleft = crops->cleft;
-        m_ctop = crops->ctop;
+        //m_cleft = crops->cleft;
+        //m_ctop = crops->ctop;
+        //m_cwidth = crops->cwidth <= processing->raw_data->imgdata.sizes.width ? processing->raw_data->imgdata.sizes.width : crops->cwidth;
+		//m_cheight = crops->cheight <= processing->raw_data->imgdata.sizes.height ? processing->raw_data->imgdata.sizes.height : crops->cheight;
+        m_cleft = crops->cleft > 0 ? crops->cleft : iwidth - crops->cwidth / 2;
+        m_ctop = crops->ctop > 0 ? crops->ctop : iheigth - crops->cheight / 2;
 		no_error = true;
     };
 
+    // 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CCW Vertical, 6 - 90 CW Vertical
+    //           top        width
+    //            |          |
+    //    left  --+----------+-
+    //            |          |
+    //            |          |
+    //  heigth  --+----------+-
+    //            |          |
     if (settings.crop_mode != -1 && ok) {
         LOG(debug) << "setCrops: Crop valid" << std::endl;
         switch (processing->raw_data->imgdata.sizes.flip) {
         case 0: // Unrotated/Horisontal
             LOG(trace) << "setCrops: Unrotated/Horisontal\n";
-            processing->m_crops.left = m_cleft;
-            processing->m_crops.top = m_ctop;
+			processing->m_crops.left = m_cleft;
+			processing->m_crops.top = m_ctop;
             processing->m_crops.width = m_cwidth;
             processing->m_crops.height = m_cheight;
             break;
         case 3: // 180 Horisontal
             LOG(trace) << "setCrops: 180 Horisontal\n";
-            processing->m_crops.left = processing->raw_data->imgdata.sizes.raw_width - m_cleft - m_cwidth;
-            processing->m_crops.top = processing->raw_data->imgdata.sizes.raw_height - m_ctop - m_cheight;
+            processing->m_crops.left = processing->raw_data->imgdata.sizes.width - m_cleft - m_cwidth;
+            processing->m_crops.top = processing->raw_data->imgdata.sizes.height - m_ctop - m_cheight;
             processing->m_crops.width = m_cwidth;
             processing->m_crops.height = m_cheight;
             break;
         case 5: // 90 CCW Vertical
             LOG(trace) << "setCrops: 90 CCW Vertical\n";
             processing->m_crops.left = m_ctop;
-            processing->m_crops.top = processing->raw_data->imgdata.sizes.raw_width - m_cleft - m_cwidth;
+            processing->m_crops.top = processing->raw_data->imgdata.sizes.width - m_cleft - m_cwidth;
             processing->m_crops.width = m_cheight;
             processing->m_crops.height = m_cwidth;
             break;
         case 6: // 90 CW Vertical
             LOG(trace) << "setCrops: 90 CW Vertical\n";
-            processing->m_crops.left = processing->raw_data->imgdata.sizes.raw_height - m_ctop - m_cheight;
+            processing->m_crops.left = processing->raw_data->imgdata.sizes.height - m_ctop - m_cheight;
             processing->m_crops.top = m_cleft;
             processing->m_crops.width = m_cheight;
             processing->m_crops.height = m_cwidth;
@@ -164,10 +167,10 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
 			no_error = false;
             break;
         }
-        LOG(trace) << std::format("setCrops: Crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}\n",
-            processing->m_crops.top, processing->m_crops.left, processing->m_crops.width, processing->m_crops.height);
     }
-
+	LOG(debug) << no_error ? ("setCrops: crops initialized correctly") : ("setCrops: crops initialization failed");
+	LOG(trace) << std::format("setCrops: Crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}\n",
+            processing->m_crops.top, processing->m_crops.left, processing->m_crops.width, processing->m_crops.height);
 	return no_error;
 }
 
