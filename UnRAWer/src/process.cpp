@@ -29,7 +29,7 @@ ProcessGlobals procGlobals;
 
 bool doProgress(std::atomic_size_t* fileCntr, size_t files, QProgressBar* progressBar, MainWindow* mainWindow) {
     while (*fileCntr > 0) {
-        float counts = static_cast<float>(files * 5); // 5 queues
+        float counts = static_cast<float>(files * 7); // 7 queues
         float progress = (counts - *fileCntr) / counts;
         bool ok = m_progress_callback(progressBar, progress);
         std::this_thread::sleep_for(std::chrono::milliseconds(250));

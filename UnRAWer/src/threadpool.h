@@ -99,6 +99,7 @@ public:
         queue.push(item);
         lock.unlock();
         cv.notify_all();
+        //cv.notify_one();
     }
 
     std::optional<T> try_pop() {
@@ -119,6 +120,7 @@ public:
         queue.push(item);
         lock.unlock();
         cv.notify_all();
+        //cv.notify_one();
         return true;
     }
 

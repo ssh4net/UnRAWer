@@ -44,27 +44,36 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
     unsigned short th_width = processing->raw_data->imgdata.thumbnail.twidth;
     unsigned short th_height = processing->raw_data->imgdata.thumbnail.theight;
 
-    LOG(trace) << std::format("\n\tThumbnail width: {}\n\tThumbnail heigth: {}", th_width, th_height);
-
-    unsigned short iheigth = processing->raw_data->imgdata.sizes.iheight;
+    unsigned short iheight = processing->raw_data->imgdata.sizes.iheight;
     unsigned short iwidth = processing->raw_data->imgdata.sizes.iwidth;
 
 	unsigned short im_width = processing->raw_data->imgdata.sizes.width;
 	unsigned short im_height = processing->raw_data->imgdata.sizes.height;
 
-    LOG(trace) << std::format("\n\tImage half width: {}\n\tImage half heigth: {}", iwidth, iheigth);
+	unsigned short raw_width = processing->raw_data->imgdata.sizes.raw_width;
+	unsigned short raw_height = processing->raw_data->imgdata.sizes.raw_height;
+
+    LOG(trace) << std::format("\n\tThumbnail width: {}\n\tThumbnail heigth: {}", th_width, th_height);
+
+
+    LOG(trace) << std::format("\n\tImage iwidth: {}\n\tImage iheigth: {}", iwidth, iheight);
 
     LOG(trace) << std::format("setCrops: Orientation: {}", processing->raw_data->imgdata.sizes.flip);
 
-    processing->m_crops.width = im_width;
-	processing->m_crops.height = im_height;
-    processing->m_crops.left = 0;
-    processing->m_crops.top = 0;
+	int r_width = im_width != 0 ? im_width : raw_width;
+	int r_height = im_height != 0 ? im_height : raw_height;
+	int r_left = 0;
+	int r_top = 0;
 
-    int m_cwidth = im_width;
-    int m_cheight = im_height;
+    int m_cwidth = r_width;
+	int m_cheight = r_height;
     int m_cleft = 0;
     int m_ctop = 0;
+
+	processing->m_crops.width = m_cwidth;
+	processing->m_crops.height = m_cheight;
+    processing->m_crops.left = 0;
+    processing->m_crops.top = 0;
 
     bool cw_ok = crops->cwidth > 0;
     bool ch_ok = crops->cheight > 0;
@@ -80,26 +89,26 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
     if (!ok) {
         LOG(debug) << "SetCrop: Invalid crop values" << std::endl;
         if (cw_ok && ch_ok) { // if crop width and height are valid
-            m_cleft = iwidth - crops->cwidth / 2;
-            m_ctop = iheigth - crops->cheight / 2;
+            m_cleft = (r_width - crops->cwidth) / 2;
+            m_ctop = (r_height - crops->cheight) / 2;
             m_cwidth = crops->cwidth;
             m_cheight = crops->cheight;
             ok = true;
         }
 		else if (th_width > 0 && th_height > 0) { // if thumbnail width and height are valid
-			if (im_width / float(th_width) < 1.25f && im_height / float(th_height) < 1.25f) {
+			if (r_width / float(th_width) < 1.25f && r_height / float(th_height) < 1.25f) {
 				if (processing->raw_data->imgdata.sizes.flip == 0 || processing->raw_data->imgdata.sizes.flip == 3) {
 					LOG(debug) << "SetCrop: Thumbnail is full-size" << std::endl;
-					m_cleft = iwidth - th_width / 2;
-					m_ctop = iheigth - th_height / 2;
+					m_cleft = (r_width - th_width) / 2;
+					m_ctop = (r_height - th_height) / 2;
 					m_cwidth = th_width;
 					m_cheight = th_height;
 					ok = true;
 				}
 				else if (processing->raw_data->imgdata.sizes.flip == 5 || processing->raw_data->imgdata.sizes.flip == 6) {
 					LOG(debug) << "setCrops: Thumbnail is full-size" << std::endl;
-					m_cleft = iwidth - th_width / 2;
-					m_ctop = iheigth - th_height / 2;
+					m_cleft = (r_width - th_width) / 2;
+					m_ctop = (r_height - th_height) / 2;
 					m_cwidth = th_width;
 					m_cheight = th_height;
 					ok = true;
@@ -118,8 +127,8 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
         //m_ctop = crops->ctop;
         //m_cwidth = crops->cwidth <= processing->raw_data->imgdata.sizes.width ? processing->raw_data->imgdata.sizes.width : crops->cwidth;
 		//m_cheight = crops->cheight <= processing->raw_data->imgdata.sizes.height ? processing->raw_data->imgdata.sizes.height : crops->cheight;
-        m_cleft = crops->cleft > 0 ? crops->cleft : iwidth - crops->cwidth / 2;
-        m_ctop = crops->ctop > 0 ? crops->ctop : iheigth - crops->cheight / 2;
+        m_cleft = crops->cleft > 0 ? crops->cleft : (im_width - crops->cwidth) / 2;
+        m_ctop = crops->ctop > 0 ? crops->ctop : (im_height - crops->cheight) / 2;
 		no_error = true;
     };
 
@@ -131,7 +140,7 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
     //            |          |
     //  heigth  --+----------+-
     //            |          |
-    if (settings.crop_mode != -1 && ok) {
+    if (settings.crop_mode != -1) {
         LOG(debug) << "setCrops: Crop valid" << std::endl;
         switch (processing->raw_data->imgdata.sizes.flip) {
         case 0: // Unrotated/Horisontal
@@ -429,6 +438,7 @@ void rawReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     processing->raw_data = std::make_unique<LibRaw>();
     LibRaw* raw = processing->raw_data.get();
 
+    /*
     raw->imgdata.params.use_camera_wb = settings.rawParms.use_camera_wb;
     raw->imgdata.params.use_camera_matrix = settings.rawParms.use_camera_matrix;
     raw->imgdata.params.highlight = settings.rawParms.highlight;
@@ -454,7 +464,7 @@ void rawReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     else {
         raw->imgdata.params.fbdd_noiserd = 0;
     }
-
+    */
     LOG(info) << "Libraw Reader: file " << processing->srcFile << std::endl;
 
     //int ret = raw->open_buffer(raw_buffer->data(), raw_buffer->size());
@@ -464,10 +474,10 @@ void rawReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
         return;
     }
 
-    // set crops
-	if (!setCrops(index, processing_entry)) {
-		LOG(error) << "Reader: Cannot set crops for file: " << processing->srcFile << std::endl;
-	}
+ //   // set crops
+	//if (!setCrops(index, processing_entry)) {
+	//	LOG(error) << "Reader: Cannot set crops for file: " << processing->srcFile << std::endl;
+	//}
 
 	// set maker and model
     LOG(trace) << std::format("Reader: Make: {}", processing->raw_data->imgdata.idata.make);
@@ -514,10 +524,100 @@ void LUnpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 
     auto& raw = processing->raw_data;
 
+    raw->imgdata.params.use_camera_wb = settings.rawParms.use_camera_wb;
+    raw->imgdata.params.use_camera_matrix = settings.rawParms.use_camera_matrix;
+    raw->imgdata.params.highlight = settings.rawParms.highlight;
+    raw->imgdata.params.aber[0] = settings.rawParms.aber[0];
+    raw->imgdata.params.aber[1] = settings.rawParms.aber[1];
+    //raw->imgdata.params.exp_correc = settings.rawParms.exp_correc;
+    raw->imgdata.params.half_size = settings.rawParms.half_size;
+
+    raw->imgdata.params.output_color = settings.rawSpace;
+
+    raw->imgdata.params.user_flip = settings.rawRot;
+
+    if (settings.denoise_mode == 1 || settings.denoise_mode == 3) {
+        raw->imgdata.params.threshold = settings.rawParms.denoise_thr;
+    }
+    else {
+        raw->imgdata.params.threshold = 0.0f;
+    }
+
+    if (settings.denoise_mode == 2 || settings.denoise_mode == 3) {
+        raw->imgdata.params.fbdd_noiserd = settings.rawParms.fbdd_noiserd;
+    }
+    else {
+        raw->imgdata.params.fbdd_noiserd = 0;
+    }
+
     int ret = raw->unpack();
     if (ret != LIBRAW_SUCCESS) {
         LOG(error) << "Unpack: Cannot unpack data from file: " << processing->srcFile << std::endl;
         return;
+    }
+
+
+	if (settings.crop_mode != -1) {
+        if (raw->imgdata.sizes.raw_inset_crops->cwidth != 0 &&
+            raw->imgdata.sizes.raw_inset_crops->cheight != 0) {
+            if (raw->imgdata.sizes.raw_inset_crops->cwidth <= raw->imgdata.rawdata.sizes.raw_width &&
+                raw->imgdata.sizes.raw_inset_crops->cheight <= raw->imgdata.rawdata.sizes.raw_height)
+            {
+                raw->imgdata.sizes.width = raw->imgdata.sizes.raw_inset_crops->cwidth;
+                raw->imgdata.sizes.height = raw->imgdata.sizes.raw_inset_crops->cheight;
+                //raw->imgdata.sizes.iwidth = raw->imgdata.sizes.raw_inset_crops->cwidth;
+                //raw->imgdata.sizes.iheight = raw->imgdata.sizes.raw_inset_crops->cheight;
+
+                raw->imgdata.rawdata.sizes.width = raw->imgdata.sizes.raw_inset_crops->cwidth;
+                raw->imgdata.rawdata.sizes.height = raw->imgdata.sizes.raw_inset_crops->cheight;
+                //raw->imgdata.rawdata.sizes.iwidth = raw->imgdata.sizes.raw_inset_crops->cwidth;
+                //raw->imgdata.rawdata.sizes.iheight = raw->imgdata.sizes.raw_inset_crops->cheight;
+            }
+        }
+    };
+
+	ret = raw->adjust_sizes_info_only();
+	if (ret != LIBRAW_SUCCESS) {
+		LOG(error) << "Unpack: Cannot adjust sizes info: " << processing->srcFile << std::endl;
+		return;
+	}
+    /* TODO: expose crop settings to the user
+    raw->imgdata.sizes.width = raw->imgdata.rawdata.sizes.raw_width;
+	raw->imgdata.sizes.height = raw->imgdata.rawdata.sizes.raw_height;
+	raw->imgdata.sizes.iwidth = raw->imgdata.rawdata.sizes.raw_width;
+	raw->imgdata.sizes.iheight = raw->imgdata.rawdata.sizes.raw_height;
+
+	raw->imgdata.rawdata.sizes.width = raw->imgdata.rawdata.sizes.raw_width;
+	raw->imgdata.rawdata.sizes.height = raw->imgdata.rawdata.sizes.raw_height;
+	raw->imgdata.rawdata.sizes.iwidth = raw->imgdata.rawdata.sizes.raw_width;
+	raw->imgdata.rawdata.sizes.iheight = raw->imgdata.rawdata.sizes.raw_height;
+
+	raw->imgdata.sizes.raw_inset_crops->cwidth = raw->imgdata.rawdata.sizes.raw_width;
+	raw->imgdata.sizes.raw_inset_crops->cheight = raw->imgdata.rawdata.sizes.raw_height;
+	raw->imgdata.sizes.raw_inset_crops->cleft = 0;
+	raw->imgdata.sizes.raw_inset_crops->ctop = 0;
+
+	raw->imgdata.rawdata.sizes.raw_inset_crops->cwidth = raw->imgdata.rawdata.sizes.raw_width;
+	raw->imgdata.rawdata.sizes.raw_inset_crops->cheight = raw->imgdata.rawdata.sizes.raw_height;
+	raw->imgdata.rawdata.sizes.raw_inset_crops->cleft = 0;
+	raw->imgdata.rawdata.sizes.raw_inset_crops->ctop = 0;
+
+	raw->imgdata.sizes.left_margin = 0;
+	raw->imgdata.sizes.top_margin = 0;
+
+	raw->imgdata.rawdata.sizes.left_margin = 0;
+	raw->imgdata.rawdata.sizes.top_margin = 0;
+    */
+
+ //   ret = raw->adjust_to_raw_inset_crop(0b10, 1.0f);
+	//if (ret != LIBRAW_SUCCESS) {
+	//	LOG(error) << "Unpack: Cannot adjust to raw inset crop: " << processing->srcFile << std::endl;
+	//	return;
+	//}
+
+    // set crops
+    if (!setCrops(index, processing_entry)) {
+        LOG(error) << "Reader: Cannot set crops for file: " << processing->srcFile << std::endl;
     }
 
     processing->setStatus(ProcessingStatus::Unpacked);
@@ -648,6 +748,8 @@ void Dcraw(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     auto& raw_parms = raw->imgdata.params;
     raw_parms.output_bps = 16;
 
+	//int w, h, c, b;
+	//raw->get_mem_image_format(&w, &h, &c, &b);
     //libraw_processed_image_t* image = raw->dcraw_make_mem_image();
     processing->raw_image = raw->dcraw_make_mem_image();
 
@@ -675,148 +777,9 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     OIIO::ImageSpec image_spec(image->width, image->height, image->colors, OIIO::TypeDesc::UINT16);
     OIIO::ImageBuf image_buf(image_spec, image->data);
 
-/////////////////
-
-	//OIIO::ImageBuf raw_buf(image_spec, image->data);
-    //OIIO::ImageBuf image_buf = OIIO::ImageBufAlgo::copy(raw_buf, OIIO::TypeDesc::FLOAT);
-
-/////////////////
-
 	//EXIF Parser
 	EXIF::get_exif(processing->raw_data, image_spec);
 
-	/*
-	// Estimate Crop for ImageBuf w.r.t. orientation
-	auto crops = processing->raw_data->imgdata.sizes.raw_inset_crops;
-	LOG(trace) << std::format("Exif crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}", crops->ctop, crops->cleft, crops->cwidth, crops->cheight);
-
-	unsigned short th_width = processing->raw_data->imgdata.thumbnail.twidth;
-	unsigned short th_heigth = processing->raw_data->imgdata.thumbnail.theight;
-
-	LOG(trace) << std::format("\n\tThumbnail width: {}\n\tThumbnail heigth: {}", th_width, th_heigth);
-
-	unsigned short iheigth = processing->raw_data->imgdata.sizes.iheight;
-	unsigned short iwidth = processing->raw_data->imgdata.sizes.iwidth;
-
-	LOG(trace) << std::format("\n\tImage half width: {}\n\tImage half heigth: {}", iwidth, iheigth);
-
-	LOG(trace) << std::format("Make: {}", processing->raw_data->imgdata.idata.make);
-	LOG(trace) << std::format("Model: {}", processing->raw_data->imgdata.idata.model);
-	LOG(trace) << std::format("Orientation: {}", processing->raw_data->imgdata.sizes.flip);
-
-	processing->m_exif.make = processing->raw_data->imgdata.idata.make;
-	processing->m_exif.model = processing->raw_data->imgdata.idata.model;
-
-	processing->m_crops.width = image->width;
-	processing->m_crops.height = image->height;
-	processing->m_crops.left = 0;
-	processing->m_crops.top = 0;
-
-	int m_cwidth = image->width;
-	int m_cheight = image->height;
-	int m_cleft = 0;
-	int m_ctop = 0;
-	// 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CCW Vertical, 6 - 90 CW Vertical
-	//           top        width
-	//            |          |
-	//    left  --+----------+-
-	//            |          |
-	//            |          |
-	//  heigth  --+----------+-
-	//            |          |
-	bool cw_ok = crops->cwidth > 0;
-	bool ch_ok = crops->cheight > 0;
-
-	cw_ok &= crops->cwidth <= processing->raw_data->imgdata.sizes.raw_width;
-	ch_ok &= crops->cheight <= processing->raw_data->imgdata.sizes.raw_height;
-
-	bool cl_ok = crops->cleft + crops->cwidth <= processing->raw_data->imgdata.sizes.raw_width;
-	bool ct_ok = crops->ctop + crops->cheight <= processing->raw_data->imgdata.sizes.raw_height;
-
-	bool ok = cw_ok && ch_ok && cl_ok && ct_ok;
-
-	if (!ok) {
-		LOG(error) << "Processor: Invalid crop values" << std::endl;
-		if (cw_ok && ch_ok) { // if crop width and height are valid
-			m_cleft = iwidth - crops->cwidth / 2;
-			m_ctop = iheigth - crops->cheight / 2;
-			m_cwidth = crops->cwidth;
-			m_cheight = crops->cheight;
-			ok = true;
-		}
-		else if (th_width > 0 && th_heigth > 0) { // if thumbnail width and height are valid
-			if (processing->raw_data->imgdata.sizes.flip == 0 || processing->raw_data->imgdata.sizes.flip == 3) {
-				if (image->width / float(th_width) < 1.25f && image->height / float(th_heigth) < 1.25f) {
-					LOG(debug) << "Processor: Thumbnail is full-size" << std::endl;
-					m_cleft = iwidth - th_width / 2;
-					m_ctop = iheigth - th_heigth / 2;
-					m_cwidth = th_width;
-					m_cheight = th_heigth;
-					ok = true;
-				}
-			}
-			else if (processing->raw_data->imgdata.sizes.flip == 5 || processing->raw_data->imgdata.sizes.flip == 6) {
-				if (image->width / float(th_heigth) < 1.25f && image->height / float(th_width) < 1.25f) {
-					LOG(debug) << "Processor: Thumbnail is full-size" << std::endl;
-					m_cleft = iwidth - th_width / 2;
-					m_ctop = iheigth - th_heigth / 2;
-					m_cwidth = th_width;
-					m_cheight = th_heigth;
-					ok = true;
-				}
-			}
-		}
-		else {
-			LOG(error) << "Processor: No valid crop values" << std::endl;
-		}
-	}
-	else {
-		m_cwidth = crops->cwidth;
-		m_cheight = crops->cheight;
-		m_cleft = crops->cleft;
-		m_ctop = crops->ctop;
-	};
-
-	if (settings.crop_mode != -1 && ok) {
-		LOG(debug) << "Processor: Crop valid" << std::endl;
-		switch (processing->raw_data->imgdata.sizes.flip) {
-		case 0: // Unrotated/Horisontal
-			LOG(trace) << "Processor: Unrotated/Horisontal\n";
-			processing->m_crops.left = m_cleft;
-			processing->m_crops.top = m_ctop;
-			processing->m_crops.width = m_cwidth;
-			processing->m_crops.height = m_cheight;
-			break;
-		case 3: // 180 Horisontal
-			LOG(trace) << "Processor: 180 Horisontal\n";
-			processing->m_crops.left = processing->raw_data->imgdata.sizes.raw_width - m_cleft - m_cwidth;
-			processing->m_crops.top = processing->raw_data->imgdata.sizes.raw_height - m_ctop - m_cheight;
-			processing->m_crops.width = m_cwidth;
-			processing->m_crops.height = m_cheight;
-			break;
-		case 5: // 90 CCW Vertical
-			LOG(trace) << "Processor: 90 CCW Vertical\n";
-			processing->m_crops.left = m_ctop;
-			processing->m_crops.top = processing->raw_data->imgdata.sizes.raw_width - m_cleft - m_cwidth;
-			processing->m_crops.width = m_cheight;
-			processing->m_crops.height = m_cwidth;
-			break;
-		case 6: // 90 CW Vertical
-			LOG(trace) << "Processor: 90 CW Vertical\n";
-			processing->m_crops.left = processing->raw_data->imgdata.sizes.raw_height - m_ctop - m_cheight;
-			processing->m_crops.top = m_cleft;
-			processing->m_crops.width = m_cheight;
-			processing->m_crops.height = m_cwidth;
-			break;
-		default:
-			LOG(error) << "Processor: Unsupported orientation" << std::endl;
-			break;
-		}
-		LOG(trace) << std::format("Crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}\n",
-			processing->m_crops.top, processing->m_crops.left, processing->m_crops.width, processing->m_crops.height);
-	}
-    */
-    
     TypeDesc out_format = getTypeDesc(
 		settings.bitDepth != -1 ? settings.bitDepth : settings.defBDepth
     );
@@ -933,13 +896,21 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 	u_out.reset();
 #endif
 
-    // temp copy for saving
-    ImageBuf* out_buf_ptr = uns_buf_ptr;
+    // copy for saving
+	ImageBuf* out_buf_ptr = uns_buf_ptr;
+	if (settings.lutMode == -1 && settings.sharp_mode == -1 && image_buf.spec().format != out_format) {
+		LOG(debug) << "Processor: Copying image buffer as format: " << out_format.basetype << std::endl;
+		if (!ImageBufAlgo::copy(*out_buf_ptr, image_buf, out_format)) {
+			LOG(error) << "Processor: Cannot copy image buffer" << std::endl;
+			LOG(error) << "Processor: " << out_buf_ptr->geterror() << std::endl;
+			return;
+		}
+	}
 
 	LOG(trace) << "Unsharp: Unsh Image buffer: " << uns_buf_ptr->localpixels() << std::endl;
 	LOG(trace) << "Unsharp: Out Image buffer: " << out_buf_ptr->localpixels() << std::endl;
 
-    LOG(trace) << "Processor: Output image format: " << out_buf_ptr->spec().format << std::endl;
+    LOG(trace) << "Processor: Result output image format: " << out_buf_ptr->spec().format << std::endl;
 ///    return { true, std::make_shared<ImageBuf>(*out_buf_ptr) };
     ///
     processing->image = std::make_unique<ImageBuf>(*out_buf_ptr);

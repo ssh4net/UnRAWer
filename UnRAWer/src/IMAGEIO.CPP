@@ -366,11 +366,12 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
     }
     LOG(info) << "Output file format: " << formatText(write_spec.format) << std::endl;
 
-	TypeDesc format = getTypeDesc(
+	//TypeDesc format = write_spec.format;
+        /*getTypeDesc(
 		(settings.bitDepth != -1) ? settings.bitDepth : settings.defBDepth
-    );
-	write_spec.set_format(format);
-	LOG(debug) << "Writer: Output file bit depth: " << formatText(format) << std::endl;
+    );*/
+	//write_spec.set_format(format);
+	//LOG(debug) << "Writer: Output file bit depth: " << formatText(format) << std::endl;
 
 	//ImageBuf write_buf(write_spec);
 
@@ -416,7 +417,7 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
 
 	LOG(trace) << "Writing image: " << outputFileName << "\n\tPixel address: " << ou_px << "\n\tPixel stride: " << ou_pst << "\n\tScanline stride: " << ou_bst << "\n\tZ stride: " << ou_zst << std::endl;
     
-	out->write_image(format, ou_px, ou_pst, ou_bst, ou_zst, m_progress_callback, progressBar);
+	out->write_image(write_spec.format, ou_px, ou_pst, ou_bst, ou_zst, m_progress_callback, progressBar);
     out->close();
 
   //  if (settings.crop_mode != -1) {

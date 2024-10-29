@@ -70,9 +70,6 @@
     </QtUic>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\threadpool.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
@@ -109,7 +106,12 @@
     <ClInclude Include="src\exif_parser.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="src\cli.h" />
+    <ClInclude Include="src\cli.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\threadpool.h">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="src\unrw_config.toml">
