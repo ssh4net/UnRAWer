@@ -27,28 +27,6 @@ Cropping RAWs is not guaranteed to be identical to commercial raw processors' cr
 # User Manual 
 Settings are available through *.toml config file and UI menu
 
-## Headless (CLI)
-
-Process single RAW file from CLI using default config file settings (less efficient way to use CLI)
-
-`UnRAWer.exe path_to_file.ext`
-
-Process a folder with raw files from CLI using default config file settings.
-
-`UnRAWer.exe path_to_folder`
-
-Process multiply folders with raw files from CLI using default config file settings and more silent verbosity
-
-`UnRAWer.exe -v=1 path_to_folder1 path_to_folder2`
-
-Process multiply inputs (folders and files) with raw files from CLI using default config file settings and more verbosity
-
-`UnRAWer.exe -v=4 path_to_folder1 path_to_folder2 path_to_file1.ext path_to_file2.ext path_to_file3.ext`
-
-Process multiply inputs (folders and lists) with raw files from CLI using custom config file settings and more verbosity
-
-`UnRAWer.exe -v=4 path_to_config.toml path_to_folder1 path_to_file_list.txt`
-
 ## Global
 Global app settings
 
@@ -308,7 +286,30 @@ threshold
 *source + contrast * (source - blur)*
 *if (source - blur) < threshold => result == source (no sharp)*
 
-## Required dependencies
+# Headless (CLI)
+
+Process single RAW file from CLI using default config file settings (less efficient way to use CLI)
+
+`UnRAWer.exe path_to_file.ext`
+
+Process a folder with raw files from CLI using default config file settings.
+
+`UnRAWer.exe path_to_folder`
+
+Process multiply folders with raw files from CLI using default config file settings and more silent verbosity
+
+`UnRAWer.exe -v=1 path_to_folder1 path_to_folder2`
+
+Process multiply inputs (folders and files) with raw files from CLI using default config file settings and more verbosity
+
+`UnRAWer.exe -v=4 path_to_folder1 path_to_folder2 path_to_file1.ext path_to_file2.ext path_to_file3.ext`
+
+Process multiply inputs (folders and lists) with raw files from CLI using custom config file settings and more verbosity
+
+`UnRAWer.exe -v=4 path_to_config.toml path_to_folder1 path_to_file_list.txt`
+
+
+# Required dependencies
 * OpenImageIO
 * LibRAW
 * OpenImageIO
