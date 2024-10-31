@@ -22,10 +22,32 @@
 
 Limitations
 -------
-Cropping RAWs not garantee to be identical to commercial raw processors crop.
+Cropping RAWs is not guaranteed to be identical to commercial raw processors' crops.
 
 # User Manual 
-Settings available through *.toml config file and UI menu
+Settings are available through *.toml config file and UI menu
+
+## Headless (CLI)
+
+Process single RAW file from CLI using default config file settings (less efficient way to use CLI)
+
+`UnRAWer.exe path_to_file.ext`
+
+Process a folder with raw files from CLI using default config file settings.
+
+`UnRAWer.exe path_to_folder`
+
+Process multiply folders with raw files from CLI using default config file settings and more silent verbosity
+
+`UnRAWer.exe -v=1 path_to_folder1 path_to_folder2`
+
+Process multiply inputs (folders and files) with raw files from CLI using default config file settings and more verbosity
+
+`UnRAWer.exe -v=4 path_to_folder1 path_to_folder2 path_to_file1.ext path_to_file2.ext path_to_file3.ext`
+
+Process multiply inputs (folders and lists) with raw files from CLI using custom config file settings and more verbosity
+
+`UnRAWer.exe -v=4 path_to_config.toml path_to_folder1 path_to_file_list.txt`
 
 ## Global
 Global app settings
@@ -33,22 +55,22 @@ Global app settings
 `Console = true/false`
 
 ### Threads count for read and write
-Choose this settings depending on your CPU, memory and IO specs
+Choose these settings depending on your CPU, memory, and IO specs
 
 `Threads = 10`
 
-### Threads multiplier for processing 1.0 equal all cores/threads
+### Threads multiplier for processing 1.0 equals all cores/threads
 (TODO: check if still used)
 
 `ThredsMult = 1.0`
 
 ### Export into subfolders
-If set to true, processed images will be stored in lut_name folder, otherwise lut_name will be added as a suffix (aka. filename_lut_name.ext)
+If set to true, processed images will be stored in the lut_name folder. Otherwise, lut_name will be added as a suffix (aka. filename_lut_name.ext)
 
 `ExportSubf = true`
 
-### Global subfolders preffix
-relative path preffix. For example "../Proc" will create a folder Proc in a parent folder to a camera raw images source folder.
+### Global subfolders prefix
+relative path prefix. For example, "../Proc" will create a folder Proc in a parent folder to a camera raw images source folder.
 
 `PathPrefix = ""`
 
@@ -66,7 +88,7 @@ relative path preffix. For example "../Proc" will create a folder Proc in a pare
 ## Range
 
 ### Range conversion mode
-(TODO: check if still needed, this part of code from Solidify)
+(TODO: check if still needed; this part of code from Solidify)
 - 0 - Unsigned 0.0 ~ 1.0
 - 1 - Signed -1.0 ~ 1.0
 - 2 - Signed to Unsigned -1.0~1.0 -> 0.0~1.0
@@ -78,9 +100,9 @@ relative path preffix. For example "../Proc" will create a folder Proc in a pare
 Export settings
 
 ### FileFormat:
-- -1 - Same as input. If input format can't be
-    used for export (for example CameraRAWs) 
-    app will use default 
+- -1 - Same as input. If the input format can't be
+    used for export (for example, CameraRAWs) 
+    app will use the default 
 - 0 - TIFF
 - 1 - OpenEXR
 - 2 - PNG
@@ -97,11 +119,11 @@ Export settings
 - -1 - Original
 - 0 - uint8 (8bit unsigned int)
 - 1 - uint16 (16bit unsigned int)
-- 2 - uint32 (64bit unsigned int) !! most file formats have not support 32bit unsigned int
-- 3 - uint64 (64bit unsigned int) !! most file formats have not support double precision
+- 2 - uint32 (64bit unsigned int) !! most file formats do not support 32bit unsigned int
+- 3 - uint64 (64bit unsigned int) !! most file formats do not support double-precision
 - 4 - half (16bit float)
 - 5 - float (32bit float)
-- 6 - double (64bit float) !! most file formats have not support double precision
+- 6 - double (64-bit float) !! Most file formats do not support double-precision
 
 `DefaultBit = 4`
 `BitDepth = -1`
@@ -117,8 +139,8 @@ Export settings
 
 ### Raw rotation:
 - -1 - Auto EXIF
-- 0 - Unrotated/Horisontal
-- 3 - 180 Horisontal
+- 0 - Unrotated/Horizontal
+- 3 - 180 Horizontal
 - 5 - 90 CW Vertical
 - 6 - 90 CCW Vertical
   
@@ -154,7 +176,7 @@ Export settings
 
 `Demosaic = 3`
 
-### Import Camera RAW in half resolution
+### Import Camera RAW in half-resolution
 
 `half_size = false`
 
@@ -169,9 +191,9 @@ If possible, use the white balance from the camera.
 `use_camera_wb = true`
 
 ### use_camera_matrix
-- 0: do not use embedded color profile
+- 0: do not use an embedded color profile
 - 1 (default): use embedded color profile (if present) for DNG files (always); for other files only if use_camera_wb is set;
--# 3: use embedded color data (if present) regardless of white balance setting.
+-# 3: use embedded color data (if present) regardless of the white balance setting.
 
 `use_camera_matrix = 1`
 
@@ -181,12 +203,12 @@ If possible, use the white balance from the camera.
 `highlights = 3`
 
 ### aberrations
-Correction of chromatic aberrations; (red multiplier, blue multiplier)
+Correction of chromatic aberrations (red multiplier, blue multiplier)
 
 `aberrations = 1.0, 1.0`
 
 ### Denoise before debayering. 
-Do not recommended to use both wavelet denoising and FBDD noise reduction!
+It is not recommended to use both wavelet denoising and FBDD noise reduction!
 - 0 - disabled
 - 1 - wavelength
 - 2 - fbdd
@@ -208,7 +230,7 @@ Controls FBDD noise reduction before demosaic.
 `fbdd_noiserd = 2`
 
 ### Exif crop
-At this moment both auto and force work the same. TODO: merge them into the one
+At this moment, both auto and force work the same. TODO: merge them into the one
 - -1 - disabled
 - 0 - auto
 - 1 - force
@@ -217,24 +239,24 @@ At this moment both auto and force work the same. TODO: merge them into the one
 
 ## OCIO settings
 OCIO config file:
-If empty, OpenColorIO library will use $OCIO environment variable
+If empty, the OpenColorIO library will use the $OCIO environment variable
 ### If $OCIO is not set, app will give an error
 
 `OCIO_Config = "aces_1.2/config.ocio"`
 
 ## Transform image (color transform)
-Luts folder, absolute or relative to a program folder. **UnRAWer** automatically load list of LUTs in this folder in load time.
-*Use a console to check if LUTs correctly recognised.*
-**No LUT check in load time!!**
-(TODO: check if non default handle correctly)
+Luts folder, absolute or relative to a program folder. **UnRAWer** automatically loads the list of LUTs in this folder in load time.
+*Use a console to check if LUTs are correctly recognized.*
+**No LUT checking load time!!**
+(TODO: check if non-default handle correctly)
 
 `LutFolder = "LUTs"`
 
 ### LUT transform mode
 LUT mode.
 If set to **Smart** check if path or image file name have included lut preset name.
-For example, several folders with raw files: diffuse, cross, parallel and you have dedicated LUT presets for such images.
-**UnRAWer** should automatically recognise and use dedicated LUT preset.
+For example, several folders with raw files: diffuse, cross, parallel, and you have dedicated LUT presets for such images.
+**UnRAWer** should automatically recognize and use a dedicated LUT preset.
 - -1 - disabled
 - 0 - Smart (file path/name)
 - 1 - Force
@@ -278,7 +300,7 @@ Unsharp mode:
 
 sharp window size
 `sharp_width = 3.0`
-sharp strenght
+sharp strength
 `sharp_contrast = 0.5`
 threshold
 `sharp_treshold = 0.125`
