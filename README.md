@@ -116,114 +116,177 @@ Export settings
 ## CameraRaw
 
 ### Raw rotation:
-# -1 - Auto EXIF
-# 0 - Unrotated/Horisontal
-# 3 - 180 Horisontal
-# 5 - 90 CW Vertical
-# 6 - 90 CCW Vertical
-RawRotation = -1
-# Raw Color Space
-# 0 - raw
-# 1 - sRGB
-# 2 - sRGB-linear (sRGB primaries, but a linear transfer function)
-# 3 - Adobe
-# 4 - Wide
-# 5 - ProPhoto
-# 6 - ProPhoto-linear
-# 7 - XYZ
-# 8 - ACES (only supported by LibRaw >= 0.18)
-# 9 - DCI-P3 (LibRaw >= 0.21)
-# 10 - Rec2020 (LibRaw >= 0.2)
-RawColorSpace = 1
-# Demosaic (only some of this methods are available)
-# -2 - raw data (Single channel)
-# -1 - no demosaic (RGB)
-# 0 - linear 
-# 1 - VNG
-# 2 - PPG
-# 3 - AHD (default)
-# 4 - DCB
-# 5 ~ 10 is not used
-# 11 - DHT
-# 12 - AAHD (Modified AHD)
-Demosaic = 3
-# Import Camera RAW in half resolution
-half_size = false
-# use_auto_wb
-# Use automatic white balance obtained after averaging over the entire image.
-use_auto_wb = false
-# use_camera_wb
-# If possible, use the white balance from the camera.
-use_camera_wb = true
-# use_camera_matrix
-# 0: do not use embedded color profile
-# 1 (default): use embedded color profile (if present) for DNG files (always); for other files only if use_camera_wb is set;
-# 3: use embedded color data (if present) regardless of white balance setting.
-use_camera_matrix = 1
-# highlight 
-# 0-9: Highlight mode (0=clip, 1=unclip, 2=blend, 3+=rebuild).
-highlights = 3
-# aberrations
-# Correction of chromatic aberrations; [red multiplier, blue multiplier].
-aberrations = [1.0, 1.0]
-#
-# Denoise before debayering. Do not recommended to use both wavelet denoising and FBDD noise reduction!
-#
-# denoise_mode: 0 - disabled, 1 - wavelength, 2 - fbdd, 3 - both
-denoise_mode = 1
-# threshold
-# Use wavelets to erase noise while preserving real detail. The best threshold should be somewhere between 100 and 1000.
-dnz_threshold = 100.0
-# fbdd_noiserd
-# Controls FBDD noise reduction before demosaic.
-# 0 - do not use FBDD noise reduction
-# 1 - light FBDD reduction
-# 2 (and more) - full FBDD reduction
-fbdd_noiserd = 2
-# Exif crop
-# -1 - disabled, 0 - auto, 1 - force
-exif_crop = 0
+- -1 - Auto EXIF
+- 0 - Unrotated/Horisontal
+- 3 - 180 Horisontal
+- 5 - 90 CW Vertical
+- 6 - 90 CCW Vertical
+  
+`RawRotation = -1`
 
-[OCIO]
-# OCIO settings
-# OCIO config file
-# If empty, OpenColorIO library will use $OCIO environment variable
-# If $OCIO is not set, app will give an error
-OCIO_Config = "aces_1.2/config.ocio"
+### Raw Color Space
+(TODO: Check if this is an actual color conversion in LibRAW or just a tagging)
+- 0 - raw
+- 1 - sRGB
+- 2 - sRGB-linear (sRGB primaries, but a linear transfer function)
+- 3 - Adobe
+- 4 - Wide
+- 5 - ProPhoto
+- 6 - ProPhoto-linear
+- 7 - XYZ
+- 8 - ACES (only supported by LibRaw >= 0.18)
+- 9 - DCI-P3 (LibRaw >= 0.21)
+- 10 - Rec2020 (LibRaw >= 0.2)
 
-[Transform]
-# Transform image
-# Luts folder
-# relative path the root folder is a OCIO_Config path
-LutFolder = "LUTs"
-# LUT transform mode
-# LUT mode: -1 - disabled, 0 - Smart (file path/name), 1 - Force
-LutTransform = 1
-# Force/Default preset
-LutDefault = "hdr"
-# Per camera model presets
-exif_lut = false
+`RawColorSpace = 1`
+
+### Demosaic
+- -2 - raw data (Single channel)
+- -1 - no demosaic (RGB)
+- 0 - linear 
+- 1 - VNG
+- 2 - PPG
+- 3 - AHD (default)
+- 4 - DCB
+- 5 ~ 10 is not used
+- 11 - DHT
+- 12 - AAHD (Modified AHD)
+
+`Demosaic = 3`
+
+### Import Camera RAW in half resolution
+
+`half_size = false`
+
+### use_auto_wb
+Use automatic white balance obtained after averaging over the entire image.
+
+`use_auto_wb = false`
+
+### use_camera_wb
+If possible, use the white balance from the camera.
+
+`use_camera_wb = true`
+
+### use_camera_matrix
+- 0: do not use embedded color profile
+- 1 (default): use embedded color profile (if present) for DNG files (always); for other files only if use_camera_wb is set;
+-# 3: use embedded color data (if present) regardless of white balance setting.
+
+`use_camera_matrix = 1`
+
+### highlight 
+0-9: Highlight mode (0=clip, 1=unclip, 2=blend, 3+=rebuild).
+
+`highlights = 3`
+
+### aberrations
+Correction of chromatic aberrations; (red multiplier, blue multiplier)
+
+`aberrations = 1.0, 1.0`
+
+### Denoise before debayering. 
+Do not recommended to use both wavelet denoising and FBDD noise reduction!
+- 0 - disabled
+- 1 - wavelength
+- 2 - fbdd
+- 3 - both
+  
+`denoise_mode = 1`
+
+### threshold
+Use wavelets to erase noise while preserving real detail. The best threshold should be somewhere between 100 and 1000.
+
+`dnz_threshold = 100.0`
+
+### fbdd_noiserd
+Controls FBDD noise reduction before demosaic.
+- 0 - do not use FBDD noise reduction
+- 1 - light FBDD reduction
+- 2 (and more) - full FBDD reduction
+  
+`fbdd_noiserd = 2`
+
+### Exif crop
+At this moment both auto and force work the same. TODO: merge them into the one
+- -1 - disabled
+- 0 - auto
+- 1 - force
+ 
+`exif_crop = 0`
+
+## OCIO settings
+OCIO config file:
+If empty, OpenColorIO library will use $OCIO environment variable
+### If $OCIO is not set, app will give an error
+
+`OCIO_Config = "aces_1.2/config.ocio"`
+
+## Transform image (color transform)
+Luts folder, absolute or relative to a program folder. **UnRAWer** automatically load list of LUTs in this folder in load time.
+*Use a console to check if LUTs correctly recognised.*
+**No LUT check in load time!!**
+(TODO: check if non default handle correctly)
+
+`LutFolder = "LUTs"`
+
+### LUT transform mode
+LUT mode.
+If set to **Smart** check if path or image file name have included lut preset name.
+For example, several folders with raw files: diffuse, cross, parallel and you have dedicated LUT presets for such images.
+**UnRAWer** should automatically recognise and use dedicated LUT preset.
+- -1 - disabled
+- 0 - Smart (file path/name)
+- 1 - Force
+  
+`LutTransform = 1`
+
+Force/Default preset
+
+`LutDefault = "hdr"`
+
+Per camera model presets
+
+`exif_lut = false`
 
 
-[Unsharp]
-# Unsharp mask
-# Unsharp mode: -1 - disabled, 0 - smart, 1 - Force
-sharp_mode = 1
-# Unsharp kernel
-# 0 - gaussian (default), 1 - sharp-gaussian, 2 - box, 3- triangle
-# 4 - blackman-harris, 5 - mitchell, 6 - b-spline, 7 - catmull-rom
-# 8 - lanczos3, 9 - disk, 10 - binomial, 11 - laplacian, 12 - median
-sharp_kernel = 0
-sharp_width = 3.0
-sharp_contrast = 0.5
-sharp_treshold = 0.125
+## Unsharp
+### Unsharp mask
+Unsharp mode:
+- -1 - disabled
+- 0 - smart
+- 1 - Force
 
+`sharp_mode = 1`
 
+## Unsharp kernel
+- 0 - gaussian (default)
+- 1 - sharp-gaussian
+- 2 - box
+- 3- triangle
+- 4 - blackman-harris
+- 5 - mitchell
+- 6 - b-spline
+- 7 - catmull-rom
+- 8 - lanczos3
+- 9 - disk
+- 10 - binomial
+- 11 - laplacian
+- 12 - median
 
+`sharp_kernel = 0`
 
-TODO
+sharp window size
+`sharp_width = 3.0`
+sharp strenght
+`sharp_contrast = 0.5`
+threshold
+`sharp_treshold = 0.125`
 
-### Required dependencies
+*source + contrast * (source - blur)*
+*if (source - blur) < threshold => result == source (no sharp)*
+
+## Required dependencies
 * OpenImageIO
 * LibRAW
 * OpenImageIO
