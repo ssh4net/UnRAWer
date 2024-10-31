@@ -1,18 +1,19 @@
 /*
  * UnRAWer - camera raw batch processor on top of OpenImageIO
- * Copyright (c) 2023 Erium Vladlen.
+ * Copyright (c) 2024 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, version 3.
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
 //#include <toml++/toml.h>
@@ -64,11 +65,6 @@ bool loadSettings(Settings& settings, const std::string& filename) {
 			LOG(error) << "Error parsing settings file: [OCIO] section not found or empty." << std::endl;
 			return false;
 		}
-        // Lut Preset
-        if (!parsed.contains("LUT_Preset")) {
-            LOG(error) << "Error parsing settings file: [LUT_Preset] section not found." << std::endl;
-			return false;
-        }
         // Unsharp
         if (!parsed.contains("Unsharp") || parsed["Unsharp"].as_table().empty()) {
             LOG(error) << "Error parsing settings file: [Unsharp] section not found." << std::endl;
@@ -228,16 +224,30 @@ bool loadSettings(Settings& settings, const std::string& filename) {
 			LOG(error) << "Error parsing settings file: [OCIO] section: \"ocio_Config\" key value is invalid." << std::endl;
 			return false;
 		}
-        // LUT_Preset
-        auto lutPreset = parsed["LUT_Preset"].as_table();
-        if (!lutPreset.empty()) {
-            for (auto& [key, value] : lutPreset) {
-				settings.lut_Preset.emplace(key, value.as_string());
-			}
-		} else {
-			LOG(info) << "Parsing settings file: [LUT_Preset] section: \"LUT_Preset\" key value is empty." << std::endl;
-		}
+
         // Transform
+		if (!check("Transform", "LutFolder")) return false;
+		// initialize lut folder as current directory
+		std::filesystem::path currentPath = std::filesystem::current_path();
+		std::string lutFolder = parsed["Transform"]["LutFolder"].as_string();
+		std::replace(lutFolder.begin(), lutFolder.end(), '/', '\\');
+        std::filesystem::path lutFolderPath = lutFolder;
+
+        if (std::filesystem::exists(lutFolderPath)) {
+			LOG(info) << "LUT folder: " << lutFolderPath << std::endl;
+			settings.lutFolder = (lutFolderPath.is_absolute() ? lutFolderPath : currentPath / lutFolderPath).string();
+		}
+        else {
+            LOG(error) << "Error parsing settings file: [Transform] section: \"LutFolder\" key value is invalid." << std::endl;
+            return false;
+        }
+		// gel all files in lut folder
+		for (const auto& entry : std::filesystem::directory_iterator(settings.lutFolder)) {
+			if (entry.is_regular_file()) {
+				auto file_name_no_ext = entry.path().filename().replace_extension().string();
+				settings.lut_Preset.emplace(file_name_no_ext, entry.path().string());
+			}
+		}
         if (!check("Transform", "LutTransform")) return false;
         settings.lutMode = parsed["Transform"]["LutTransform"].as_integer();//.value_or(-1);
         if (settings.lutMode < -1 || settings.lutMode > 1) {
@@ -247,8 +257,11 @@ bool loadSettings(Settings& settings, const std::string& filename) {
         std::string lutDefault = parsed["Transform"]["LutDefault"].as_string();
         if (lutDefault != "") {
             // check if settings.lut_Preset[key] exists
-            settings.dLutPreset = settings.lut_Preset.find(lutDefault)->first;
-            if (settings.dLutPreset == "") {
+			auto preset = settings.lut_Preset.find(lutDefault);
+            if (preset != settings.lut_Preset.end()) {
+                settings.dLutPreset = preset->first;
+			}
+			else {
 				LOG(error) << "Error parsing settings file: [Transform] section: \"LutDefault\" key value is invalid." << std::endl;
 				return false;
             }
@@ -413,10 +426,10 @@ void printSettings(Settings& settings) {
 
 	qDebug() << "[Transform]";
 	qDebug() << qPrintable(QString(" LUT Transform: %1").arg(settings.lutMode == -1 ? "disabled" : (settings.lutMode == 0 ? "smart" : "force")));
-	qDebug() << qPrintable(QString(" Default LUT Preset: %1").arg(settings.dLutPreset.c_str()));
+	qDebug() << qPrintable(QString(" Default LUT Preset: %1:\t%2").arg(settings.dLutPreset.c_str()).arg(settings.lut_Preset[settings.dLutPreset].c_str()));
 	qDebug() << qPrintable(QString(" Per Camera LUT: %1").arg(settings.perCamera ? "enabled" : "disabled"));
 	for (const auto& [key, value] : settings.lut_Preset) {
-		qDebug() << qPrintable(QString(" LUT Preset: %1 - %2").arg(key.c_str()).arg(value.c_str()));
+		qDebug() << qPrintable(QString(" LUT Preset: %1:\t%2").arg(key.c_str()).arg(value.c_str()));
 	}
 
 	qDebug() << "[Unsharp]";

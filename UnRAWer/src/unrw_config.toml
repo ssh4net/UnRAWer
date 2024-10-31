@@ -141,21 +141,17 @@ OCIO_Config = "aces_1.2/config.ocio"
 
 [Transform]
 # Transform image
+# Luts folder
+# relative path the root folder is a OCIO_Config path
+LutFolder = "LUTs"
 # LUT transform mode
 # LUT mode: -1 - disabled, 0 - Smart (file path/name), 1 - Force
 LutTransform = 1
 # Force/Default preset
-LutDefault = "_hdr"
+LutDefault = "hdr"
 # Per camera model presets
 exif_lut = false
 
-[LUT_Preset]
-# Presets
-# For relative path the root folder is a OCIO_Config path
-_linear = "../../LUTs/linear.clf"
-_hdr = "../../LUTs/hdr.clf"
-_texture = "../../LUTs/test.csp"
-_geometry = "../../LUTs/test.csp"
 
 [Unsharp]
 # Unsharp mask

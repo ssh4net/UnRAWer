@@ -1,19 +1,18 @@
 /*
- * UnRAWer - camera raw batch processor on top of OpenImageIO
- * Copyright (c) 2024 Erium Vladlen.
+ * UnRAWer - camera raw bnatch processor on top of OpenImageIO
+ * Copyright (c) 2023 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #pragma once
 
@@ -100,7 +99,6 @@ public:
         queue.push(item);
         lock.unlock();
         cv.notify_all();
-        //cv.notify_one();
     }
 
     std::optional<T> try_pop() {
@@ -121,7 +119,6 @@ public:
         queue.push(item);
         lock.unlock();
         cv.notify_all();
-        //cv.notify_one();
         return true;
     }
 
@@ -185,7 +182,9 @@ public:
                         this->done_condition.notify_all();
 
                         // Notify enqueuers that there is space in the queue
-                        this->condition.notify_one();
+                        //this->condition.notify_one();
+                        // Notify all waiting threads to avoid deadlocks
+                        this->condition.notify_all();
                     }
                 }
                 });
@@ -197,6 +196,7 @@ public:
     ThreadPool& operator=(const ThreadPool&) = delete;
 
     // Enqueue method: Adds a new task to the thread pool
+/*
     template <class F, class... Args>
     auto enqueue(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>>
     {
@@ -237,6 +237,48 @@ public:
         condition.notify_one();
         return res;
     }
+*/  
+    template <class F, class... Args>
+    auto enqueue(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>> {
+        using return_type = std::invoke_result_t<F, Args...>;
+
+        // Create a packaged task with the function and its arguments
+        auto task = std::make_shared<std::packaged_task<return_type()>>(
+            [f = std::forward<F>(f), args = std::make_tuple(std::forward<Args>(args)...)]() mutable -> return_type {
+                return std::apply(f, std::move(args));
+            }
+        );
+
+        std::future<return_type> res = task->get_future();
+
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+
+            // Check if the pool has been stopped
+            if (stop) {
+                throw std::runtime_error("enqueue on stopped ThreadPool");
+            }
+
+            // Wait until there's space in the queue or the pool is stopped
+            condition.wait(lock, [this] {
+                return tasks_count < maxQueueSize || stop;
+                });
+
+            if (stop) {
+                throw std::runtime_error("enqueue on stopped ThreadPool");
+            }
+
+            // Add the task to the queue
+            tasks.emplace([task]() { (*task)(); });
+            ++tasks_count;
+        }
+
+        // Notify all waiting threads to avoid missed wakeups
+        condition.notify_all();
+
+        return res;
+    }
+
 
     // Checks if the thread pool is idle (no tasks in queue and no active workers)
     bool isIdle() {
@@ -245,9 +287,15 @@ public:
     }
 
     // Waits for all tasks to complete
+    //void waitForAllTasks() {
+    //    std::unique_lock<std::mutex> lock(queue_mutex);
+    //    done_condition.wait(lock, [this] { return tasks_count == 0; });
+    //}
     void waitForAllTasks() {
         std::unique_lock<std::mutex> lock(queue_mutex);
-        done_condition.wait(lock, [this] { return tasks_count == 0; });
+        done_condition.wait(lock, [this] {
+            return tasks_count == 0 && working == 0;
+            });
     }
 
     // Sets a new limitation for the task queue size

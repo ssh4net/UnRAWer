@@ -1,18 +1,19 @@
 /*
  * UnRAWer - camera raw batch processor on top of OpenImageIO
- * Copyright (c) 2023 Erium Vladlen.
+ * Copyright (c) 2024 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, version 3.
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 #pragma once
 
@@ -49,6 +50,7 @@ struct Settings {
 	std::string ocioConfigPath, dLutPreset;
 	
 	std::map<std::string, std::string> lut_Preset;
+	std::string lutFolder;
 	const std::string sharp_kerns[13] = {"gaussian", "sharp-gaussian", "box", "triangle",
 		"blackman-harris", "mitchell", "b-spline", "catmull-rom", "lanczos3",
 		"disk", "binomial", "laplacian", "median" };
@@ -88,6 +90,7 @@ struct Settings {
 		pathPrefix = "";	// Path prefix for output
 		verbosity = 3;		// Verbosity level: 0 - none, 1 - errors, 2 - warnings, 3 - info, 4 - debug, 5 - trace
 		lutMode = 0;		// LUT mode: -1 - disabled, 0 - Smart, 1 - Force
+		lutFolder = "";		// LUT folder
 		crop_mode = 0;		// Crop mode: -1 - disabled, 0 - Smart, 1 - Force
 		dLutPreset = "";	// Default LUT preset, top one
 
