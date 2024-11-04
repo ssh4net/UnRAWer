@@ -17,22 +17,26 @@
  */
 #pragma once
 
-#include <cctype>
-#include <string>
-#include <algorithm>
-#include <optional>
+//#include <cctype>
+//#include <string>
+//#include <algorithm>
+//#include <optional>
 #include <unordered_set>
-#include <QtCore/QDir>
-#include <QtCore/QRegularExpression>
 
-#include "Log.h"
-#include "settings.h"
+//#include <QtCore/QDir>
+//#include <QtCore/QRegularExpression>
+//#include <libraw/libraw.h>
+
+#include "log.h"
+//#include "settings.h"
 #include "imageio.h"
 #include "ui.h"
-#include "threadpool.h"
+//#include "threadpool.h"
 
 #ifndef FILEPROCESSOR_H
 #define FILEPROCESSOR_H
+
+struct Settings; // forward declaration
 
 class OutPaths {
 public:

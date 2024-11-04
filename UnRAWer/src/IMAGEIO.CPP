@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include "stdafx.h"
 #include "imageio.h"
 #include "settings.h"
 #include "Log.h"

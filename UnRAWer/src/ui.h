@@ -17,27 +17,9 @@
  */
 #pragma once
 
-#include <QtWidgets/QMainWindow>
-#include <QtWidgets/QMenuBar>
-#include <QtWidgets/QMenu>
-
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QLabel>
-#include <QtGui/QDragEnterEvent>
-#include <QtGui/QDropEvent>
-#include <QtCore/QMimeData>
-#include <QtCore/QDebug>
-#include <QtCore/QFileInfo>
-#include <QtCore/QProcess>
-#include <QtWidgets/QProgressBar>
-#include <QtWidgets/QStatusBar>
-#include <QtWidgets/QVBoxLayout>
-
-#include <QtCore/QFutureWatcher>
-#include <QtConcurrent/QtConcurrentRun>
-#include <QtCore/QRandomGenerator>
-
 #include "process.h"
+#include <QtWidgets/QMainWindow>
+#include <QtWidgets/QProgressBar>
 
 #define VERSION_MAJOR 1
 #define VERSION_MINOR 61

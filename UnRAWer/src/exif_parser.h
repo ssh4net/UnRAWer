@@ -17,10 +17,13 @@
  */
 #pragma once
 
-#include <memory>
-#include <string>
-#include <OpenImageIO/imageio.h>
-#include <libraw/libraw.h>
+//#include <memory>
+//#include <string>
+//#include <OpenImageIO/imageio.h>
+//#include <libraw/libraw.h>
+
+OIIO::ImageSpec; // forward declaration
+class LibRaw; // forward declaration
 
 namespace EXIF
 {

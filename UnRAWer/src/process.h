@@ -20,5 +20,6 @@
 #include "ui.h"
 
 class MainWindow; // forward declaration
+class QProgressBar; // forward declaration
 
 bool doProcessing(QList<QUrl> URLs, QProgressBar* progressBar, MainWindow* mainWindow);

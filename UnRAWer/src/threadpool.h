@@ -17,17 +17,17 @@
  */
 #pragma once
 
-#include <queue>
+//#include <queue>
 #include <vector>
-#include <thread>
-#include <functional>
 #include <mutex>
 #include <condition_variable>
-#include <atomic>
-#include <optional>
-#include <future>
-#include <stdexcept>
-#include <thread>
+//#include <thread>
+//#include <functional>
+//#include <atomic>
+//#include <optional>
+//#include <future>
+//#include <stdexcept>
+//#include <thread>
 
 #ifndef SAFEQUEUE_H
 #define SAFEQUEUE_H

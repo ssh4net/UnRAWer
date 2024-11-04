@@ -20,19 +20,19 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include <math.h>
-
-#include "Timer.h"
+//#include <math.h>
+//
+//#include "Timer.h"
 #include "ui.h"
-
+//
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/imagebuf.h>
-#include <OpenImageIO/imagecache.h>
-#include <OpenImageIO/imagebufalgo.h>
-#include <OpenImageIO/imagebufalgo_util.h>
-#include <Imath/half.h>
-#include <OpenImageIO/half.h>
-#include <libraw/libraw.h>
+//#include <OpenImageIO/imagecache.h>
+//#include <OpenImageIO/imagebufalgo.h>
+//#include <OpenImageIO/imagebufalgo_util.h>
+//#include <Imath/half.h>
+//#include <OpenImageIO/half.h>
+//#include <libraw/libraw.h>
 
 using namespace OIIO;
 

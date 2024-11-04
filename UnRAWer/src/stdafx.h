@@ -15,4 +15,66 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+
+#include <algorithm>
+#include <array>
+#include <atomic>
+#include <cassert>
+#include <cctype>
+#include <condition_variable>
+#include <exception>
+#include <filesystem>
+#include <fstream>
+#include <functional>
+#include <future>
+#include <iomanip>
+#include <iostream>
+#include <iterator>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <queue>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <vector>
+
+#include <QtConcurrent/QtConcurrentRun>
+#include <QtCore/QDebug>
+#include <QtCore/QDir>
+#include <QtCore/QFileInfo>
+#include <QtCore/QFutureWatcher>
+#include <QtCore/QMimeData>
+#include <QtCore/QProcess>
+#include <QtCore/QRandomGenerator>
+#include <QtCore/QRegularExpression>
+#include <QtGui/QDragEnterEvent>
+#include <QtGui/QDropEvent>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QMainWindow>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QMenuBar>
+#include <QtWidgets/QProgressBar>
+#include <QtWidgets/QStatusBar>
 #include <QtWidgets/QtWidgets>
+#include <QtWidgets/QVBoxLayout>
+
+#include <OpenImageIO/color.h>
+#include <OpenImageIO/imagebuf.h>
+#include <OpenImageIO/imagebufalgo.h>
+#include <OpenImageIO/imageio.h>
+#include <OpenImageIO/imageio.h>
+#include <OpenImageIO/span.h>
+#include <OpenImageIO/strutil.h>
+#include <OpenImageIO/sysutil.h>
+
+#include <boost/log/expressions.hpp>
+#include <boost/log/utility/setup.hpp>
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+
+#include <libraw/libraw.h>

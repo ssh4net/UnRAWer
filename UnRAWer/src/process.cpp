@@ -23,6 +23,8 @@
 #include "imageio.h"
 #include "process.h"
 #include "processors.h"
+#include "settings.h"
+#include "Timer.h"
 
 std::map<std::string, std::unique_ptr<ThreadPool>> myPools;
 std::atomic_size_t fileCntr;

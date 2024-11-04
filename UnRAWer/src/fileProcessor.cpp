@@ -16,7 +16,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "stdafx.h"
 #include "fileProcessor.h"
+#include "settings.h"
 
 std::string toLower(const std::string& str) {
     std::string strCopy = str;

@@ -16,9 +16,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "stdafx.h"
 #include "processors.h"
-#include "Unrawer.h"
+//#include "Unrawer.h"
 #include "exif_parser.h"
+#include "log.h"
+#include "settings.h"
 
 #define DEBWRT 0
 

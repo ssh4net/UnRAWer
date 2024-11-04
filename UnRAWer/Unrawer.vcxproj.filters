@@ -45,10 +45,7 @@
     <ClCompile Include="src\settings.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Log.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Unrawer.cpp">
+    <ClCompile Include="src\log.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\fileProcessor.cpp">
@@ -91,10 +88,7 @@
     <ClInclude Include="src\Timer.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="src\Unrawer.h">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="src\LOG.H">
+    <ClInclude Include="src\log.h">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="src\fileProcessor.h">

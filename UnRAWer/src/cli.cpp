@@ -17,13 +17,7 @@
  */
 #pragma once
 
-
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <string>
-#include <optional>
-#include <cctype>
+#include "stdafx.h"
 
 #include "ui.h"
 #include "cli.h"

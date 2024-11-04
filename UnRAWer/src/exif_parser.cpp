@@ -15,16 +15,11 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+
+#include "stdafx.h"
+
 #include "exif_parser.h"
 #include "Log.h"
-
-#include <iostream>
-#include <memory>
-
-#include <OpenImageIO/strutil.h>
-#include <OpenImageIO/sysutil.h>
-#include <OpenImageIO/span.h>
-#include <OpenImageIO/imageio.h>
 
 template<typename T> static bool allval(OIIO::cspan<T> d, T v = T(0))
 {

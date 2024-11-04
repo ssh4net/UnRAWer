@@ -16,12 +16,14 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "Common.h"
-#include "Log.h"
+#include "stdafx.h"
 
-#include <boost/log/expressions.hpp>
-#include <boost/log/utility/setup.hpp>
-#include <boost/log/utility/setup/console.hpp>
+#include "Common.h"
+#include "log.h"
+
+//#include <boost/log/expressions.hpp>
+//#include <boost/log/utility/setup.hpp>
+//#include <boost/log/utility/setup/console.hpp>
 
 namespace logging = boost::log;
 namespace expr = boost::log::expressions;

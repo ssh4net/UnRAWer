@@ -18,23 +18,6 @@
 
 #pragma once
 
-#include <string>
-#include <memory>
-#include <map>
-#include <vector>
-#include <array>
-
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <filesystem>
-
-#include <cassert>
-#include <exception>
-
-#include <algorithm>
-#include <iterator>
-
 #if 0
 /* Is Windows OS? */
 #define OS_WIN \
