@@ -16,7 +16,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//#include <toml++/toml.h>
 #include <toml.hpp>
 #include <filesystem>
 #include "settings.h"
