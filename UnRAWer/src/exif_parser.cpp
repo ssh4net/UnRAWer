@@ -1,5 +1,5 @@
 /*
- * UnRAWer - camera raw batch processor on top of OpenImageIO
+ * UnRAWer - camera raw batch processor
  * Copyright (c) 2024 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,11 +15,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-
-#include "stdafx.h"
+#include "pch.h"
 
 #include "exif_parser.h"
-#include "Log.h"
+#include "log.h"
 
 template<typename T> static bool allval(OIIO::cspan<T> d, T v = T(0))
 {

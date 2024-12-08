@@ -1,5 +1,5 @@
 /*
- * UnRAWer - camera raw batch processor on top of OpenImageIO
+ * UnRAWer - camera raw batch processor
  * Copyright (c) 2024 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+#include "pch.h"
 
-#include "stdafx.h"
 #include "processors.h"
 //#include "Unrawer.h"
 #include "exif_parser.h"
@@ -539,6 +539,8 @@ void LUnpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     raw->imgdata.params.output_color = settings.rawSpace;
 
     raw->imgdata.params.user_flip = settings.rawRot;
+
+	LOG(trace) << std::format("Unpack: CameraRaw Rotations: {}", settings.rawRot);
 
     if (settings.denoise_mode == 1 || settings.denoise_mode == 3) {
         raw->imgdata.params.threshold = settings.rawParms.denoise_thr;

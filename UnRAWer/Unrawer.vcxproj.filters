@@ -36,7 +36,7 @@
     <ClCompile Include="src\process.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\stdafx.cpp">
+    <ClCompile Include="src\pch.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\imageio.cpp">
@@ -82,7 +82,7 @@
     <ClInclude Include="src\settings.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="src\stdafx.h">
+    <ClInclude Include="src\pch.h">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="src\Timer.h">

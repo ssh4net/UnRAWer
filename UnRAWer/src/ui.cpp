@@ -1,5 +1,5 @@
 /*
- * UnRAWer - camera raw batch processor on top of OpenImageIO
+ * UnRAWer - camera raw batch processor
  * Copyright (c) 2024 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,9 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+#include "pch.h"
 
-#include "stdafx.h"
+#include <DbgHelp.h>
 #include "ui.h"
 
 #include "process.h"
@@ -118,6 +119,7 @@ MainWindow::MainWindow() {
     QMenu* p_menu = new QMenu("Processing", menuBar);
     QMenu* o_menu = new QMenu("Outputs", menuBar);
     QMenu* s_menu = new QMenu("Settings", menuBar);
+	QMenu* d_menu = new QMenu("Debug", menuBar);
 
     //menuBar->setStyleSheet(
     //    "QMenu { color: #E0E0E0; }"
@@ -167,7 +169,8 @@ MainWindow::MainWindow() {
 	QMenu* sharp_k_submenu = new QMenu("Unsharp kernel", p_menu);
 	QMenu* crop_submenu = new QMenu("Crop", p_menu);
 
-	QMenu* verb_submenu = new QMenu("Verbosity", s_menu);
+	QMenu* verb_submenu = new QMenu("Verbosity", d_menu);
+	QMenu* dump_submenu = new QMenu("Create Dump", d_menu);
 
     QActionGroup* RangeGroup = new QActionGroup(rng_submenu);
     QActionGroup* FrmtGroup = new QActionGroup(fmt_submenu);
@@ -183,6 +186,7 @@ MainWindow::MainWindow() {
 	QActionGroup* CropGroup = new QActionGroup(crop_submenu);
 
     QActionGroup* VerbGroup = new QActionGroup(verb_submenu);
+	QActionGroup* DumpGroup = new QActionGroup(dump_submenu);
 
     auto createAction = [](const QString& title, QActionGroup* group, QMenu* menu, bool checkable = true, bool checked = false) {
         QAction* action = new QAction(title, menu);
@@ -192,6 +196,13 @@ MainWindow::MainWindow() {
         menu->addAction(action);
         return action;
     };
+	// Dump menu
+	std::vector<QString> dumpMenu = { "Normal", "Full" };
+	for (QString& title : dumpMenu) {
+		QAction* action = createAction(title, DumpGroup, dump_submenu, false, false);
+		dumpActions.push_back(action);
+	}
+
     // Verbose level
     std::vector<std::pair<const QString, int>> verbMenu = {
         {"0 - Fatal", 0}, {"1 - Error", 1}, {"2 - Warning", 2}, {"3 - Info", 3}, {"4 - Debug", 4}, {"5 - Trace", 5} };
@@ -300,11 +311,14 @@ MainWindow::MainWindow() {
     menuBar->addMenu(p_menu);
     menuBar->addMenu(o_menu);
     menuBar->addMenu(s_menu);
+	menuBar->addMenu(d_menu);
     //
-    s_menu->addMenu(verb_submenu);
-    s_menu->addSeparator();
-    s_menu->addAction(con_enable);
-    s_menu->addSeparator();
+    d_menu->addMenu(verb_submenu);
+    d_menu->addSeparator();
+    d_menu->addAction(con_enable);
+    d_menu->addSeparator();
+	d_menu->addMenu(dump_submenu);
+    //
     s_menu->addAction(prnt_settings);
 	//
     r_menu->addMenu(raw_submenu);
@@ -393,6 +407,9 @@ MainWindow::MainWindow() {
     for (QAction* action : verbActions) {
 		connect(action, &QAction::triggered, this, &MainWindow::verbLevel);
 	}
+    for (QAction* action : dumpActions) {
+        connect(action, &QAction::triggered, this, &MainWindow::createMemoryDump);
+    }
 
     connect(con_enable, &QAction::toggled, this, &MainWindow::toggleConsole);
     connect(prnt_settings, &QAction::triggered, this, &MainWindow::prntSettings);
@@ -424,6 +441,134 @@ void MainWindow::verbLevel() {
 		}
 	}
 }
+
+void SuspendAllThreadsExceptCurrent() {
+    DWORD currentThreadId = GetCurrentThreadId();
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+
+    THREADENTRY32 te;
+    te.dwSize = sizeof(THREADENTRY32);
+
+    if (Thread32First(snapshot, &te)) {
+        do {
+            if (te.th32ThreadID != currentThreadId) {
+                HANDLE threadHandle = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te.th32ThreadID);
+                if (threadHandle) {
+                    SuspendThread(threadHandle);
+                    CloseHandle(threadHandle);
+                }
+            }
+        } while (Thread32Next(snapshot, &te));
+    }
+    CloseHandle(snapshot);
+}
+
+void ResumeAllThreadsExceptCurrent() {
+    DWORD currentThreadId = GetCurrentThreadId();
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+
+    THREADENTRY32 te;
+    te.dwSize = sizeof(THREADENTRY32);
+
+    if (Thread32First(snapshot, &te)) {
+        do {
+            if (te.th32ThreadID != currentThreadId) {
+                HANDLE threadHandle = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te.th32ThreadID);
+                if (threadHandle) {
+                    ResumeThread(threadHandle);  // Resume the thread
+                    CloseHandle(threadHandle);
+                }
+            }
+        } while (Thread32Next(snapshot, &te));
+    }
+    CloseHandle(snapshot);
+}
+
+void MainWindow::createMemoryDump() {
+	QAction* action = qobject_cast<QAction*>(sender());
+	MINIDUMP_TYPE dumpType = MiniDumpWithFullMemory;
+	if (action == dumpActions[0]) {
+		dumpType = MiniDumpNormal;
+		emit updateTextSignal("Normal dump");
+		qDebug() << "Normal dump";
+	}
+	else if (action == dumpActions[1]) {
+		dumpType = (MINIDUMP_TYPE)(
+			MiniDumpWithFullMemory |                 // Captures the full memory of the process
+			MiniDumpWithDataSegs |                   // Includes static and global variables
+			MiniDumpWithThreadInfo |                 // Includes detailed thread information
+			MiniDumpWithFullMemoryInfo |             // Includes detailed memory region info
+			MiniDumpWithHandleData                   // Includes handle information
+			);
+		//MiniDumpWithFullMemory;
+		emit updateTextSignal("Full dump");
+		qDebug() << "Full dump";
+	}
+
+	// Generate a unique dump file name
+	SYSTEMTIME st;
+	GetSystemTime(&st);
+	char dumpFileName[128];
+	sprintf_s(dumpFileName, "crash_dump_%04d%02d%02d_%02d%02d%02d.dmp",
+		st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+
+	HANDLE dumpFile = CreateFileA(dumpFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (dumpFile != INVALID_HANDLE_VALUE) {
+		//	MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
+		//	dumpInfo.ThreadId = GetCurrentThreadId();
+		//	dumpInfo.ExceptionPointers = NULL;
+		//	dumpInfo.ClientPointers = FALSE;
+
+		//	// Write the dump
+		//	MiniDumpWriteDump(
+		//		GetCurrentProcess(),
+		//		GetCurrentProcessId(),
+		//		dumpFile,
+		//		dumpType,
+		//		&dumpInfo,
+		//		NULL,
+		//		NULL);
+
+		// Suspend all threads to ensure consistency
+		SuspendAllThreadsExceptCurrent();
+
+		//// Define dump type
+		//MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(
+		//	MiniDumpWithFullMemory |
+		//	MiniDumpWithDataSegs |
+		//	MiniDumpWithThreadInfo |
+		//	MiniDumpWithHandleData |
+		//	MiniDumpWithFullMemoryInfo
+		//	);
+
+		// Write the dump
+		BOOL success = MiniDumpWriteDump(
+			GetCurrentProcess(),
+			GetCurrentProcessId(),
+			dumpFile,
+			dumpType,
+			NULL,  // No exception information
+			NULL,  // No custom streams (yet)
+			NULL
+		);
+
+		if (!success) {
+			DWORD error = GetLastError();
+			printf("MiniDumpWriteDump failed with error code: %lu\n", error);
+		}
+
+		// Resume all threads after dumping
+		ResumeAllThreadsExceptCurrent();
+
+		CloseHandle(dumpFile);
+	}
+	/// 
+	printf("UnRAWer has crashed. A dump file has been saved as %s\n", dumpFileName);
+};
+
+
 void MainWindow::prntSettings(){
     printSettings(settings);
 }
@@ -506,7 +651,8 @@ void MainWindow::rngSettings() {
 
 void MainWindow::rawSettings() {
     QAction* action = qobject_cast<QAction*>(sender());
-
+    // -1 - Auto EXIF, 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CW Vertical, 6 - 90 CCW Vertical
+	// const int raw_rot[5] = { -1, 0, 3, 5, 6 }; 0 -1; 1 - 0; 2 - 3; 3 - 5; 4 - 6
     if (action == rawActions[0]) {
         settings.rawRot = settings.raw_rot[0];
         emit updateTextSignal("Camera Raw rotation - Auto");
@@ -518,12 +664,12 @@ void MainWindow::rawSettings() {
         qDebug() << "Camera Raw rotation set to 0 degree - Unrotatate/Horizontal";
     }
     else if (action == rawActions[2]) {
-		settings.rawRot = settings.raw_rot[3];
+		settings.rawRot = settings.raw_rot[2];
         emit updateTextSignal("Camera Raw rotation - 180 (Horisontal)");
 		qDebug() << "Camera Raw rotation set to 180 degree (Horizontal)";
 	}
     else if (action == rawActions[3]) {
-		settings.rawRot = settings.raw_rot[2];
+		settings.rawRot = settings.raw_rot[3];
 		emit updateTextSignal("Camera Raw rotation - 90 CCW (Vertical)");
         qDebug() << "Camera Raw rotation set to 90 degree CCW (Vertical)";
 	}
@@ -719,7 +865,7 @@ void MainWindow::reloadConfig() {
     printSettings(settings);
 }
 
-void setPBarColor(QProgressBar* progressBar, const QColor& color) {
+void MainWindow::setPBarColor(QProgressBar* progressBar, const QColor& color) {
     QString style = QString(
         "QProgressBar {"
         "border: 0px solid black; border-radius: 3px; background-color: black; color: white;"

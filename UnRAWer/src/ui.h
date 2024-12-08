@@ -1,5 +1,5 @@
 /*
- * UnRAWer - camera raw batch processor on top of OpenImageIO
+ * UnRAWer - camera raw batch processor
  * Copyright (c) 2024 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,13 +18,18 @@
 #pragma once
 
 #include "process.h"
+#include <QtCore/QFutureWatcher>
+#include <QtCore/QList>
+#include <QtCore/QUrl>
+#include <QtGui/QDropEvent>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QProgressBar>
 
-#define VERSION_MAJOR 1
-#define VERSION_MINOR 61
 
-void setPBarColor(QProgressBar* progressBar, const QColor& color = QColor("#05B8CC"));
+#define VERSION_MAJOR 1
+#define VERSION_MINOR 62
+
 
 class DropArea : public QLabel {
     Q_OBJECT  // Macro needed to handle signals and slots
@@ -46,6 +51,7 @@ public:
     MainWindow();
     //explicit MainWindow(const QStringList& args, QWidget* parent = nullptr);
     virtual void emitUpdateTextSignal(const QString& text) { emit updateTextSignal(text); }  // Public method to emit the signal
+	void setPBarColor(QProgressBar* progressBar, const QColor& color = QColor("#05B8CC"));
 
 signals:
     void updateTextSignal(const QString& text);
@@ -61,6 +67,7 @@ private slots:
     
     void toggleConsole(bool checked);
     void verbLevel();
+	void createMemoryDump();
 
     void toggleSubfldr(bool checked);
     void startProcessing(QList<QUrl> urls);
@@ -89,6 +96,7 @@ private:
 
     QAction* con_enable;
     QList<QAction*> verbActions;
+	QList<QAction*> dumpActions;
 
     QList<QAction*> rngActions;
     QList<QAction*> demActions;

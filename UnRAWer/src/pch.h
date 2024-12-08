@@ -1,5 +1,5 @@
 /*
- * UnRAWer - camera raw batch processor on top of OpenImageIO
+ * UnRAWer - camera raw batch processor
  * Copyright (c) 2024 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,6 +15,11 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <Windows.h>
+#include <tlhelp32.h>
 
 #include <algorithm>
 #include <array>
@@ -46,10 +51,12 @@
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtCore/QFutureWatcher>
+#include <QtCore/QList>
 #include <QtCore/QMimeData>
 #include <QtCore/QProcess>
 #include <QtCore/QRandomGenerator>
 #include <QtCore/QRegularExpression>
+#include <QtCore/QUrl>
 #include <QtGui/QDragEnterEvent>
 #include <QtGui/QDropEvent>
 #include <QtWidgets/QApplication>

@@ -15,21 +15,4 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-#pragma once
-
-#include <OpenImageIO/imageio.h>
-#include <OpenImageIO/imagebuf.h>
-#include <OpenImageIO/imagebufalgo.h>
-
-#include "ui.h"
-#include "fileProcessor.h"
-using namespace OIIO;
-
-bool unrawer_main(const std::string& inputFileName, const std::string& outputFileName,
-	ColorConfig* colorconfig, std::string* lut_preset,
-	QProgressBar* progressBar, MainWindow* mainWindow);
-
-//std::pair<bool, std::shared_ptr<ImageBuf>>
-//imgProcessor(ImageBuf& input_buf, ColorConfig* colorconfig, std::string* lut_preset,
-//	std::shared_ptr<ProcessingParams>& processing_entry, libraw_processed_image_t* raw_image,
-//	QProgressBar* progressBar, MainWindow* mainWindow);
+#include "pch.h"

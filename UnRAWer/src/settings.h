@@ -1,5 +1,5 @@
 /*
- * UnRAWer - camera raw batch processor on top of OpenImageIO
+ * UnRAWer - camera raw batch processor
  * Copyright (c) 2024 Erium Vladlen.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 #include "ui.h"
-#include "LOG.H"
+#include "log.h"
 
 #ifndef SETTINGS_H
 #define SETTINGS_H

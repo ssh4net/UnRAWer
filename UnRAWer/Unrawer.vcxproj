@@ -5,6 +5,10 @@
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release (Debug symbols)|x64">
+      <Configuration>Release (Debug symbols)</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
@@ -14,11 +18,16 @@
     <ProjectGuid>{F4724139-79E9-4A7B-879F-8BBB14824647}</ProjectGuid>
     <Keyword>QtVS_v304</Keyword>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">10.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0</WindowsTargetPlatformVersion>
     <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
@@ -31,6 +40,12 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
+    <QtInstall>6.2.4_msvc2019_64</QtInstall>
+    <QtModules>core;gui;widgets</QtModules>
+    <QtBuildConfig>debug</QtBuildConfig>
+    <QtQMLDebugEnable>true</QtQMLDebugEnable>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'" Label="QtSettings">
     <QtInstall>6.2.4_msvc2019_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
@@ -50,6 +65,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(QtMsBuild)\Qt.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(QtMsBuild)\Qt.props" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(QtMsBuild)\Qt.props" />
@@ -62,24 +81,31 @@
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">
+    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_87;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
+    <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
+    <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_87;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
     <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'" Label="Vcpkg" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <PreprocessorDefinitions>;WIN32_LEAN_AND_MEAN</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <QtMoc>
-      <PrependInclude>$(ProjectDir)src\stdafx.h;%(PrependInclude)</PrependInclude>
+      <PrependInclude>$(ProjectDir)src\pch.h;%(PrependInclude)</PrependInclude>
     </QtMoc>
     <Link>
-      <AdditionalDependencies>OpenImageIO.lib;OpenImageIO_Util.lib;raw_r.lib;raw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>DbgHelp.lib;OpenImageIO.lib;OpenImageIO_Util.lib;raw_r.lib;raw.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
@@ -173,16 +199,127 @@ xcopy /y e:\DVR\bin\libwebpmux.dll "$(TargetDir)"</Command>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>QT_QML_DEBUG;%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <QtMoc>
-      <PrependInclude>$(ProjectDir)src\stdafx.h;%(PrependInclude)</PrependInclude>
+      <PrependInclude>$(ProjectDir)src\pch.h;%(PrependInclude)</PrependInclude>
     </QtMoc>
     <Link />
     <Link />
     <Link />
     <Link />
     <Link>
-      <AdditionalDependencies>OpenImageIO_d.lib;OpenImageIO_Util_d.lib;raw_rd.lib;rawd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>DbgHelp.lib;OpenImageIO_d.lib;OpenImageIO_Util_d.lib;raw_rd.lib;rawd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions> /VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y e:\DVR\bin\libpng16d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\zlibd1.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\yaml-cppd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\zstdd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\jasperd.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\OpenColorIO_d_2_4.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\OpenEXRUtil-3_4_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenEXR-3_4_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenEXRCore-3_4_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\IlmThread-3_4_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\Iex-3_4_d.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\raw_rd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\rawd.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\freetyped.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\heifd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libde265d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libx265d.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\lib\bz2d.dll "$(TargetDir)bz2-1.dll"*
+
+xcopy /y e:\DVR\bin\jxld.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\jxl_threadsd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\jxl_cmsd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\hwyd.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\kvazaard.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\brotliencd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\brotlidecd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\brotliencd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\brotlicommond.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\freetyped.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\Ptexd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\liblzmad.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\turbojpegd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\jpeg62d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\tiffd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\deflated.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\Imath-3_2_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\openjp2d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libexpatd.dll "$(TargetDir)"
+xcopy /y e:\DVR\debug\bin\gif.dll "$(TargetDir)"
+
+xcopy /y e:\GH\Little-CMS\bin\lcms2d.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\bin\OpenImageIO_d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenImageIO_Util_d.dll "$(TargetDir)"
+
+xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-gd-x64-1_87.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log-vc143-mt-gd-x64-1_87.dll "$(TargetDir)"
+
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Cored.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Guid.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Widgetsd.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Svgd.dll "$(TargetDir)"
+
+mkdir "$(TargetDir)\plugins\platforms"
+mkdir "$(TargetDir)\plugins\imageformats"
+mkdir "$(TargetDir)\plugins\styles"
+mkdir "$(TargetDir)\plugins\iconengines"
+
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\platforms\qwindowsd.dll "$(TargetDir)\plugins\platforms"
+
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qgifd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qicnsd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qicod.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qjpegd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qsvgd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qtgad.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qtiffd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qwbmpd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qwebpd.dll "$(TargetDir)\plugins\imageformats"
+
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\styles\qwindowsvistastyled.dll "$(TargetDir)\plugins\styles"
+xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\iconengines\qsvgicond.dll "$(TargetDir)\plugins\iconengines"
+
+xcopy /y e:\DVR\bin\libsharpyuvd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libwebpd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libwebpdecoderd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libwebpdemuxd.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>QT_QML_DEBUG;%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <QtMoc>
+      <PrependInclude>$(ProjectDir)src\pch.h;%(PrependInclude)</PrependInclude>
+    </QtMoc>
+    <Link />
+    <Link />
+    <Link />
+    <Link />
+    <Link>
+      <AdditionalDependencies>DbgHelp.lib;OpenImageIO_d.lib;OpenImageIO_Util_d.lib;raw_rd.lib;rawd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions> /VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
@@ -290,6 +427,20 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'" Label="Configuration">
+    <ClCompile>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <Optimization>MaxSpeed</Optimization>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
     <ClCompile>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
@@ -301,7 +452,7 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -316,9 +467,13 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
     <ClCompile Include="src\process.cpp" />
     <ClCompile Include="src\processors.cpp" />
     <ClCompile Include="src\settings.cpp" />
-    <ClCompile Include="src\stdafx.cpp">
+    <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="src\ui.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -334,7 +489,7 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
     <ClInclude Include="src\process.h" />
     <ClInclude Include="src\processors.h" />
     <ClInclude Include="src\settings.h" />
-    <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\threadpool.h" />
     <ClInclude Include="src\Timer.h" />
   </ItemGroup>
@@ -343,6 +498,7 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
       <FileType>Document</FileType>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">true</DeploymentContent>
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
