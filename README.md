@@ -331,7 +331,7 @@ Please consider supporting this project via https://www.patreon.com/MadProcessor
 License
 -------
 
-Copyright © 2021-2024 Erium Vladlen.
+Copyright © 2021-2025 Erium Vladlen.
 
 UnRAWer is licensed under the GNU General Public License, Version 3.
 Individual files may have a different but compatible license.
