@@ -442,33 +442,6 @@ void rawReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     processing->raw_data = std::make_unique<LibRaw>();
     LibRaw* raw = processing->raw_data.get();
 
-    /*
-    raw->imgdata.params.use_camera_wb = settings.rawParms.use_camera_wb;
-    raw->imgdata.params.use_camera_matrix = settings.rawParms.use_camera_matrix;
-    raw->imgdata.params.highlight = settings.rawParms.highlight;
-    raw->imgdata.params.aber[0] = settings.rawParms.aber[0];
-    raw->imgdata.params.aber[1] = settings.rawParms.aber[1];
-    //raw->imgdata.params.exp_correc = settings.rawParms.exp_correc;
-    raw->imgdata.params.half_size = settings.rawParms.half_size;
-
-    raw->imgdata.params.output_color = settings.rawSpace;
-
-    raw->imgdata.params.user_flip = settings.rawRot;
-
-    if (settings.denoise_mode == 1 || settings.denoise_mode == 3) {
-        raw->imgdata.params.threshold = settings.rawParms.denoise_thr;
-    }
-    else {
-        raw->imgdata.params.threshold = 0.0f;
-    }
-
-    if (settings.denoise_mode == 2 || settings.denoise_mode == 3) {
-        raw->imgdata.params.fbdd_noiserd = settings.rawParms.fbdd_noiserd;
-    }
-    else {
-        raw->imgdata.params.fbdd_noiserd = 0;
-    }
-    */
     LOG(info) << "Libraw Reader: file " << processing->srcFile << std::endl;
 
     //int ret = raw->open_buffer(raw_buffer->data(), raw_buffer->size());
@@ -477,11 +450,6 @@ void rawReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
         LOG(error) << "Reader: Cannot read file: " << processing->srcFile << std::endl;
         return;
     }
-
- //   // set crops
-	//if (!setCrops(index, processing_entry)) {
-	//	LOG(error) << "Reader: Cannot set crops for file: " << processing->srcFile << std::endl;
-	//}
 
 	// set maker and model
     LOG(trace) << std::format("Reader: Make: {}", processing->raw_data->imgdata.idata.make);
@@ -528,6 +496,16 @@ void LUnpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 
     auto& raw = processing->raw_data;
 
+    //raw->imgdata.color.cam_mul[0] = 1.0f;
+	//raw->imgdata.color.cam_mul[1] = 1.0f;
+	//raw->imgdata.color.cam_mul[2] = 1.0f;
+	//raw->imgdata.color.cam_mul[3] = 1.0f;
+
+	//raw->imgdata.color.pre_mul[0] = 1.0f;
+	//raw->imgdata.color.pre_mul[1] = 1.0f;
+	//raw->imgdata.color.pre_mul[2] = 1.0f;
+	//raw->imgdata.color.pre_mul[3] = 1.0f;
+
     raw->imgdata.params.use_camera_wb = settings.rawParms.use_camera_wb;
     raw->imgdata.params.use_camera_matrix = settings.rawParms.use_camera_matrix;
     raw->imgdata.params.highlight = settings.rawParms.highlight;
@@ -535,6 +513,8 @@ void LUnpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     raw->imgdata.params.aber[1] = settings.rawParms.aber[1];
     //raw->imgdata.params.exp_correc = settings.rawParms.exp_correc;
     raw->imgdata.params.half_size = settings.rawParms.half_size;
+
+    std::fill(std::begin(raw->imgdata.params.gamm), std::end(raw->imgdata.params.gamm), 1.0);
 
     raw->imgdata.params.output_color = settings.rawSpace;
 
@@ -587,39 +567,6 @@ void LUnpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 		LOG(error) << "Unpack: Cannot adjust sizes info: " << processing->srcFile << std::endl;
 		return;
 	}
-    /* TODO: expose crop settings to the user
-    raw->imgdata.sizes.width = raw->imgdata.rawdata.sizes.raw_width;
-	raw->imgdata.sizes.height = raw->imgdata.rawdata.sizes.raw_height;
-	raw->imgdata.sizes.iwidth = raw->imgdata.rawdata.sizes.raw_width;
-	raw->imgdata.sizes.iheight = raw->imgdata.rawdata.sizes.raw_height;
-
-	raw->imgdata.rawdata.sizes.width = raw->imgdata.rawdata.sizes.raw_width;
-	raw->imgdata.rawdata.sizes.height = raw->imgdata.rawdata.sizes.raw_height;
-	raw->imgdata.rawdata.sizes.iwidth = raw->imgdata.rawdata.sizes.raw_width;
-	raw->imgdata.rawdata.sizes.iheight = raw->imgdata.rawdata.sizes.raw_height;
-
-	raw->imgdata.sizes.raw_inset_crops->cwidth = raw->imgdata.rawdata.sizes.raw_width;
-	raw->imgdata.sizes.raw_inset_crops->cheight = raw->imgdata.rawdata.sizes.raw_height;
-	raw->imgdata.sizes.raw_inset_crops->cleft = 0;
-	raw->imgdata.sizes.raw_inset_crops->ctop = 0;
-
-	raw->imgdata.rawdata.sizes.raw_inset_crops->cwidth = raw->imgdata.rawdata.sizes.raw_width;
-	raw->imgdata.rawdata.sizes.raw_inset_crops->cheight = raw->imgdata.rawdata.sizes.raw_height;
-	raw->imgdata.rawdata.sizes.raw_inset_crops->cleft = 0;
-	raw->imgdata.rawdata.sizes.raw_inset_crops->ctop = 0;
-
-	raw->imgdata.sizes.left_margin = 0;
-	raw->imgdata.sizes.top_margin = 0;
-
-	raw->imgdata.rawdata.sizes.left_margin = 0;
-	raw->imgdata.rawdata.sizes.top_margin = 0;
-    */
-
- //   ret = raw->adjust_to_raw_inset_crop(0b10, 1.0f);
-	//if (ret != LIBRAW_SUCCESS) {
-	//	LOG(error) << "Unpack: Cannot adjust to raw inset crop: " << processing->srcFile << std::endl;
-	//	return;
-	//}
 
     // set crops
     if (!setCrops(index, processing_entry)) {
@@ -1045,7 +992,7 @@ void Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 	processing->raw_image = nullptr;
 	processing.reset();
 
-    (*fileCntr)--;
+	(*fileCntr) = 0;
 }
 
 void Dummy(int index, std::shared_ptr<ProcessingParams>& processing_entry,

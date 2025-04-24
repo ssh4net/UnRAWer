@@ -115,7 +115,7 @@ xcopy /y e:\DVR\bin\yaml-cpp.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\zstd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\jasper.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\bin\OpenColorIO_2_4.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenColorIO_2_5.dll "$(TargetDir)"
 
 xcopy /y e:\DVR\bin\OpenEXRUtil-3_4.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenEXR-3_4.dll "$(TargetDir)"
@@ -150,6 +150,7 @@ xcopy /y e:\DVR\bin\tiff.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\deflate.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\Imath-3_2.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\openjp2.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\openjph.0.21.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\libexpat.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\gif.dll "$(TargetDir)"
 
@@ -221,7 +222,7 @@ xcopy /y e:\DVR\bin\yaml-cppd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\zstdd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\jasperd.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\bin\OpenColorIO_d_2_4.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\OpenColorIO_d_2_5.dll "$(TargetDir)"
 
 xcopy /y e:\DVR\bin\OpenEXRUtil-3_4_d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenEXR-3_4_d.dll "$(TargetDir)"
@@ -260,6 +261,7 @@ xcopy /y e:\DVR\bin\tiffd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\deflated.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\Imath-3_2_d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\openjp2d.dll "$(TargetDir)"
+xcopy /y e:\DVR\bin\openjph.0.21d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\libexpatd.dll "$(TargetDir)"
 xcopy /y e:\DVR\debug\bin\gif.dll "$(TargetDir)"
 

@@ -45,8 +45,8 @@ std::string formatText(TypeDesc format);
 void formatFromBuff(ImageBuf& buf);
 
 //bool img_load(ImageBuf& outBuf, const std::string& inputFileName, QProgressBar* progressBar, MainWindow* mainWindow);
-std::pair<bool, std::pair<std::shared_ptr<ImageBuf>, TypeDesc>> 
-    img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow* mainWindow);
+std::pair<bool, std::pair<std::shared_ptr<ImageBuf>, TypeDesc>>
+img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow* mainWindow);
 
 //bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& out_spec, const std::string& outputFileName,
 //  TypeDesc out_format, TypeDesc orig_format, QProgressBar* progressBar, MainWindow* mainWindow, std::array<int, 4> crops);

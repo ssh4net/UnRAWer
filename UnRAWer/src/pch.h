@@ -40,6 +40,7 @@
 #include <mutex>
 #include <optional>
 #include <queue>
+#include <ranges>
 #include <sstream>
 #include <stdexcept>
 #include <string>
