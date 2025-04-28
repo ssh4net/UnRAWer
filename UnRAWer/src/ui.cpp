@@ -114,12 +114,12 @@ MainWindow::MainWindow() {
         "QMenu::separator { background-color: #181818; height: 1px; }"
     );
 
+    // file menu
     QMenu* f_menu = new QMenu("Files", menuBar);
-    QMenu* r_menu = new QMenu("RAW", menuBar);
-    QMenu* p_menu = new QMenu("Processing", menuBar);
-    QMenu* o_menu = new QMenu("Outputs", menuBar);
-    QMenu* s_menu = new QMenu("Settings", menuBar);
-	QMenu* d_menu = new QMenu("Debug", menuBar);
+    QAction* f_RelConf = new QAction("Reload Config", f_menu);
+    QAction* f_Restart = new QAction("Restart", f_menu);
+    QAction* f_Exit = new QAction("Exit", f_menu);
+
 
     //menuBar->setStyleSheet(
     //    "QMenu { color: #E0E0E0; }"
@@ -129,36 +129,34 @@ MainWindow::MainWindow() {
     //    "QMenu::separator { background-color: #181818; height: 1px; }"
     //);
 
-    // file menu
-    QAction* f_RelConf = new QAction("Reload Config", f_menu);
-    QAction* f_Restart = new QAction("Restart", f_menu);
-    QAction* f_Exit = new QAction("Exit", f_menu);
-    
-    QAction* con_enable = new QAction("Enable Console", s_menu);
-    con_enable->setCheckable(true);
-    con_enable->setChecked(settings.conEnable);
+	// RAW menu
+    QMenu* r_menu = new QMenu("RAW", menuBar);
+	
+    zero_raw = new QAction("Disable RAW", r_menu);
 
-    QAction* prnt_settings = new QAction("Print Settings", s_menu);
-    prnt_settings->setCheckable(false);
-
-    QAction* useSubfldr = new QAction("Export Subfolders", o_menu);
-    useSubfldr->setCheckable(true);
-    useSubfldr->setChecked(settings.useSbFldr);
-
-    QAction* halfSizeRaw = new QAction("Half Resolution", r_menu);
-	halfSizeRaw->setCheckable(true);
-	halfSizeRaw->setChecked(settings.rawParms.half_size == 0 ? false : true);
-
-	// Submenu
-	QMenu* rng_submenu = new QMenu("Floats type", o_menu);
-	QMenu* fmt_submenu = new QMenu("Formats", o_menu);
-	QMenu* bit_submenu = new QMenu("Bits Depth", o_menu);
-	QMenu* raw_submenu = new QMenu("RAW Rotation", r_menu);
+    QMenu* raw_submenu = new QMenu("RAW Rotation", r_menu);
 	QMenu* dem_submenu = new QMenu("Demosaic", r_menu);
 	QMenu* denoise_submenu = new QMenu("Denoise", r_menu);
 	QMenu* rclr_submenu = new QMenu("RAW ColorSpace", r_menu);
+	QMenu* mtx_submenu = new QMenu("Camera Matrix", r_menu);
+	QMenu* hlt_submenu = new QMenu("Highlights", r_menu);
 
-	QAction* lut_exif = new QAction("Per Camera", p_menu);
+    halfSizeRaw = new QAction("Half Resolution", r_menu);
+	halfSizeRaw->setCheckable(true);
+	halfSizeRaw->setChecked(settings.rawParms.half_size == 0 ? false : true);
+
+	auto_wb = new QAction("Auto WB", r_menu);
+	auto_wb->setCheckable(true);
+	auto_wb->setChecked(settings.rawParms.use_auto_wb == 0 ? false : true);
+	camera_wb = new QAction("Camera WB", r_menu);
+	camera_wb->setCheckable(true);
+	camera_wb->setChecked(settings.rawParms.use_camera_wb == 0 ? false : true);
+
+	// Processing menu
+    QMenu* p_menu = new QMenu("Processing", menuBar);
+	zero_proc = new QAction("Disable Processing", p_menu);
+
+	lut_exif = new QAction("Per Camera", p_menu);
 	lut_exif->setCheckable(true);
 	lut_exif->setChecked(settings.perCamera);
 
@@ -169,6 +167,26 @@ MainWindow::MainWindow() {
 	QMenu* sharp_k_submenu = new QMenu("Unsharp kernel", p_menu);
 	QMenu* crop_submenu = new QMenu("Crop", p_menu);
 
+	// Outputs menu
+    QMenu* o_menu = new QMenu("Outputs", menuBar);
+    QAction* useSubfldr = new QAction("Export Subfolders", o_menu);
+    useSubfldr->setCheckable(true);
+    useSubfldr->setChecked(settings.useSbFldr);
+
+    QMenu* rng_submenu = new QMenu("Floats type", o_menu);
+	QMenu* fmt_submenu = new QMenu("Formats", o_menu);
+	QMenu* bit_submenu = new QMenu("Bits Depth", o_menu);
+
+	// Settings menu
+    QMenu* s_menu = new QMenu("Settings", menuBar);
+    QAction* con_enable = new QAction("Enable Console", s_menu);
+    con_enable->setCheckable(true);
+    con_enable->setChecked(settings.conEnable);
+    QAction* prnt_settings = new QAction("Print Settings", s_menu);
+    prnt_settings->setCheckable(false);
+
+	// debug menu
+    QMenu* d_menu = new QMenu("Debug", menuBar);
 	QMenu* verb_submenu = new QMenu("Verbosity", d_menu);
 	QMenu* dump_submenu = new QMenu("Create Dump", d_menu);
 
@@ -179,6 +197,8 @@ MainWindow::MainWindow() {
     QActionGroup* DemGroup = new QActionGroup(dem_submenu);
     QActionGroup* DenoiseGroup = new QActionGroup(dem_submenu);
     QActionGroup* RclrGroup = new QActionGroup(rclr_submenu);
+	QActionGroup* MtxGroup = new QActionGroup(mtx_submenu);
+	QActionGroup* HltGroup = new QActionGroup(hlt_submenu);
     QActionGroup* LutGroup = new QActionGroup(lut_submenu);
     QActionGroup* SharpGroup = new QActionGroup(sharp_submenu);
     QActionGroup* SharpKGroup = new QActionGroup(sharp_k_submenu);
@@ -242,6 +262,20 @@ MainWindow::MainWindow() {
         QAction* action = createAction(title, RawGroup, raw_submenu, true, (settings.rawRot == value));
         rawActions.push_back(action);
     }
+	// camera matrix
+	std::vector<std::pair<const QString, int>> mtxMenu = {
+        {"Don't use", 1 }, { "DNG Embedded", 0 }, { "Always", 0 } };
+	for (auto& [title, value] : mtxMenu) {
+		QAction* action = createAction(title, MtxGroup, mtx_submenu, true, (settings.rawParms.use_camera_matrix == value));
+		mtxActions.push_back(action);
+	}
+	// highlights
+	std::vector<std::pair<const QString, int>> hltMenu = {
+		{"Clip", 0}, {"Unclip", 1}, {"Blend", 2}, {"Rebuild", 3} };
+	for (auto& [title, value] : hltMenu) {
+		QAction* action = createAction(title, HltGroup, hlt_submenu, true, (settings.rawParms.highlight == value));
+		hltActions.push_back(action);
+	}
     // demosaic
     std::vector<std::pair<const QString, int>> demMenu = {
         // "raw data", "none", "linear", "VNG", "PPG", "AHD", "DCB", "", "", "", "", "", "", "DHT", "AAHD"
@@ -321,15 +355,21 @@ MainWindow::MainWindow() {
     //
     s_menu->addAction(prnt_settings);
 	//
+	r_menu->addAction(zero_raw);
     r_menu->addMenu(raw_submenu);
     r_menu->addMenu(dem_submenu);
     r_menu->addMenu(rclr_submenu);
     r_menu->addSeparator();
     r_menu->addMenu(denoise_submenu);
+	r_menu->addAction(auto_wb);
+	r_menu->addAction(camera_wb);
+	r_menu->addMenu(mtx_submenu);
+	r_menu->addMenu(hlt_submenu);
     r_menu->addSeparator();
     r_menu->addAction(halfSizeRaw);
     r_menu->addSeparator();
     //
+	p_menu->addAction(zero_proc);
 	p_menu->addMenu(crop_submenu);
 	p_menu->addSeparator();
 	p_menu->addAction(lut_exif);
@@ -374,6 +414,18 @@ MainWindow::MainWindow() {
     for (QAction* action : bitActions) {
 		connect(action, &QAction::triggered, this, &MainWindow::bitSettings);
 	}
+
+    connect(zero_raw, &QAction::triggered, this, &MainWindow::zero);
+	connect(auto_wb, &QAction::triggered, this, &MainWindow::autoWbSettings);
+	connect(camera_wb, &QAction::triggered, this, &MainWindow::autoWbSettings);
+
+	for (QAction* action : mtxActions) {
+		connect(action, &QAction::triggered, this, &MainWindow::mtxSettings);
+	}
+	for (QAction* action : hltActions) {
+		connect(action, &QAction::triggered, this, &MainWindow::hltSettings);
+	}
+
     for (QAction* action : rawActions) {
 		connect(action, &QAction::triggered, this, &MainWindow::rawSettings);
 	}
@@ -386,6 +438,9 @@ MainWindow::MainWindow() {
     for (QAction* action : rclrActions) {
 		connect(action, &QAction::triggered, this, &MainWindow::rclrSettings);
 	}
+
+	connect(zero_proc, &QAction::triggered, this, &MainWindow::zero);
+
 	for (QAction* action : cropActions) {
 		connect(action, &QAction::triggered, this, &MainWindow::cropSettings);
 	}
@@ -624,6 +679,108 @@ void MainWindow::frmtSettings() {
 		}
 	}
 }
+
+void MainWindow::zero() {
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (action == zero_raw) {
+        qDebug() << "Zeroing RAW prorpocessing and disable demosaic:";
+        settings.rawRot = settings.raw_rot[1];
+		rawActions[1]->setChecked(true);
+		qDebug() << "Camera Raw rotation set to 0 degree - Unrotatate/Horizontal";
+		settings.dDemosaic = -2;
+		demActions[0]->setChecked(true);
+		qDebug() << "Demosaic set to RAW data";
+        settings.rawSpace = 0;
+		rclrActions[0]->setChecked(true);
+		qDebug() << "RAW colorspace set to RAW";
+		settings.denoise_mode = 0;
+		denoiseActions[0]->setChecked(true);
+		qDebug() << "Denoise set to Disabled";
+		settings.rawParms.half_size = 0;
+		halfSizeRaw->setChecked(false);
+		qDebug() << "RAW half size set to 0 (full-size)";
+		settings.rawParms.use_auto_wb = 0;
+		auto_wb->setChecked(false);
+		qDebug() << "Auto White Balance set to Disabled";
+		settings.rawParms.use_camera_wb = 0;
+		camera_wb->setChecked(false);
+		qDebug() << "Camera White Balance set to Disabled";
+		settings.rawParms.use_camera_matrix = 0;
+		mtxActions[0]->setChecked(true);
+		qDebug() << "Camera matrix set to Disabled";
+		settings.rawParms.highlight = 1;
+		hltActions[1]->setChecked(true);
+		qDebug() << "Highlights set to Unclip";
+        settings.fileFormat = settings.out_formats.size() - 1;
+		frmtActions[settings.out_formats.size()]->setChecked(true);
+		qDebug() << "Output file format set to PPM";
+		settings.bitDepth = 1;
+		bitActions[2]->setChecked(true);
+		qDebug() << "Bit precision set to 16 bits int";
+    }
+    else if (action == zero_proc) {
+        qDebug() << "Zeroing Image processing";
+		settings.crop_mode = 0;
+		cropActions[0]->setChecked(true);
+		qDebug() << "Crop set to Disabled";
+		settings.perCamera = 0;
+		lut_exif->setChecked(false);
+		qDebug() << "LUT per camera set to Disabled";
+		settings.lutMode = -1;
+		lutActions[0]->setChecked(true);
+		qDebug() << "LUT transform set to Disabled";
+		settings.sharp_mode = -1;
+		sharpActions[0]->setChecked(true);
+		qDebug() << "Sharpening set to Disabled";
+    }
+}
+
+void MainWindow::autoWbSettings() {
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (action == auto_wb) {
+        settings.rawParms.use_auto_wb = auto_wb->isChecked();
+        qDebug() << "Auto White Balance: " << (settings.rawParms.use_auto_wb ? "enabled" : "disabled");
+    }
+    else if (action == camera_wb) {
+        settings.rawParms.use_camera_wb = camera_wb->isChecked();
+        qDebug() << "Use Camera White Balance: " << (settings.rawParms.use_camera_wb ? "enabled" : "disabled");
+    }
+}
+
+void MainWindow::mtxSettings() {
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (action == mtxActions[0]) {
+        settings.rawParms.use_camera_matrix = 0;
+        qDebug() << "do not use embedded color profile matrix";
+    }
+    else if (action == mtxActions[1]) {
+        settings.rawParms.use_camera_matrix = 1;
+        qDebug() << "use embedded color profile(if present) for DNG files(always)";
+    }
+    else if (action == mtxActions[2]) {
+        settings.rawParms.use_camera_matrix = 2;
+        qDebug() << "always use embedded color data (if present)";
+    }
+};
+void MainWindow::hltSettings() {
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (action == hltActions[0]) {
+        settings.rawParms.highlight = 0;
+        qDebug() << "Clip Highlights";
+    }
+    else if (action == hltActions[1]) {
+        settings.rawParms.highlight = 1;
+        qDebug() << "Unclip Highlights";
+    }
+    else if (action == hltActions[2]) {
+        settings.rawParms.highlight = 2;
+        qDebug() << "Blend Highlights";
+    }
+    else if (action == hltActions[3]) {
+        settings.rawParms.highlight = 3;
+        qDebug() << "Reconstruct Highlights";
+    }
+};
 
 void MainWindow::rngSettings() {
 	QAction* action = qobject_cast<QAction*>(sender());

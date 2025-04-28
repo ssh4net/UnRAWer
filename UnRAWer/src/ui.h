@@ -28,7 +28,7 @@
 
 
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 62
+#define VERSION_MINOR 63
 
 
 class DropArea : public QLabel {
@@ -74,6 +74,12 @@ private slots:
     void rngSettings();
     void frmtSettings();
     void bitSettings();
+    
+    void zero();
+	void autoWbSettings();
+    void mtxSettings();
+    void hltSettings();
+
     void rawSettings();
     void halfSizeSettings(bool checked);
     void demSettings();
@@ -94,7 +100,14 @@ private:
     QFutureWatcher<bool> processingWatcher;
     QProgressBar* progressBar;
 
+    QAction* lut_exif;
+    QAction* halfSizeRaw;
     QAction* con_enable;
+    QAction* auto_wb;
+    QAction* camera_wb;
+    QAction* zero_raw;
+    QAction* zero_proc;
+
     QList<QAction*> verbActions;
 	QList<QAction*> dumpActions;
 
@@ -103,6 +116,10 @@ private:
     QList<QAction*> frmtActions;
     QList<QAction*> bitActions;
     QList<QAction*> rawActions;
+
+	QList<QAction*> mtxActions;
+    QList<QAction*> hltActions;
+
 	QList<QAction*> cropActions;
     QList<QAction*> lutActions;
     QList<QAction*> lutPActions;

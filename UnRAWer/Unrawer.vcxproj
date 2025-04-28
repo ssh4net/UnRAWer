@@ -75,19 +75,19 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_87;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_89;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
     <LinkIncremental>true</LinkIncremental>
     <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">
-    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_87;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_89;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
     <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_87;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_89;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
     <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
@@ -115,6 +115,7 @@ xcopy /y e:\DVR\bin\yaml-cpp.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\zstd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\jasper.dll "$(TargetDir)"
 
+xcopy /y e:\GH\libultrahdr\build\Release\uhdr.dll  "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenColorIO_2_5.dll "$(TargetDir)"
 
 xcopy /y e:\DVR\bin\OpenEXRUtil-3_4.dll "$(TargetDir)"
@@ -159,8 +160,8 @@ xcopy /y e:\GH\Little-CMS\bin\lcms2.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenImageIO.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenImageIO_Util.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-x64-1_87.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_log-vc143-mt-x64-1_87.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-x64-1_89.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log-vc143-mt-x64-1_89.dll "$(TargetDir)"
 
 xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Core.dll "$(TargetDir)"
 xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Gui.dll "$(TargetDir)"
@@ -222,6 +223,7 @@ xcopy /y e:\DVR\bin\yaml-cppd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\zstdd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\jasperd.dll "$(TargetDir)"
 
+xcopy /y e:\GH\libultrahdr\build\Debug\uhdrd.dll  "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenColorIO_d_2_5.dll "$(TargetDir)"
 
 xcopy /y e:\DVR\bin\OpenEXRUtil-3_4_d.dll "$(TargetDir)"
@@ -270,8 +272,8 @@ xcopy /y e:\GH\Little-CMS\bin\lcms2d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenImageIO_d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenImageIO_Util_d.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-gd-x64-1_87.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_log-vc143-mt-gd-x64-1_87.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-gd-x64-1_89.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log-vc143-mt-gd-x64-1_89.dll "$(TargetDir)"
 
 xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Cored.dll "$(TargetDir)"
 xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Guid.dll "$(TargetDir)"
@@ -380,8 +382,8 @@ xcopy /y e:\GH\Little-CMS\bin\lcms2d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenImageIO_d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenImageIO_Util_d.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-gd-x64-1_87.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_log-vc143-mt-gd-x64-1_87.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-gd-x64-1_89.dll "$(TargetDir)"
+xcopy /y e:\DVR\lib\boost_log-vc143-mt-gd-x64-1_89.dll "$(TargetDir)"
 
 xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Cored.dll "$(TargetDir)"
 xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Guid.dll "$(TargetDir)"

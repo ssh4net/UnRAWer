@@ -74,7 +74,6 @@
 #include <OpenImageIO/imagebuf.h>
 #include <OpenImageIO/imagebufalgo.h>
 #include <OpenImageIO/imageio.h>
-#include <OpenImageIO/imageio.h>
 #include <OpenImageIO/span.h>
 #include <OpenImageIO/strutil.h>
 #include <OpenImageIO/sysutil.h>
