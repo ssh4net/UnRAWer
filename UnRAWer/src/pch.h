@@ -26,6 +26,7 @@
 #include <atomic>
 #include <cassert>
 #include <cctype>
+#include <ctime>
 #include <condition_variable>
 #include <exception>
 #include <filesystem>
@@ -78,10 +79,16 @@
 #include <OpenImageIO/strutil.h>
 #include <OpenImageIO/sysutil.h>
 
-#include <boost/log/expressions.hpp>
-#include <boost/log/utility/setup.hpp>
-#include <boost/log/utility/setup/console.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
+//#include <boost/log/expressions.hpp>
+//#include <boost/log/utility/setup.hpp>
+//#include <boost/log/utility/setup/console.hpp>
+//#include <boost/log/core.hpp>
+//#include <boost/log/trivial.hpp>
+
+#define SPDLOG_USE_STD_FORMAT
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/fmt/ostr.h>
 
 #include <libraw/libraw.h>

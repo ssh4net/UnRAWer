@@ -483,15 +483,16 @@ MainWindow::MainWindow() {
 
 void MainWindow::verbLevel() {
     std::vector<std::pair<QString, int>> actionMap = {
-        {"0 - Fatal", 0}, {"1 - Error", 1}, {"2 - Warning", 2}, {"3 - Info", 3}, {"4 - Debug", 4}, {"5 - Trace", 5}
+        {"0 - Fatal", 0}, {"1 - Error", 1}, {"2 - Warning", 2}, {"3 - Info", 3}, {"4 - Debug", 4}, {"0 - Trace", 5}
     };
     QAction* action = qobject_cast<QAction*>(sender());
     for (int i = 0; i < verbActions.size() && i < actionMap.size(); ++i) {
         if (action == verbActions[i]) {
 			settings.verbosity = actionMap[i].second;
-            Log_SetVerbosity(settings.verbosity);
+            //Log_SetVerbosity(settings.verbosity);
+			spdlog::set_level(static_cast<spdlog::level::level_enum>(5 - settings.verbosity));
 			emit updateTextSignal(QString("Verbosity level set to %1").arg(settings.verbosity));
-            qDebug() << qPrintable(QString("Verbosity level set to %1").arg(settings.verbosity));
+			spdlog::info("Verbosity level set to {}", settings.verbosity);
 			break;
 		}
 	}
@@ -545,7 +546,7 @@ void MainWindow::createMemoryDump() {
 	if (action == dumpActions[0]) {
 		dumpType = MiniDumpNormal;
 		emit updateTextSignal("Normal dump");
-		qDebug() << "Normal dump";
+		spdlog::info("Normal dump");
 	}
 	else if (action == dumpActions[1]) {
 		dumpType = (MINIDUMP_TYPE)(
@@ -557,7 +558,7 @@ void MainWindow::createMemoryDump() {
 			);
 		//MiniDumpWithFullMemory;
 		emit updateTextSignal("Full dump");
-		qDebug() << "Full dump";
+		spdlog::info("Full dump");
 	}
 
 	// Generate a unique dump file name
@@ -650,7 +651,8 @@ void MainWindow::bitSettings() {
         if (action == bitActions[i]) {
             settings.bitDepth = actionMap[i].second;
             emit updateTextSignal(QString("Bit precision: %1 ").arg(actionMap[i].first));
-            qDebug() << qPrintable(QString("Bit precision: %1 ").arg(actionMap[i].first));
+            //qDebug() << qPrintable(QString("Bit precision: %1 ").arg(actionMap[i].first));
+			spdlog::info("Bit precision: {}", actionMap[i].first.toStdString());
             break;
         }
     }
@@ -674,7 +676,8 @@ void MainWindow::frmtSettings() {
 		if (action == frmtActions[i]) {
 			settings.fileFormat = actionMap[i].second;
 			emit updateTextSignal(QString("Output file format: %1 ").arg(actionMap[i].first));
-			qDebug() << qPrintable(QString("Output file format: %1 ").arg(actionMap[i].first));
+			//qDebug() << qPrintable(QString("Output file format: %1 ").arg(actionMap[i].first));
+			spdlog::info("Output file format: {}", actionMap[i].first.toStdString());
 			break;
 		}
 	}
@@ -683,55 +686,55 @@ void MainWindow::frmtSettings() {
 void MainWindow::zero() {
     QAction* action = qobject_cast<QAction*>(sender());
     if (action == zero_raw) {
-        qDebug() << "Zeroing RAW prorpocessing and disable demosaic:";
+		spdlog::info("Zeroing RAW processing and disable demosaic:");
         settings.rawRot = settings.raw_rot[1];
 		rawActions[1]->setChecked(true);
-		qDebug() << "Camera Raw rotation set to 0 degree - Unrotatate/Horizontal";
+		spdlog::info("Camera Raw rotation set to 0 degree - Unrotatate/Horizontal");
 		settings.dDemosaic = -2;
 		demActions[0]->setChecked(true);
-		qDebug() << "Demosaic set to RAW data";
+		spdlog::info("Demosaic set to RAW data");
         settings.rawSpace = 0;
 		rclrActions[0]->setChecked(true);
-		qDebug() << "RAW colorspace set to RAW";
+		spdlog::info("RAW colorspace set to RAW");
 		settings.denoise_mode = 0;
 		denoiseActions[0]->setChecked(true);
-		qDebug() << "Denoise set to Disabled";
+		spdlog::info("Denoise set to Disabled");
 		settings.rawParms.half_size = 0;
 		halfSizeRaw->setChecked(false);
-		qDebug() << "RAW half size set to 0 (full-size)";
+		spdlog::info("RAW half size set to 0 (full-size)");
 		settings.rawParms.use_auto_wb = 0;
 		auto_wb->setChecked(false);
-		qDebug() << "Auto White Balance set to Disabled";
+		spdlog::info("Auto White Balance set to Disabled");
 		settings.rawParms.use_camera_wb = 0;
 		camera_wb->setChecked(false);
-		qDebug() << "Camera White Balance set to Disabled";
+		spdlog::info("Camera White Balance set to Disabled");
 		settings.rawParms.use_camera_matrix = 0;
 		mtxActions[0]->setChecked(true);
-		qDebug() << "Camera matrix set to Disabled";
+		spdlog::info("Camera matrix set to Disabled");
 		settings.rawParms.highlight = 1;
 		hltActions[1]->setChecked(true);
-		qDebug() << "Highlights set to Unclip";
+		spdlog::info("Highlights set to Unclip");
         settings.fileFormat = settings.out_formats.size() - 1;
 		frmtActions[settings.out_formats.size()]->setChecked(true);
-		qDebug() << "Output file format set to PPM";
+		spdlog::info("Output file format set to PPM");
 		settings.bitDepth = 1;
 		bitActions[2]->setChecked(true);
-		qDebug() << "Bit precision set to 16 bits int";
+		spdlog::info("Bit precision set to 16 bits int");
     }
     else if (action == zero_proc) {
-        qDebug() << "Zeroing Image processing";
+        //qDebug() << "Zeroing Image processing";
 		settings.crop_mode = 0;
 		cropActions[0]->setChecked(true);
-		qDebug() << "Crop set to Disabled";
+		//qDebug() << "Crop set to Disabled";
 		settings.perCamera = 0;
 		lut_exif->setChecked(false);
-		qDebug() << "LUT per camera set to Disabled";
+		spdlog::info("LUT per camera set to Disabled");
 		settings.lutMode = -1;
 		lutActions[0]->setChecked(true);
-		qDebug() << "LUT transform set to Disabled";
+		spdlog::info("LUT transform set to Disabled");
 		settings.sharp_mode = -1;
 		sharpActions[0]->setChecked(true);
-		qDebug() << "Sharpening set to Disabled";
+		spdlog::info("Sharpening set to Disabled");
     }
 }
 
@@ -739,11 +742,11 @@ void MainWindow::autoWbSettings() {
     QAction* action = qobject_cast<QAction*>(sender());
     if (action == auto_wb) {
         settings.rawParms.use_auto_wb = auto_wb->isChecked();
-        qDebug() << "Auto White Balance: " << (settings.rawParms.use_auto_wb ? "enabled" : "disabled");
+		spdlog::info("Auto White Balance: {}", settings.rawParms.use_auto_wb ? "enabled" : "disabled");
     }
     else if (action == camera_wb) {
         settings.rawParms.use_camera_wb = camera_wb->isChecked();
-        qDebug() << "Use Camera White Balance: " << (settings.rawParms.use_camera_wb ? "enabled" : "disabled");
+		spdlog::info("Camera White Balance: {}", settings.rawParms.use_camera_wb ? "enabled" : "disabled");
     }
 }
 
@@ -751,34 +754,34 @@ void MainWindow::mtxSettings() {
     QAction* action = qobject_cast<QAction*>(sender());
     if (action == mtxActions[0]) {
         settings.rawParms.use_camera_matrix = 0;
-        qDebug() << "do not use embedded color profile matrix";
+		spdlog::info("do not use embedded color profile matrix");
     }
     else if (action == mtxActions[1]) {
         settings.rawParms.use_camera_matrix = 1;
-        qDebug() << "use embedded color profile(if present) for DNG files(always)";
+		spdlog::info("use embedded color profile matrix for DNG files");
     }
     else if (action == mtxActions[2]) {
         settings.rawParms.use_camera_matrix = 2;
-        qDebug() << "always use embedded color data (if present)";
+		spdlog::info("always use embedded color data (if present)");
     }
 };
 void MainWindow::hltSettings() {
     QAction* action = qobject_cast<QAction*>(sender());
     if (action == hltActions[0]) {
         settings.rawParms.highlight = 0;
-        qDebug() << "Clip Highlights";
+		spdlog::info("Clip Highlights");
     }
     else if (action == hltActions[1]) {
         settings.rawParms.highlight = 1;
-        qDebug() << "Unclip Highlights";
+		spdlog::info("Unclip Highlights");
     }
     else if (action == hltActions[2]) {
         settings.rawParms.highlight = 2;
-        qDebug() << "Blend Highlights";
+		spdlog::info("Blend Highlights");
     }
     else if (action == hltActions[3]) {
         settings.rawParms.highlight = 3;
-        qDebug() << "Reconstruct Highlights";
+		spdlog::info("Rebuild Highlights");
     }
 };
 
@@ -787,22 +790,22 @@ void MainWindow::rngSettings() {
     if (action == rngActions[0]) {
         settings.rangeMode = 0;
 		emit updateTextSignal("Unsigned floats");
-        qDebug() << "32/16 bit float Normals are in [0.0 ~ 1.0] range";
+		spdlog::info("32/16 bit float Normals are in [0.0 ~ 1.0] range");
 	}
     else if (action == rngActions[1]) {
         settings.rangeMode = 1;
 		emit updateTextSignal("Signed floats");
-        qDebug() << "32/16 bit floats Normals are in [-1.0 ~ 1.0] range";
+		spdlog::info("32/16 bit floats Normals are in [-1.0 ~ 1.0] range");
 	}
     else if (action == rngActions[2]) {
 		settings.rangeMode = 2;
         emit updateTextSignal("Signed <> Unsigned");
-        qDebug() << "32/16 bit floats Normals are in [-1.0 ~ 1.0] range converted to [0.0 ~ 1.0]";
+		spdlog::info("32/16 bit floats Normals are in [-1.0 ~ 1.0] range converted to [0.0 ~ 1.0]");
     }
     else if (action == rngActions[3]) {
         settings.rangeMode = 3;
         emit updateTextSignal("Unsigned <> Signed");
-        qDebug() << "32/16 bit floats Normals are in [0.0 ~ 1.0] range converted to [-1.0 ~ 1.0]";
+		spdlog::info("32/16 bit floats Normals are in [0.0 ~ 1.0] range converted to [-1.0 ~ 1.0]");
     }
 }
 
@@ -813,27 +816,27 @@ void MainWindow::rawSettings() {
     if (action == rawActions[0]) {
         settings.rawRot = settings.raw_rot[0];
         emit updateTextSignal("Camera Raw rotation - Auto");
-        qDebug() << "Camera Raw rotation set to EXIF Auto";
+		spdlog::info("Camera Raw rotation set to EXIF Auto");
     }
     else if (action == rawActions[1]) {
         settings.rawRot = settings.raw_rot[1];
         emit updateTextSignal("Camera Raw rotation - 0 (Unrotate)");
-        qDebug() << "Camera Raw rotation set to 0 degree - Unrotatate/Horizontal";
+		spdlog::info("Camera Raw rotation set to 0 degree - Unrotatate/Horizontal");
     }
     else if (action == rawActions[2]) {
 		settings.rawRot = settings.raw_rot[2];
         emit updateTextSignal("Camera Raw rotation - 180 (Horisontal)");
-		qDebug() << "Camera Raw rotation set to 180 degree (Horizontal)";
+		spdlog::info("Camera Raw rotation set to 180 degree (Horizontal)");
 	}
     else if (action == rawActions[3]) {
 		settings.rawRot = settings.raw_rot[3];
 		emit updateTextSignal("Camera Raw rotation - 90 CCW (Vertical)");
-        qDebug() << "Camera Raw rotation set to 90 degree CCW (Vertical)";
+		spdlog::info("Camera Raw rotation set to 90 degree CCW (Vertical)");
 	}
     else if (action == rawActions[4]) {
 		settings.rawRot = settings.raw_rot[4];
 		emit updateTextSignal("Camera Raw rotation - 90 CW (Vertical)");
-		qDebug() << "Camera Raw rotation set to 90 degree CW (Vertical)";
+		spdlog::info("Camera Raw rotation set to 90 degree CW (Vertical)");
 	}
 }
 
@@ -841,8 +844,7 @@ void MainWindow::halfSizeSettings(bool checked) {
 
 		settings.rawParms.half_size = checked ? 1 : 0;
 		emit updateTextSignal(QString("Half size raw - %1 ").arg(checked ? "Enabled" : "Disabled"));
-        qDebug() << qPrintable(QString("Half size raw - %1 ").arg(checked ? "Enabled" : "Disabled"));
-
+		spdlog::info("Half size raw - {}", checked ? "Enabled" : "Disabled");
 }
 
 void MainWindow::demSettings() {
@@ -859,7 +861,7 @@ void MainWindow::demSettings() {
         if (action == demActions[i]) {
 			settings.dDemosaic = actionMap[i].second;
 			emit updateTextSignal(QString("Demosaic - %1 ").arg(actionMap[i].first));
-			qDebug() << qPrintable(QString("Demosaic - %1 ").arg(actionMap[i].first));
+			spdlog::info("Demosaic - {}", actionMap[i].first.toStdString());
 			break;
 		}
     }
@@ -872,7 +874,7 @@ void MainWindow::denoiseSettings() {
 		if (action == denoiseActions[i]) {
 			settings.denoise_mode = actionMap[i].second;
 			emit updateTextSignal(QString("Denoise - %1 ").arg(actionMap[i].first));
-			qDebug() << qPrintable(QString("Denoise - %1 ").arg(actionMap[i].first));
+			spdlog::info("Denoise - {}", actionMap[i].first.toStdString());
 			break;
 		}
 	}
@@ -891,7 +893,7 @@ void MainWindow::rclrSettings() {
         if (action == rclrActions[i]) {
             settings.rawSpace = actionMap[i].second;
             emit updateTextSignal(QString("Raw color space - %1 ").arg(actionMap[i].first));
-            qDebug() << qPrintable(QString("Raw color space - %1 ").arg(actionMap[i].first));
+			spdlog::info("Raw color space - {}", actionMap[i].first.toStdString());
         }
     }
 }
@@ -904,7 +906,7 @@ void MainWindow::cropSettings() {
 		if (action == cropActions[i]) {
 			settings.crop_mode = actionMap[i].second;
 			emit updateTextSignal(QString("Crop - %1 ").arg(actionMap[i].first));
-			qDebug() << qPrintable(QString("Crop - %1 ").arg(actionMap[i].first));
+			spdlog::info("Crop - {}", actionMap[i].first.toStdString());
 			break;
 		}
 	}
@@ -916,10 +918,10 @@ void MainWindow::lutCameraSettings() {
 	emit updateTextSignal(QString("LUT per camera - %1").arg(settings.perCamera ? "On" : "Off"));
 	qDebug() << qPrintable(QString("Per Camera Model LUT - %1").arg(settings.perCamera ? "On" : "Off"));
     if (settings.perCamera) {
-		qDebug() << "LUT will be load as path_to/lut_preset_Make_Model.csp";
+		spdlog::info("LUT will be load as path_to/lut_preset_Make_Model.csp");
 	}
 	else {
-		qDebug() << "LUT will be load as path_to/lut_preset.csp";
+		spdlog::info("LUT will be load as path_to/lut_preset.csp");
 	}
 }
 
@@ -931,7 +933,7 @@ void MainWindow::lutSettings() {
 		if (action == lutActions[i]) {
 			settings.lutMode = actionMap[i].second;
 			emit updateTextSignal(QString("LUT transform: %1 ").arg(actionMap[i].first));
-			qDebug() << qPrintable(QString("LUT transform: %1 ").arg(actionMap[i].first));
+			spdlog::info("LUT transform: {}", actionMap[i].first.toStdString());
 			break;
 		}
 	}
@@ -943,7 +945,7 @@ void MainWindow::lutPSettings() {
         if (action == lutPActions[i]) {
             settings.dLutPreset = lutPActions[i]->text().toStdString();
             emit updateTextSignal(QString("LUT preset: %1 ").arg(settings.dLutPreset.c_str()));
-            qDebug() << qPrintable(QString("LUT preset: %1 ").arg(settings.dLutPreset.c_str()));
+			spdlog::info("LUT preset: {}", settings.dLutPreset);
         }
     }
 }
@@ -956,7 +958,7 @@ void MainWindow::sharpSettings() {
         if (action == sharpActions[i]) {
 			settings.sharp_mode = actionMap[i].second;
 			emit updateTextSignal(QString("Unsharp - %1 ").arg(actionMap[i].first));
-			qDebug() << qPrintable(QString("Unsharp - %1 ").arg(actionMap[i].first));
+			spdlog::info("Unsharp - {}", actionMap[i].first.toStdString());
 			break;
 		}
 	}
@@ -971,7 +973,7 @@ void MainWindow::sharpKSettings() {
 			settings.sharp_kernel = i;
             QString kernel = settings.sharp_kerns[settings.sharp_kernel].c_str();
 			emit updateTextSignal(QString("Unsharp kernel: %1 ").arg(kernel));
-			qDebug() << qPrintable(QString("Unsharp kernel: %1 ").arg(kernel));
+			spdlog::info("Unsharp kernel: {}", kernel.toStdString());
             break;
 		}
 	}
@@ -1000,7 +1002,7 @@ void MainWindow::toggleConsole(bool checked) {
 void MainWindow::toggleSubfldr(bool checked) {
 	settings.useSbFldr = checked;
     emit updateTextSignal(QString("Use subfolders - %1").arg(checked ? "On" : "Off"));
-    qDebug() << qPrintable(QString("Use subfolders - %1").arg(checked ? "On" : "Off"));
+	spdlog::info("Use subfolders - {}", checked ? "On" : "Off");
 }
 
 void MainWindow::restartApp() {
@@ -1016,7 +1018,7 @@ void MainWindow::restartApp() {
 
 void MainWindow::reloadConfig() {
     if (!loadSettings(settings, "unrw_config.toml")) {
-        LOG(error) << "Can not load [unrw_config.toml] Using default settings." << std::endl;
+		spdlog::error("Can not load [unrw_config.toml] Using default settings.");
         settings.reSettings();
     }
     printSettings(settings);

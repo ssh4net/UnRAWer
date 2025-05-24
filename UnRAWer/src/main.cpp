@@ -70,13 +70,23 @@ int main(int argc, char* argv[]) {
         freopen("CONOUT$", "w", stderr);
     }
 
-    Log_Init();
-    Log_SetVerbosity(3);
+    //Log_Init();
+    //Log_SetVerbosity(3);
+    spdlog::set_level(spdlog::level::info);
+    spdlog::set_pattern("%^[%l]%$<%t> %v");
 
-    qDebug() << qPrintable(QString("UnRAWer %1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR));
-    qDebug() << qPrintable(QString("Build from: %1, %2").arg(__DATE__).arg(__TIME__));
-    qDebug() << "Debug output:";
+    time_t timestamp;
+    time(&timestamp);
+    std::cout << std::fixed << std::setprecision(8);
 
+
+    //qDebug() << qPrintable(QString("UnRAWer %1.%2").arg(VERSION_MAJOR).arg(VERSION_MINOR));
+    //qDebug() << qPrintable(QString("Build from: %1, %2").arg(__DATE__).arg(__TIME__));
+    //qDebug() << "Debug output:";
+
+	spdlog::info("UnRAWer {}.{}.{}", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+	spdlog::info("Build from: {} {}", __DATE__, __TIME__);
+    spdlog::info("Log started at: {}", ctime(&timestamp), "%Y-%m-%d %H:%M:%S");
     //int* crash = nullptr;
     //*crash = 42;
 
@@ -84,7 +94,8 @@ int main(int argc, char* argv[]) {
     if (argc == 1) {
 
 		if (!loadSettings(settings, "unrw_config.toml")) {
-			LOG(error) << "Can not load [unrw_config.toml] Using default settings." << std::endl;
+			//LOG(error) << "Can not load [unrw_config.toml] Using default settings." << std::endl;
+			spdlog::error("Can not load [unrw_config.toml] Using default settings.");
 			settings.reSettings();
 		}
 		

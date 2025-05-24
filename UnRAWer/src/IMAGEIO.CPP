@@ -135,14 +135,14 @@ std::string formatText(TypeDesc format) {
 
 void formatFromBuff(ImageBuf& buf) {
 	std::string format = buf.file_format_name();
-    LOG(info) << "Format: " << format << std::endl;
+	spdlog::info("Format: {}", format);
 }
 
 void debugImageBufWrite(const ImageBuf& buf, const std::string& filename) {
 	bool write_ok = buf.write(filename);
     if (!write_ok) {
-		LOG(error) << "Error: Could not write to " << filename << std::endl;
-		LOG(error) << "Error: " << buf.geterror() << std::endl;
+		spdlog::error("Error: Could not write to {}", filename);
+		spdlog::error("Error: {}", buf.geterror());
 	}
 }
 
@@ -151,19 +151,19 @@ bool thumb_load(ImageBuf& outBuf, const std::string inputFileName, MainWindow* m
     LibRaw raw_processor;
     libraw_processed_image_t* thumb;
     if (LIBRAW_SUCCESS != raw_processor.open_file(inputFileName.c_str())) {
-        LOG(error) << "Cannot open file: " << inputFileName << std::endl;
+		spdlog::error("Cannot open file: {}", inputFileName);
         return false;
     }
 
     if (LIBRAW_SUCCESS != raw_processor.unpack_thumb()) {
-        LOG(error) << "Cannot unpack thumbnail" << std::endl;
+		spdlog::error("Cannot unpack thumbnail");
         return false;
     }
 
     thumb = raw_processor.dcraw_make_mem_thumb();
 
     if (!thumb) {
-        LOG(error) << "Cannot create in-memory thumb representation" << std::endl;
+		spdlog::error("Cannot create in-memory thumb representation");
         return false;
     }
 
@@ -188,7 +188,7 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
 {
     TypeDesc out_format;
 
-    LOG(info) << "READ: " << inputFileName << std::endl;
+	spdlog::info("READ: {}", inputFileName);
     //  make this as a function
     ImageSpec config;
     config["raw:user_flip"] = settings.rawRot;
@@ -211,15 +211,15 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
     ImageBuf outBuf(inputFileName, 0, 0, nullptr, &config, nullptr);
 
     if (!outBuf.init_spec(inputFileName, 0, 0)) {
-        LOG(error) << "READ: Error reading " << inputFileName << std::endl;
-        LOG(error) << "READ: " << outBuf.geterror() << std::endl;
+		spdlog::error("READ: Error reading {}", inputFileName);
+		spdlog::error("READ: {}", outBuf.geterror());
         mainWindow->emitUpdateTextSignal("Error! Check console for details");
         return { false, { std::make_shared<OIIO::ImageBuf>(), TypeDesc::UNKNOWN }};
     }
 
     TypeDesc orig_format = outBuf.spec().format;
 
-    LOG(info) << "READ: File bith depth: " << formatText(orig_format) << std::endl;
+	spdlog::info("READ: File bith depth: {}", formatText(orig_format));
 ///////////////////////////
     
     int last_channel = -1;
@@ -230,7 +230,7 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
 //    outBuf.specmod().attribute("raw:user_flip", settings.rawRot);
 //    outBuf.specmod().extra_attribs["raw:user_flip"] = settings.rawRot;
 
-    LOG(info) << "READ: CameraRaw Rotations: " << settings.rawRot << std::endl;
+	spdlog::info("READ: CameraRaw Rotations: {}", settings.rawRot);
     
     TypeDesc o_format = spec.format; //getTypeDesc(settings.bitDepth);
 
@@ -260,7 +260,7 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
     
     bool read_ok = outBuf.read(0, 0, 0, last_channel, true, o_format, m_progress_callback, progressBar);
     if (!read_ok) {
-        LOG(error) << "READ: Error! Could not read input image\n";
+		spdlog::error("READ: Error! Could not read input image");
         mainWindow->emitUpdateTextSignal("Error! Check console for details");
         return { false, { std::make_shared<OIIO::ImageBuf>(), TypeDesc::UNKNOWN } };
     }
@@ -277,13 +277,13 @@ img_load(const std::string& inputFileName, QProgressBar* progressBar, MainWindow
     TypeDesc load_format = ispec.format;
     out_format = load_format; // copy latest buffer format as an output format
 
-    LOG(info) << "READ: File loaded bit depth: " << formatText(load_format) << std::endl;
+	spdlog::info("READ: File loaded bit depth: {}", formatText(load_format));
 
     // get the image size
     int width = outBuf.spec().width;
     int height = outBuf.spec().height;
-    LOG(info) << "READ: Image size: " << width << "x" << height << std::endl;
-    LOG(info) << "READ: Channels: " << outBuf.nchannels() << " Alpha channel index: " << outBuf.spec().alpha_channel << std::endl;
+	spdlog::info("READ: Image size: {}x{}", width, height);
+	spdlog::info("READ: Channels: {} Alpha channel index: {}", outBuf.nchannels(), outBuf.spec().alpha_channel);
 
     return { true, {std::make_shared<OIIO::ImageBuf>(outBuf), orig_format} };
 }
@@ -366,7 +366,7 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
 		write_spec.full_width = crops[2]; // .width;
 		write_spec.full_height = crops[3]; // .height;
     }
-    LOG(info) << "Output file format: " << formatText(write_spec.format) << std::endl;
+	spdlog::info("Output file format: {}", formatText(write_spec.format));
 
 	//TypeDesc format = write_spec.format;
         /*getTypeDesc(
@@ -380,7 +380,7 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
     auto out = ImageOutput::create(outputFileName);
 
     if (!out) {
-        LOG(error) << "Could not create output file: " << outputFileName << std::endl;
+		spdlog::error("Could not create output file: {}", outputFileName);
         mainWindow->emitUpdateTextSignal("Error! Check console for details");
         return false;
     }
@@ -394,7 +394,7 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
 
     QMetaObject::invokeMethod(progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, 0));
 
-    LOG(info) << "Writing " << outputFileName << std::endl;
+	spdlog::info("Writing {}", outputFileName);
 
 
 	//if (settings.crop_mode != -1) {
@@ -417,7 +417,9 @@ bool img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& o
 	auto ou_bst = out_buf->scanline_stride();
 	auto ou_zst = out_buf->z_stride();
 
-	LOG(trace) << "Writing image: " << outputFileName << "\n\tPixel address: " << ou_px << "\n\tPixel stride: " << ou_pst << "\n\tScanline stride: " << ou_bst << "\n\tZ stride: " << ou_zst << std::endl;
+	//LOG(trace) << "Writing image: " << outputFileName << "\n\tPixel address: " << ou_px << "\n\tPixel stride: " << ou_pst << "\n\tScanline stride: " << ou_bst << "\n\tZ stride: " << ou_zst << std::endl;
+	spdlog::info("Writing image: {} Pixel address: {} Pixel stride: {} Scanline stride: {} Z stride: {}",
+        outputFileName, reinterpret_cast<uintptr_t>(ou_px), ou_pst, ou_bst, ou_zst);
     
 	out->write_image(write_spec.format, ou_px, ou_pst, ou_bst, ou_zst, m_progress_callback, progressBar);
     out->close();

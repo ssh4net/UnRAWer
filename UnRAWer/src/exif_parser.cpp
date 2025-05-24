@@ -131,7 +131,7 @@ void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OI
 }
 
 bool get_soft(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec) {
-	LOG(trace) << "EXIF::get_soft()" << std::endl;
+	spdlog::trace("EXIF::get_soft()");
 
     const libraw_image_sizes_t& sizes(m_processor->imgdata.sizes);
     m_spec.attribute("PixelAspectRatio", (float)sizes.pixel_aspect);
@@ -208,9 +208,9 @@ bool get_soft(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::I
 	return true;
 }
 
-bool EXIF::get_exif(std::unique_ptr<LibRaw>& m_processor, OIIO::ImageSpec& inp_spec) {
-
-    LOG(trace) << "EXIF::get_exif()" << std::endl;
+bool EXIF::get_exif(std::unique_ptr<LibRaw>& m_processor, OIIO::ImageSpec& inp_spec)
+{
+	spdlog::trace("EXIF::get_exif()");
 
 	std::string m_make;
 
@@ -233,8 +233,9 @@ bool EXIF::get_exif(std::unique_ptr<LibRaw>& m_processor, OIIO::ImageSpec& inp_s
     return true;
 };
 
-void EXIF::get_makernotes(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec) {
-    LOG(trace) << "EXIF::get_makernotes()" << std::endl;
+void EXIF::get_makernotes(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec) 
+{
+	spdlog::trace("EXIF::get_makernotes()");
 
 	if (OIIO::Strutil::istarts_with(m_make, "Canon"))
 		get_makernotes_canon(m_processor, m_make, m_spec);
@@ -263,7 +264,7 @@ void EXIF::get_makernotes(std::unique_ptr<LibRaw>& m_processor, std::string& m_m
 
 void EXIF::get_makernotes_canon(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	LOG(debug) << "EXIF::get_makernotes_canon()" << std::endl;
+	spdlog::trace("EXIF::get_makernotes_canon()");
 
     auto const& mn(m_processor->imgdata.makernotes.canon);
     // MAKER (CanonColorDataVer, 0);
@@ -303,7 +304,7 @@ void EXIF::get_makernotes_canon(std::unique_ptr<LibRaw>& m_processor, std::strin
 
 void EXIF::get_makernotes_nikon(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	LOG(trace) << "EXIF::get_makernotes_nikon()" << std::endl;
+	spdlog::trace("EXIF::get_makernotes_nikon()");
 
     auto const& mn(m_processor->imgdata.makernotes.nikon);
     MAKER(ExposureBracketValue, 0.0f);
@@ -344,7 +345,7 @@ void EXIF::get_makernotes_nikon(std::unique_ptr<LibRaw>& m_processor, std::strin
 
 void EXIF::get_makernotes_olympus(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	LOG(trace) << "EXIF::get_makernotes_olympus()" << std::endl;
+	spdlog::trace("EXIF::get_makernotes_olympus()");
 
     auto const& mn(m_processor->imgdata.makernotes.olympus);
     MAKERF(SensorCalibration);
@@ -363,7 +364,7 @@ void EXIF::get_makernotes_olympus(std::unique_ptr<LibRaw>& m_processor, std::str
 
 void EXIF::get_makernotes_panasonic(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	LOG(trace) << "EXIF::get_makernotes_panasonic()" << std::endl;
+	spdlog::trace("EXIF::get_makernotes_panasonic()");
 
     auto const& mn(m_processor->imgdata.makernotes.panasonic);
     MAKERF(Compression);
@@ -373,7 +374,7 @@ void EXIF::get_makernotes_panasonic(std::unique_ptr<LibRaw>& m_processor, std::s
 
 void EXIF::get_makernotes_pentax(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	LOG(trace) << "EXIF::get_makernotes_pentax()" << std::endl;
+	spdlog::trace("EXIF::get_makernotes_pentax()");
 
     auto const& mn(m_processor->imgdata.makernotes.pentax);
     MAKERF(FocusMode);
@@ -386,7 +387,7 @@ void EXIF::get_makernotes_pentax(std::unique_ptr<LibRaw>& m_processor, std::stri
 
 void EXIF::get_makernotes_kodak(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	LOG(trace) << "EXIF::get_makernotes_kodak()" << std::endl;
+	spdlog::trace("EXIF::get_makernotes_kodak()");
 
     auto const& mn(m_processor->imgdata.makernotes.kodak);
     MAKERF(BlackLevelTop);
@@ -405,7 +406,7 @@ void EXIF::get_makernotes_kodak(std::unique_ptr<LibRaw>& m_processor, std::strin
 
 void EXIF::get_makernotes_fuji(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	LOG(trace) << "EXIF::get_makernotes_fuji()" << std::endl;
+	spdlog::trace("EXIF::get_makernotes_fuji()");
 
     auto const& mn(m_processor->imgdata.makernotes.fuji);
 
@@ -430,7 +431,7 @@ void EXIF::get_makernotes_fuji(std::unique_ptr<LibRaw>& m_processor, std::string
 
 void EXIF::get_makernotes_sony(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	LOG(trace) << "EXIF::get_makernotes_sony()" << std::endl;
+	spdlog::trace("EXIF::get_makernotes_sony()");
 
     auto const& mn(m_processor->imgdata.makernotes.sony);
 
@@ -462,7 +463,7 @@ void EXIF::get_makernotes_sony(std::unique_ptr<LibRaw>& m_processor, std::string
  
 void EXIF::get_lensinfo(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	LOG(trace) << "EXIF::get_lensinfo()" << std::endl;
+	spdlog::trace("EXIF::get_lensinfo()");
 
     {
         auto const& mn(m_processor->imgdata.lens);
@@ -534,7 +535,7 @@ void EXIF::get_lensinfo(std::unique_ptr<LibRaw>& m_processor, std::string& m_mak
 
 void EXIF::get_shootinginfo(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	LOG(trace) << "EXIF::get_shootinginfo()" << std::endl;
+	spdlog::trace("EXIF::get_shootinginfo()");
 
     auto const& mn(m_processor->imgdata.shootinginfo);
     MAKER(DriveMode, -1);
@@ -549,7 +550,7 @@ void EXIF::get_shootinginfo(std::unique_ptr<LibRaw>& m_processor, std::string& m
 
 void EXIF::get_colorinfo(std::unique_ptr<LibRaw>& m_processor, OIIO::ImageSpec& m_spec)
 {
-	LOG(trace) << "EXIF::get_colorinfo()" << std::endl;
+	spdlog::trace("EXIF::get_colorinfo()");
 
     add(&m_spec, "raw", "pre_mul", OIIO::cspan<float>(&(m_processor->imgdata.color.pre_mul[0]),
         &(m_processor->imgdata.color.pre_mul[4])), false, 0.f);

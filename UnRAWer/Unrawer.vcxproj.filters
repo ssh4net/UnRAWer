@@ -45,9 +45,6 @@
     <ClCompile Include="src\settings.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\log.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\fileProcessor.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -86,9 +83,6 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="src\Timer.h">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="src\log.h">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="src\fileProcessor.h">

@@ -79,7 +79,8 @@ int cli_main(int argc, char* argv[]) {
         }
 	}
 	std::cout << "Verbosity: " << verbosity << std::endl;
-	Log_SetVerbosity(std::max(0, std::min(verbosity, 5)));
+	spdlog::set_level(static_cast<spdlog::level::level_enum>(5 - verbosity));
+	//Log_SetVerbosity(std::max(0, std::min(verbosity, 5)));
 ////////////////////////////////////////////////////
 
     const std::string configSuffix = ".toml";
@@ -143,7 +144,8 @@ int cli_main(int argc, char* argv[]) {
 		printSettings(settings);
 	}
 
-	Log_SetVerbosity(std::max(0, std::min(verbosity, 5)));
+	//Log_SetVerbosity(std::max(0, std::min(verbosity, 5)));
+	spdlog::set_level(static_cast<spdlog::level::level_enum>(5 - settings.verbosity));
 
 	//// construct URLs from command line arguments
 	//for (; i < argc; i++) {

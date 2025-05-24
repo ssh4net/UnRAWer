@@ -55,7 +55,7 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
         if (!fileString.isEmpty()) {
             QFileInfo fileInfo(fileString);
             if (fileInfo.isDir()) {
-                LOG(trace) << "SORT: Directory: " << fileInfo.absoluteFilePath().toStdString() << std::endl;
+				spdlog::trace("SORT: Directory: {}", fileInfo.absoluteFilePath().toStdString());
                 QDirIterator it(fileInfo.absoluteFilePath(), QDir::Files | QDir::NoDotAndDotDot, 
                                 QDirIterator::Subdirectories | QDirIterator::FollowSymlinks);
                 while (it.hasNext()) {
@@ -65,9 +65,9 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
 						count++;
                     }
                     else {
-                        LOG(error) << "SORT: Not a raw file: " << file.toStdString() << std::endl;
+						spdlog::error("SORT: Not a raw file: {}", file.toStdString());
                     }
-                    LOG(trace) << "SORT File: " << file.toStdString() << std::endl;
+					spdlog::trace("SORT File: {}", file.toStdString());
                 }
 
             }
@@ -77,15 +77,15 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
 					count++;
                 }
                 else {
-                    LOG(error) << "SORT: Not a raw file: " << fileString.toStdString() << std::endl;
+					spdlog::error("SORT: Not a raw file: {}", fileString.toStdString());
                 }
-                LOG(trace) << "SORT: File: " << fileString.toStdString() << std::endl;
+				spdlog::trace("SORT: File: {}", fileString.toStdString());
 			}
         }
     }
 
 	if (count == 0) {
-        qDebug() << "No raw files found!";
+		spdlog::error("No raw files found!");
 		return false;
 	}
 
@@ -170,7 +170,7 @@ bool doProcessing(QList<QUrl> urls, QProgressBar* progressBar, MainWindow* mainW
 
 
     mainWindow->emitUpdateTextSignal("Everything Done!");
-    std::cout << "Total processing time : " << f_timer.nowText() << " for " << fileNames.size() << " files." << std::endl;
+	spdlog::info("Total processing time : {} for {} files.", f_timer.nowText(), fileNames.size());
     bool ok = m_progress_callback(progressBar, 0.0f);
     return true;
 }

@@ -28,8 +28,8 @@
 
 
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 63
-
+#define VERSION_MINOR 64
+#define VERSION_PATCH 0
 
 class DropArea : public QLabel {
     Q_OBJECT  // Macro needed to handle signals and slots

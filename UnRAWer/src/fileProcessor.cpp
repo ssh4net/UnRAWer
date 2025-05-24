@@ -32,11 +32,14 @@ void getWritableExt(QString* ext, Settings* settings) {
     QString fn = "probename" + *ext;
     probe = ImageOutput::create(fn.toStdString());
     if (probe) {
-        LOG(info) << ext->toStdString() << " is writable" << std::endl;
+        //LOG(info) << ext->toStdString() << " is writable" << std::endl;
+		spdlog::info("{} is writable", ext->toStdString());
     }
     else {
-        LOG(info) << ext->toStdString() << " is readonly" << std::endl;
-        LOG(info) << "Output format changed to " << settings->out_formats[settings->defFormat] << std::endl;
+        //LOG(info) << ext->toStdString() << " is readonly" << std::endl;
+		spdlog::info("{} is readonly", ext->toStdString());
+        //LOG(info) << "Output format changed to " << settings->out_formats[settings->defFormat] << std::endl;
+		spdlog::info("Output format changed to {}", settings->out_formats[settings->defFormat]);
         *ext = "." + QString::fromStdString(settings->out_formats[settings->defFormat]);
     }
     probe.reset();

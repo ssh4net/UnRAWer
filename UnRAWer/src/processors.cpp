@@ -43,7 +43,7 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
 
     // Estimate Crop for ImageBuf w.r.t. orientation
     auto crops = processing->raw_data->imgdata.sizes.raw_inset_crops;
-    LOG(trace) << std::format("setCrops: Exif crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}", crops->ctop, crops->cleft, crops->cwidth, crops->cheight);
+	spdlog::trace("setCrops: Exif crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}", crops->ctop, crops->cleft, crops->cwidth, crops->cheight);
 
     unsigned short th_width = processing->raw_data->imgdata.thumbnail.twidth;
     unsigned short th_height = processing->raw_data->imgdata.thumbnail.theight;
@@ -57,12 +57,11 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
 	unsigned short raw_width = processing->raw_data->imgdata.sizes.raw_width;
 	unsigned short raw_height = processing->raw_data->imgdata.sizes.raw_height;
 
-    LOG(trace) << std::format("\n\tThumbnail width: {}\n\tThumbnail heigth: {}", th_width, th_height);
+	spdlog::trace("Thumbnail width: {}, Thumbnail heigth: {}", th_width, th_height);
 
+	spdlog::trace("Image iwidth: {}, Image iheigth: {}", iwidth, iheight);
 
-    LOG(trace) << std::format("\n\tImage iwidth: {}\n\tImage iheigth: {}", iwidth, iheight);
-
-    LOG(trace) << std::format("setCrops: Orientation: {}", processing->raw_data->imgdata.sizes.flip);
+	spdlog::trace("setCrops: Orientation: {}", processing->raw_data->imgdata.sizes.flip);
 
 	int r_width = im_width != 0 ? im_width : raw_width;
 	int r_height = im_height != 0 ? im_height : raw_height;
@@ -91,7 +90,7 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
     bool ok = cw_ok && ch_ok && cl_ok && ct_ok;
 
     if (!ok) {
-        LOG(debug) << "SetCrop: Invalid crop values" << std::endl;
+		spdlog::debug("SetCrop: Invalid crop values");
         if (cw_ok && ch_ok) { // if crop width and height are valid
             m_cleft = (r_width - crops->cwidth) / 2;
             m_ctop = (r_height - crops->cheight) / 2;
@@ -102,7 +101,7 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
 		else if (th_width > 0 && th_height > 0) { // if thumbnail width and height are valid
 			if (r_width / float(th_width) < 1.25f && r_height / float(th_height) < 1.25f) {
 				if (processing->raw_data->imgdata.sizes.flip == 0 || processing->raw_data->imgdata.sizes.flip == 3) {
-					LOG(debug) << "SetCrop: Thumbnail is full-size" << std::endl;
+					spdlog::debug("SetCrop: Thumbnail is full-size");
 					m_cleft = (r_width - th_width) / 2;
 					m_ctop = (r_height - th_height) / 2;
 					m_cwidth = th_width;
@@ -110,7 +109,7 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
 					ok = true;
 				}
 				else if (processing->raw_data->imgdata.sizes.flip == 5 || processing->raw_data->imgdata.sizes.flip == 6) {
-					LOG(debug) << "setCrops: Thumbnail is full-size" << std::endl;
+					spdlog::debug("SetCrop: Thumbnail is full-size");
 					m_cleft = (r_width - th_width) / 2;
 					m_ctop = (r_height - th_height) / 2;
 					m_cwidth = th_width;
@@ -120,7 +119,7 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
 			}
         }
         else {
-            LOG(error) << "setCrops: No valid crop values" << std::endl;
+			spdlog::warn("SetCrop: No valid crop values");
 			no_error = false;
         }
     }
@@ -145,45 +144,45 @@ bool setCrops(int index, std::unique_ptr<ProcessingParams>& processing_entry) {
     //  heigth  --+----------+-
     //            |          |
     if (settings.crop_mode != -1) {
-        LOG(debug) << "setCrops: Crop valid" << std::endl;
+		spdlog::debug("setCrops: Crop valid");
         switch (processing->raw_data->imgdata.sizes.flip) {
         case 0: // Unrotated/Horisontal
-            LOG(trace) << "setCrops: Unrotated/Horisontal\n";
+			spdlog::trace("setCrops: Unrotated/Horisontal");
 			processing->m_crops.left = m_cleft;
 			processing->m_crops.top = m_ctop;
             processing->m_crops.width = m_cwidth;
             processing->m_crops.height = m_cheight;
             break;
         case 3: // 180 Horisontal
-            LOG(trace) << "setCrops: 180 Horisontal\n";
+			spdlog::trace("setCrops: 180 Horisontal");
             processing->m_crops.left = processing->raw_data->imgdata.sizes.width - m_cleft - m_cwidth;
             processing->m_crops.top = processing->raw_data->imgdata.sizes.height - m_ctop - m_cheight;
             processing->m_crops.width = m_cwidth;
             processing->m_crops.height = m_cheight;
             break;
         case 5: // 90 CCW Vertical
-            LOG(trace) << "setCrops: 90 CCW Vertical\n";
+			spdlog::trace("setCrops: 90 CCW Vertical");
             processing->m_crops.left = m_ctop;
             processing->m_crops.top = processing->raw_data->imgdata.sizes.width - m_cleft - m_cwidth;
             processing->m_crops.width = m_cheight;
             processing->m_crops.height = m_cwidth;
             break;
         case 6: // 90 CW Vertical
-            LOG(trace) << "setCrops: 90 CW Vertical\n";
+			spdlog::trace("setCrops: 90 CW Vertical");
             processing->m_crops.left = processing->raw_data->imgdata.sizes.height - m_ctop - m_cheight;
             processing->m_crops.top = m_cleft;
             processing->m_crops.width = m_cheight;
             processing->m_crops.height = m_cwidth;
             break;
         default:
-            LOG(error) << "setCrops: Unsupported orientation" << std::endl;
+			spdlog::error("setCrops: Unsupported orientation");
 			no_error = false;
             break;
         }
     }
-	LOG(debug) << no_error ? ("setCrops: crops initialized correctly") : ("setCrops: crops initialization failed");
-	LOG(trace) << std::format("setCrops: Crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}\n",
-            processing->m_crops.top, processing->m_crops.left, processing->m_crops.width, processing->m_crops.height);
+	spdlog::debug("setCrops: crops {}", no_error ? "initialized correctly" : "initialization failed");
+	spdlog::trace("setCrops: Crops:\n\tTop: {}\n\tLeft: {}\n\tWidth: {}\n\tHeigth: {}",
+		processing->m_crops.top, processing->m_crops.left, processing->m_crops.width, processing->m_crops.height);
 	return no_error;
 }
 
@@ -203,7 +202,7 @@ void Sorter(int index, QString fileName, std::unique_ptr<ProcessingParams>& proc
         prest_sfx = lut_preset.value().c_str();
     }
     else {
-        LOG(debug) << "PRE: No suitable LUT preset was found from file name" << std::endl;
+		spdlog::debug("PRE: No suitable LUT preset was found from file name");
     }
 
     if (settings.lutMode > 0) {
@@ -216,7 +215,7 @@ void Sorter(int index, QString fileName, std::unique_ptr<ProcessingParams>& proc
         else
         {
             // lut_preset remains empty or has the value from file name
-            LOG(error) << "PRE: LUT preset " << settings.dLutPreset << " not found" << std::endl;
+			spdlog::error("PRE: LUT preset {} not found", settings.dLutPreset);
         }
     }
     else if (settings.lutMode == 0 && lut_preset.has_value()) {
@@ -227,13 +226,13 @@ void Sorter(int index, QString fileName, std::unique_ptr<ProcessingParams>& proc
     
     auto [exist, path_idx] = outpaths.try_add(outPath.toStdString());
     if (!exist) {
-        LOG(debug) << "PRE: New output path added: " << outPath.toStdString() << std::endl;
+		spdlog::debug("PRE: New output path added: {}", outPath.toStdString());
     }
     processing->outPathIdx = path_idx;
     processing->outFile = outName.toStdString();
     processing->outExt = outExt.toStdString();
     processing->lut_preset = lut_preset.value_or("");
-    LOG(debug) << "PRE: Preprocessing file " << processing->srcFile << " > " << outpaths.get_path(path_idx) + "/" + processing->outFile + processing->outExt << std::endl;
+	spdlog::debug("PRE: Preprocessing file {} > {}/{}{}", processing->srcFile, outpaths.get_path(path_idx), processing->outFile, processing->outExt);
 
     processing->setStatus(ProcessingStatus::Prepared);
 //
@@ -374,25 +373,25 @@ void Reader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
             std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto& processing = processing_entry;
 
-    LOG(info) << "Reader: file " << processing->srcFile << std::endl;
+	spdlog::info("Reader: file {}", processing->srcFile);
 
     QFileInfo fileInfo(processing->srcFile.c_str());
     if (fileInfo.isSymLink()) {
         std::string symLinkTarget = fileInfo.symLinkTarget().toStdString();
-        LOG(debug) << "Reader: File is a symlink to: " << symLinkTarget << std::endl;
+		spdlog::debug("Reader: File is a symlink to: {}", symLinkTarget);
         processing->srcFile = symLinkTarget;
     }
 
     std::ifstream file(processing->srcFile, std::ios::binary | std::ios::ate);
     if (!file)
-        LOG(error) << "Reader: Could not open file: " << processing->srcFile << std::endl;
+        spdlog::error("Reader: Could not open file: {}", processing->srcFile);
 
     const auto fileSize = file.tellg();
     if (fileSize < 0)
-        LOG(error) << "Reader: Could not determine size of file: " << processing->srcFile << std::endl;
+    	spdlog::error("Reader: Could not determine size of file: {}", processing->srcFile);
     file.seekg(0);
 
-    LOG(debug) << "Reader: File size: " << fileSize << std::endl;
+	spdlog::debug("Reader: File size: {}", static_cast<long long>(fileSize));
 
     std::vector<char> raw_buffer(fileSize);
 
@@ -434,7 +433,7 @@ void rawReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     QFileInfo fileInfo(processing->srcFile.c_str());
     if (fileInfo.isSymLink()) {
         std::string symLinkTarget = fileInfo.symLinkTarget().toStdString();
-        LOG(debug) << "Reader: File is a symlink to: " << symLinkTarget << std::endl;
+		spdlog::debug("Reader: File is a symlink to: {}", symLinkTarget);
         processing->srcFile = symLinkTarget;
     }
 
@@ -442,18 +441,18 @@ void rawReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     processing->raw_data = std::make_unique<LibRaw>();
     LibRaw* raw = processing->raw_data.get();
 
-    LOG(info) << "Libraw Reader: file " << processing->srcFile << std::endl;
+	spdlog::info("Libraw Reader: file {}", processing->srcFile);
 
     //int ret = raw->open_buffer(raw_buffer->data(), raw_buffer->size());
     int ret = raw->open_file(processing->srcFile.c_str());
     if (ret != LIBRAW_SUCCESS) {
-        LOG(error) << "Reader: Cannot read file: " << processing->srcFile << std::endl;
+		spdlog::error("Reader: Cannot read file: {}", processing->srcFile);
         return;
     }
 
 	// set maker and model
-    LOG(trace) << std::format("Reader: Make: {}", processing->raw_data->imgdata.idata.make);
-    LOG(trace) << std::format("Reader: Model: {}", processing->raw_data->imgdata.idata.model);
+	spdlog::trace("Reader: Model: {}", processing->raw_data->imgdata.idata.model);
+	spdlog::trace("Reader: Make: {}", processing->raw_data->imgdata.idata.make);
     processing->m_exif.make = processing->raw_data->imgdata.idata.make;
     processing->m_exif.model = processing->raw_data->imgdata.idata.model;
 
@@ -487,7 +486,7 @@ void rawReader(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 void LUnpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry,
                std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto& processing = processing_entry;
-    LOG(info) << "Unpack: file " << processing->srcFile << std::endl;
+	spdlog::info("Unpack: file {}", processing->srcFile);
 
     //LibRaw& raw = processing->raw_data;
     //std::shared_ptr<LibRaw> raw_ptr = std::make_shared<LibRaw>();
@@ -520,7 +519,7 @@ void LUnpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 
     raw->imgdata.params.user_flip = settings.rawRot;
 
-	LOG(trace) << std::format("Unpack: CameraRaw Rotations: {}", settings.rawRot);
+	spdlog::trace("Unpack: CameraRaw Rotations: {}", settings.rawRot);
 
     if (settings.denoise_mode == 1 || settings.denoise_mode == 3) {
         raw->imgdata.params.threshold = settings.rawParms.denoise_thr;
@@ -538,7 +537,7 @@ void LUnpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 
     int ret = raw->unpack();
     if (ret != LIBRAW_SUCCESS) {
-        LOG(error) << "Unpack: Cannot unpack data from file: " << processing->srcFile << std::endl;
+		spdlog::error("Unpack: Cannot unpack data from file: {}", processing->srcFile);
         return;
     }
 
@@ -564,13 +563,13 @@ void LUnpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 
 	ret = raw->adjust_sizes_info_only();
 	if (ret != LIBRAW_SUCCESS) {
-		LOG(error) << "Unpack: Cannot adjust sizes info: " << processing->srcFile << std::endl;
+		spdlog::error("Unpack: Cannot adjust sizes info: {}", processing->srcFile);
 		return;
 	}
 
     // set crops
     if (!setCrops(index, processing_entry)) {
-        LOG(error) << "Reader: Cannot set crops for file: " << processing->srcFile << std::endl;
+		spdlog::error("Unpack: Cannot set crops for file: {}", processing->srcFile);
     }
 
     processing->setStatus(ProcessingStatus::Unpacked);
@@ -589,7 +588,7 @@ void LUnpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 void Unpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::unique_ptr<std::vector<char>>& raw_buffer,
               std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto& processing = processing_entry;
-    LOG(info) << "Unpack: file " << processing->srcFile << std::endl;
+	spdlog::info("Unpack: file {}", processing->srcFile);
 
     //LibRaw& raw = processing->raw_data;
     processing->raw_data = std::make_unique<LibRaw>();
@@ -622,13 +621,13 @@ void Unpacker(int index, std::unique_ptr<ProcessingParams>& processing_entry, st
 
     int ret = raw->open_buffer(raw_buffer->data(), raw_buffer->size());
     if (ret != LIBRAW_SUCCESS) {
-        LOG(error) << "Unpack: Cannot read buffer: " << processing->srcFile << std::endl;
+		spdlog::error("Unpack: Cannot read buffer: {}", processing->srcFile);
         return;
     }
 
     ret = raw->unpack();
     if (ret != LIBRAW_SUCCESS) {
-        LOG(error) << "Unpack: Cannot unpack data from file: " << processing->srcFile << std::endl;
+		spdlog::error("Unpack: Cannot unpack data from file: {}", processing->srcFile);
         return;
     }
 
@@ -650,7 +649,7 @@ void Demosaic(int index, std::unique_ptr<ProcessingParams>& processing_entry,
               std::atomic_size_t* fileCntr, std::map<std::string, std::unique_ptr<ThreadPool>>* myPools) {
     auto& processing = processing_entry;
     auto& raw = processing->raw_data;
-    LOG(info) << "Demosaic: file " << processing->srcFile << std::endl;
+	spdlog::info("Demosaic: file {}", processing->srcFile);
 
     auto& raw_parms = raw->imgdata.params;
 
@@ -661,7 +660,7 @@ void Demosaic(int index, std::unique_ptr<ProcessingParams>& processing_entry,
         raw_parms.no_interpolation = 1;
 
         if (raw->dcraw_process() != LIBRAW_SUCCESS) {
-            LOG(error) << "Demosaic: Cannot process data from file" << processing->srcFile << std::endl;
+			spdlog::error("Demosaic: Cannot process data from file: {}", processing->srcFile);
             return;
         }
         processing->setStatus(ProcessingStatus::Demosaiced);
@@ -675,7 +674,7 @@ void Demosaic(int index, std::unique_ptr<ProcessingParams>& processing_entry,
         //auto x = raw->imgdata.rawparams.p4shot_order;
 
         if (raw->dcraw_process() != LIBRAW_SUCCESS) {
-            LOG(error) << "Demosaic: Cannot process data from file" << processing->srcFile << std::endl;
+			spdlog::error("Demosaic: Cannot process data from file: {}", processing->srcFile);
             return;
         }
         processing->setStatus(ProcessingStatus::Demosaiced);
@@ -684,7 +683,7 @@ void Demosaic(int index, std::unique_ptr<ProcessingParams>& processing_entry,
         (*myPools)["dcraw"]->enqueue(Dcraw, index, std::ref(processing_entry), fileCntr, myPools);
 	}
     else {
-        LOG(error) << "Demosaic: Unknown demosaic mode" << std::endl;
+		spdlog::error("Demosaic: Unknown demosaic mode");
         return;
     }
 }
@@ -696,7 +695,7 @@ void Dcraw(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 
     auto& raw = processing->raw_data;
 
-    LOG(debug) << "Dcraw: Processing data from file: " << processing->srcFile << std::endl;
+	spdlog::debug("Dcraw: Processing data from file: {}", processing->srcFile);
 
     auto& raw_parms = raw->imgdata.params;
     raw_parms.output_bps = 16;
@@ -707,7 +706,7 @@ void Dcraw(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     processing->raw_image = raw->dcraw_make_mem_image();
 
     if (!processing->raw_image) {
-        LOG(error) << "Dcraw: Cannot process data from file: " << processing->srcFile << std::endl;
+		spdlog::error("Dcraw: Cannot process data from file: {}", processing->srcFile);
         return;
     }
 
@@ -721,11 +720,11 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     auto& processing = processing_entry;
     std::unique_ptr<LibRaw>& raw = processing->raw_data;
 
-    LOG(debug) << "Processor: Processing data from file: " << processing->srcFile << std::endl;
+	spdlog::debug("Processor: Processing data from file: {}", processing->srcFile);
     
     libraw_processed_image_t* image = processing->raw_image;
 
-	LOG(trace) << "Processor: RAW Image buffer: " << &image->data << std::endl;
+	spdlog::trace("Processor: RAW Image buffer: {}", reinterpret_cast<uintptr_t>(& image->data));
 
     OIIO::ImageSpec image_spec(image->width, image->height, image->colors, OIIO::TypeDesc::UINT16);
     OIIO::ImageBuf image_buf(image_spec, image->data);
@@ -737,7 +736,7 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 		settings.bitDepth != -1 ? settings.bitDepth : settings.defBDepth
     );
 
-	LOG(debug) << "Processor: Output format: " << formatText(out_format) << std::endl;
+	spdlog::debug("Processor: Output format: {}", formatText(out_format));
 
 	ImageSpec processing_spec = image_spec;
 
@@ -756,9 +755,9 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     }
     //auto test = input_buf.spec();
     //std::cout << test.width << " " << test.height << " " << test.nchannels << std::endl;
-    LOG(trace) << "Processor: Input image: " << image_buf.spec().width << "x" << image_buf.spec().height << "x" << image_buf.spec().nchannels << std::endl;
-    LOG(trace) << "Processor: Input image: " << image_buf.spec().format << std::endl;
-	LOG(trace) << "LUT: Input image buffer " << image_buf.localpixels() << std::endl;
+	spdlog::trace("Processor: Input image: {}x{}x{}", image_buf.spec().width, image_buf.spec().height, image_buf.spec().nchannels);
+	spdlog::trace("Processor: Input image buffer: {}", reinterpret_cast<uintptr_t>(image_buf.localpixels()));
+	spdlog::trace("LUT: Input Image buffer: {}", reinterpret_cast<uintptr_t>(image_buf.localpixels()));
 
 #if DEBWRT // Write input image to disk
     std::unique_ptr<ImageOutput> b_out = ImageOutput::create("w:/processor_image_buf.tif");
@@ -783,7 +782,7 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
         }
 
         if (ImageBufAlgo::ociofiletransform(*lut_buf_ptr, image_buf, lutPreset.string(), false, false, procGlobals.ocio_conf_ptr.get())) {
-            LOG(info) << "LUT preset " << processing->lut_preset << " <" << lutPreset.string() << "> " << " applied" << std::endl;
+			spdlog::info("LUT preset {} <{}> applied", processing->lut_preset, lutPreset.string());
             processing_entry->setStatus(ProcessingStatus::Graded);
             image_buf.reset();
             if (!processing_entry->rawCleared) {
@@ -792,12 +791,12 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
             }
         }
         else {
-            LOG(error) << "LUT not applied: " << lut_buf.geterror() << std::endl;
+			spdlog::error("LUT not applied: {}", lut_buf.geterror());
             lut_buf_ptr = &image_buf;
         }
     }
     else {
-        LOG(debug) << "LUT transformation disabled" << std::endl;
+		spdlog::debug("LUT transformation disabled");
         lut_buf_ptr = &image_buf;
     }
     
@@ -811,7 +810,7 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 #endif
 
     (*fileCntr)--;
-	LOG(trace) << "LUT: Out Image buffer: " << lut_buf_ptr->localpixels() << std::endl;
+	spdlog::trace("LUT: Out Image buffer: {}", reinterpret_cast<uintptr_t>(lut_buf_ptr->localpixels()));
     // Apply unsharp mask
 
     if (settings.sharp_mode != -1) {
@@ -820,9 +819,9 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
         float contrast = settings.sharp_contrast;
         float threshold = settings.sharp_tresh;
         if (ImageBufAlgo::unsharp_mask(*uns_buf_ptr, *lut_buf_ptr, kernel, width, contrast, threshold)) {
-            LOG(debug) << "Unsharp mask applied: <" << kernel.c_str() << ">" << std::endl;
-			LOG(trace) << "Unsharp: Out Image buffer: " << uns_buf_ptr->localpixels() << std::endl;
-			LOG(debug) << "Unsharp: kernel: " << kernel << " width: " << width << " contrast: " << contrast << " threshold: " << threshold << std::endl;
+			spdlog::debug("Unsharp mask applied: <{}>", kernel.c_str());
+			spdlog::trace("Unsharp: Out Image buffer: {}", reinterpret_cast<uintptr_t>(uns_buf_ptr->localpixels()));
+			spdlog::debug("Unsharp: kernel: {} width: {} contrast: {} threshold: {}", kernel.data(), width, contrast, threshold);
             processing_entry->setStatus(ProcessingStatus::Unsharped);
 			lut_buf_ptr->reset();
             if (!processing_entry->rawCleared) {
@@ -831,13 +830,13 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
             }
         }
         else {
-            LOG(error) << "Unsharp mask not applied: " << uns_buf.geterror() << std::endl;
+			spdlog::error("Unsharp mask not applied: {}", uns_buf.geterror());
             uns_buf_ptr = lut_buf_ptr;
         }
     }
     else
     {
-        LOG(debug) << "Unsharp mask disabled" << std::endl;
+		spdlog::debug("Unsharp mask disabled");
         uns_buf_ptr = lut_buf_ptr;
     }
 #if DEBWRT // Write sharpen image to disk
@@ -852,18 +851,18 @@ void Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     // copy for saving
 	ImageBuf* out_buf_ptr = uns_buf_ptr;
 	if (settings.lutMode == -1 && settings.sharp_mode == -1 && image_buf.spec().format != out_format) {
-		LOG(debug) << "Processor: Copying image buffer as format: " << out_format.basetype << std::endl;
+		spdlog::debug("Processor: Copying image buffer as format: {}", out_format.basetype);
 		if (!ImageBufAlgo::copy(*out_buf_ptr, image_buf, out_format)) {
-			LOG(error) << "Processor: Cannot copy image buffer" << std::endl;
-			LOG(error) << "Processor: " << out_buf_ptr->geterror() << std::endl;
+			spdlog::error("Processor: Cannot copy image buffer");
+			spdlog::error("Processor: Cannot copy image buffer: {}", out_buf_ptr->geterror());
 			return;
 		}
 	}
 
-	LOG(trace) << "Unsharp: Unsh Image buffer: " << uns_buf_ptr->localpixels() << std::endl;
-	LOG(trace) << "Unsharp: Out Image buffer: " << out_buf_ptr->localpixels() << std::endl;
+    spdlog::trace("Unsharp: Unsh Image buffer: {}", reinterpret_cast<uintptr_t>(uns_buf_ptr->localpixels()));
+	spdlog::trace("Unsharp: Out Image buffer: {}", reinterpret_cast<uintptr_t>(out_buf_ptr->localpixels()));
 
-    LOG(trace) << "Processor: Result output image format: " << out_buf_ptr->spec().format << std::endl;
+    spdlog::trace("Processor: Result output image format: {}", out_buf_ptr->spec().format.c_str());
 ///    return { true, std::make_shared<ImageBuf>(*out_buf_ptr) };
     ///
     processing->image = std::make_unique<ImageBuf>(*out_buf_ptr);
@@ -884,8 +883,8 @@ void Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     //LibRaw& raw = processing->raw_data;
     std::unique_ptr<LibRaw>& raw = processing->raw_data;
 
-	LOG(trace) << "Writer: raw image buffer: " << &raw->imgdata.image << std::endl;
-	LOG(trace) << "Writer: Inp Image buffer: " << processing->image->localpixels() << std::endl;
+	spdlog::trace("Writer: RAW Image buffer: {}", reinterpret_cast<uintptr_t>(raw->imgdata.image));
+	spdlog::trace("Writer: Inp Image buffer: {}", reinterpret_cast<uintptr_t>(processing->image->localpixels()));
 
     // Check if the output path exists and create it if not
     std::string outDir = outpaths.get_path(processing->outPathIdx);
@@ -901,18 +900,18 @@ void Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     std::string outFilePath = outDir + "/" + processing->outFile + processing->outExt;
 
     if (!makePath(outDir)) {
-        LOG(error) << "Writer: Cannot create output directory" << outFilePath << std::endl;
+		spdlog::error("Writer: Cannot create output directory: {}", outFilePath);
 		return;
     };
 
-    LOG(info) << "Writer: Writing data to file: " << outFilePath << std::endl;
+	spdlog::info("Writer: Writing data to file: {}", outFilePath);
     if (settings.dDemosaic == -2) {
         // Write raw data to a file
         // TODO: move this to OIIO writer to fix file format issue and byte order
         outFilePath = outDir + "/" + processing->outFile + ".ppm";
         std::ofstream output(outFilePath, std::ios::binary); // hack to add .ppm extension
         if (!output) {
-            LOG(error) << "Writer: Cannot open output file " << outFilePath << std::endl;
+			spdlog::error("Writer: Cannot open output file: {}", outFilePath);
             return;
         }
 
@@ -946,7 +945,7 @@ void Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry,
                 raw->imgdata.params.output_tiff = 0; // PPM
             }
             else {
-                LOG(error) << "Writer: Unknown file format. Format changed to *.tif" << std::endl;
+				spdlog::error("Writer: Unknown file format. Format changed to *.tif");
                 outFilePath = outDir + "/" + processing->outFile + ".tif";
                 //processing->raw_data.reset();
                 //return;
@@ -955,7 +954,7 @@ void Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry,
 
         int ret = raw->dcraw_ppm_tiff_writer(outFilePath.c_str());
         if (ret != LIBRAW_SUCCESS) {
-            LOG(error) << "Writer: Cannot write image to file " << outFilePath << std::endl;
+			spdlog::error("Writer: Cannot write image to file: {}", outFilePath);
             processing->raw_data.reset();
             return;
         }
@@ -964,11 +963,11 @@ void Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry,
         //////////////////////////////////////////////////
         /// Image saving
         ///
-		LOG(trace) << "Writer: Inp Image Buffer: " << processing->image->localpixels() << std::endl;
+		spdlog::trace("Writer: Inp Image buffer: {}", reinterpret_cast<uintptr_t>(processing->image->localpixels()));
         //bool write_ok = img_write(processing->image, processing->outSpec, outFilePath, TypeDesc::UINT16, TypeDesc::UINT16, nullptr, nullptr, crops);
         bool write_ok = img_write(processing->image, processing->outSpec, outFilePath, nullptr, nullptr, crops);
         if (!write_ok) {
-            LOG(error) << "Error writing " << outFilePath << std::endl;
+			spdlog::error("Writer: Error writing: {}", outFilePath);
             //mainWindow->emitUpdateTextSignal("Error! Check console for details");
             return;
         }
@@ -987,7 +986,7 @@ void Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry,
     }
 
     processing->setStatus(ProcessingStatus::Written);
-    LOG(debug) << "Writer: Finished writing data to file: " << outFilePath << std::endl;
+	spdlog::debug("Writer: Finished writing data to file: {}", outFilePath);
     processing->raw_data.reset();
 	processing->raw_image = nullptr;
 	processing.reset();

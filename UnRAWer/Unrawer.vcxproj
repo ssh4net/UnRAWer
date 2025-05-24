@@ -40,7 +40,7 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>6.2.4_msvc2019_64</QtInstall>
+    <QtInstall>6.9.0_msvc2022_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
     <QtQMLDebugEnable>true</QtQMLDebugEnable>
@@ -52,7 +52,7 @@
     <QtQMLDebugEnable>true</QtQMLDebugEnable>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
-    <QtInstall>6.2.4_msvc2019_64</QtInstall>
+    <QtInstall>6.9.0_msvc2022_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
@@ -75,7 +75,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_89;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Qt\6.9.0\msvc2022_64\include;e:\DVR\include;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
     <LinkIncremental>true</LinkIncremental>
     <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
@@ -87,7 +87,7 @@
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_89;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Qt\6.9.0\msvc2022_64\include;e:\DVR\include;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
     <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
@@ -160,33 +160,30 @@ xcopy /y e:\GH\Little-CMS\bin\lcms2.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenImageIO.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenImageIO_Util.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-x64-1_89.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_log-vc143-mt-x64-1_89.dll "$(TargetDir)"
-
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Core.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Gui.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Widgets.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Svg.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Core.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Gui.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Widgets.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Svg.dll "$(TargetDir)"
 
 mkdir "$(TargetDir)\plugins\platforms"
 mkdir "$(TargetDir)\plugins\imageformats"
 mkdir "$(TargetDir)\plugins\styles"
 mkdir "$(TargetDir)\plugins\iconengines"
 
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\platforms\qwindows.dll "$(TargetDir)\plugins\platforms"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\platforms\qwindows.dll "$(TargetDir)\plugins\platforms"
 
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qgif.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qicns.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qico.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qjpeg.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qsvg.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qtga.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qtiff.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qwbmp.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qwebp.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qgif.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qicns.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qico.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qjpeg.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qsvg.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qtga.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qtiff.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qwbmp.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qwebp.dll "$(TargetDir)\plugins\imageformats"
 
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\styles\qwindowsvistastyle.dll "$(TargetDir)\plugins\styles"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\iconengines\qsvgicon.dll "$(TargetDir)\plugins\iconengines"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\styles\qmodernwindowsstyle.dll "$(TargetDir)\plugins\styles"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\iconengines\qsvgicon.dll "$(TargetDir)\plugins\iconengines"
 
 xcopy /y e:\DVR\bin\libsharpyuv.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\libwebp.dll "$(TargetDir)"
@@ -272,33 +269,30 @@ xcopy /y e:\GH\Little-CMS\bin\lcms2d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenImageIO_d.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\OpenImageIO_Util_d.dll "$(TargetDir)"
 
-xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-gd-x64-1_89.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_log-vc143-mt-gd-x64-1_89.dll "$(TargetDir)"
-
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Cored.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Guid.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Widgetsd.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Svgd.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Cored.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Guid.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Widgetsd.dll "$(TargetDir)"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Svgd.dll "$(TargetDir)"
 
 mkdir "$(TargetDir)\plugins\platforms"
 mkdir "$(TargetDir)\plugins\imageformats"
 mkdir "$(TargetDir)\plugins\styles"
 mkdir "$(TargetDir)\plugins\iconengines"
 
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\platforms\qwindowsd.dll "$(TargetDir)\plugins\platforms"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\platforms\qwindowsd.dll "$(TargetDir)\plugins\platforms"
 
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qgifd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qicnsd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qicod.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qjpegd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qsvgd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qtgad.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qtiffd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qwbmpd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qwebpd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qgifd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qicnsd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qicod.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qjpegd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qsvgd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qtgad.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qtiffd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qwbmpd.dll "$(TargetDir)\plugins\imageformats"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qwebpd.dll "$(TargetDir)\plugins\imageformats"
 
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\styles\qwindowsvistastyled.dll "$(TargetDir)\plugins\styles"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\iconengines\qsvgicond.dll "$(TargetDir)\plugins\iconengines"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\styles\qmodernwindowsstyled.dll "$(TargetDir)\plugins\styles"
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\iconengines\qsvgicond.dll "$(TargetDir)\plugins\iconengines"
 
 xcopy /y e:\DVR\bin\libsharpyuvd.dll "$(TargetDir)"
 xcopy /y e:\DVR\bin\libwebpd.dll "$(TargetDir)"
@@ -467,7 +461,6 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
     <ClCompile Include="src\exif_parser.cpp" />
     <ClCompile Include="src\fileProcessor.cpp" />
     <ClCompile Include="src\imageio.cpp" />
-    <ClCompile Include="src\log.cpp" />
     <ClCompile Include="src\process.cpp" />
     <ClCompile Include="src\processors.cpp" />
     <ClCompile Include="src\settings.cpp" />
@@ -489,7 +482,6 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
     <ClInclude Include="src\exif_parser.h" />
     <ClInclude Include="src\fileProcessor.h" />
     <ClInclude Include="src\imageio.h" />
-    <ClInclude Include="src\log.h" />
     <ClInclude Include="src\process.h" />
     <ClInclude Include="src\processors.h" />
     <ClInclude Include="src\settings.h" />
