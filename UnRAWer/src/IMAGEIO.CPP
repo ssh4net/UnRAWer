@@ -20,7 +20,6 @@
 
 #include "imageio.h"
 #include "settings.h"
-#include "log.h"
 #include "exif_parser.h"
 
 int hue = 186;

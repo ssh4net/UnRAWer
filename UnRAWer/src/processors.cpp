@@ -20,7 +20,6 @@
 #include "processors.h"
 //#include "Unrawer.h"
 #include "exif_parser.h"
-#include "log.h"
 #include "settings.h"
 
 #define DEBWRT 0

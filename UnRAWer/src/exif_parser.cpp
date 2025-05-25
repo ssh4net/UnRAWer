@@ -18,7 +18,6 @@
 #include "pch.h"
 
 #include "exif_parser.h"
-#include "log.h"
 
 template<typename T> static bool allval(OIIO::cspan<T> d, T v = T(0))
 {

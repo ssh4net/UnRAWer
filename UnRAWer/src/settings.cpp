@@ -20,7 +20,6 @@
 #include <toml.hpp>
 #include <filesystem>
 #include "settings.h"
-#include "log.h"
 
 Settings settings;
 
