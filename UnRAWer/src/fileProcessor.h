@@ -27,7 +27,7 @@
 //#include <QtCore/QRegularExpression>
 //#include <libraw/libraw.h>
 
-#include "log.h"
+//#include "log.h"
 //#include "settings.h"
 #include "imageio.h"
 #include "ui.h"

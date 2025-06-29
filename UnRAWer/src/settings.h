@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 #include "ui.h"
-#include "log.h"
+//#include "log.h"
 
 #ifndef SETTINGS_H
 #define SETTINGS_H
