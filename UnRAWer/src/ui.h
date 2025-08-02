@@ -67,7 +67,7 @@ private slots:
     
     void toggleConsole(bool checked);
     void verbLevel();
-	void createMemoryDump();
+	//void createMemoryDump();
 
     void toggleSubfldr(bool checked);
     void startProcessing(QList<QUrl> urls);

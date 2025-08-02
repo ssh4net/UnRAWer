@@ -75,11 +75,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>C:\Qt\6.9.0\msvc2022_64\include;e:\DVR\include;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
+    <ExternalIncludePath>C:\Qt\6.9.0\msvc2022_64\include;e:\DVS\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">
     <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_89;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
@@ -87,9 +86,9 @@
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <IncludePath>C:\Qt\6.9.0\msvc2022_64\include;e:\DVR\include;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
-    <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>e:\DVS\lib;$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>C:\Qt\6.9.0\msvc2022_64\include;e:\DVS\include;e:\GH\toml11\build\RELEASE\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'" Label="Vcpkg" />
@@ -97,70 +96,20 @@
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
-      <PreprocessorDefinitions>;WIN32_LEAN_AND_MEAN</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;JXL_STATIC_DEFINE=1;OPJ_STATIC;LIBDE265_STATIC_BUILD;KVZ_STATIC_LIB;LIBHEIF_STATIC_BUILD;LIBRAW_NODLL;OIIO_STATIC_DEFINE=1</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <QtMoc>
       <PrependInclude>$(ProjectDir)src\pch.h;%(PrependInclude)</PrependInclude>
     </QtMoc>
     <Link>
-      <AdditionalDependencies>DbgHelp.lib;OpenImageIO.lib;OpenImageIO_Util.lib;raw_r.lib;raw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>e:\DVS\lib\OpenImageIO.lib;e:\DVS\lib\OpenImageIO_Util.lib;e:\DVS\lib\heif.lib;e:\DVS\lib\aom.lib;E:\DVS\lib\libde265.lib;e:\DVS\lib\x265-static.lib;e:\DVS\lib\libkvazaar.lib;E:\DVS\lib\bz2.lib;E:\DVS\lib\deflatestatic.lib;E:\DVS\lib\freetype.lib;E:\DVS\lib\gif.lib;E:\DVS\lib\Iex-3_4.lib;E:\DVS\lib\IlmThread-3_4.lib;E:\DVS\lib\Imath-3_2.lib;E:\DVS\lib\jasper.lib;E:\DVS\lib\jpeg.lib;e:\DVS\lib\jxl_cms.lib;E:\DVS\lib\jxl_threads.lib;E:\DVS\lib\jxl.lib;e:\DVS\lib\hwy.lib;e:\DVS\lib\brotlicommon.lib;e:\DVS\lib\brotlidec.lib;e:\DVS\lib\brotlienc.lib;e:\DVS\lib\libavcodec.lib;e:\DVS\lib\libavdevice.lib;e:\DVS\lib\libavfilter.lib;e:\DVS\lib\libavformat.lib;E:\DVS\lib\libavutil.lib;e:\DVS\lib\libswresample.lib;e:\DVS\lib\libswscale.lib;E:\DVS\lib\libexpatMT.lib;E:\DVS\lib\libpng18_static.lib;E:\DVS\lib\libsharpyuv.lib;E:\DVS\lib\libwebp.lib;E:\DVS\lib\libwebpdemux.lib;E:\DVS\lib\minizip-ng.lib;E:\DVS\lib\OpenColorIO.lib;E:\DVS\lib\OpenEXR-3_4.lib;E:\DVS\lib\OpenEXRCore-3_4.lib;E:\DVS\lib\openjp2.lib;e:\DVS\lib\openjph.0.21.lib;E:\DVS\lib\Ptex.lib;E:\DVS\lib\pugixml.lib;E:\DVS\lib\pystring.lib;E:\DVS\lib\raw_r.lib;E:\DVS\lib\raw.lib;e:\GH\Little-CMS\Lib\ST\lcms2_static.lib;E:\DVS\lib\tiff.lib;E:\DVS\lib\zlib.lib;e:\DVS\lib\zstd_static.lib;e:\DVS\lib\lzma.lib;E:\DVS\lib\uhdr.lib;E:\DVS\lib\yaml-cpp.lib;e:\DVS\lib\XMPFilesStaticRelease.lib;e:\DVS\lib\XMPCoreStaticRelease.lib;w:\VisualStudio\dng_sdk_1_7_1\dng_sdk\projects\win\x64\Release\dng_sdk.lib;C:\Qt\6.9.0\msvc2022_64\lib\Qt6Core.lib;C:\Qt\6.9.0\msvc2022_64\lib\Qt6Gui.lib;C:\Qt\6.9.0\msvc2022_64\lib\Qt6Widgets.lib;mfplat.lib;mfuuid.lib;secur32.lib;bcrypt.lib;crypt32.lib;ncrypt.lib;strmiids.lib;advapi32.lib;comdlg32.lib;d3d11.lib;d3d12.lib;dxgi.lib;dxguid.lib;gdi32.lib;glu32.lib;kernel32.lib;mpr.lib;ole32.lib;oleaut32.lib;opengl32.lib;psapi.lib;shell32.lib;shlwapi.lib;user32.lib;userenv.lib;uuid.lib;windowscodecs.lib;winspool.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y e:\DVR\bin\libpng16.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\zlib1.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\yaml-cpp.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\zstd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\jasper.dll "$(TargetDir)"
-
-xcopy /y e:\GH\libultrahdr\build\Release\uhdr.dll  "$(TargetDir)"
-xcopy /y e:\DVR\bin\OpenColorIO_2_5.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\OpenEXRUtil-3_4.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\OpenEXR-3_4.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\OpenEXRCore-3_4.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\IlmThread-3_4.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\Iex-3_4.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\raw_r.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\raw.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\heif.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libde265.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libx265.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\kvazaar.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotlidec.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotlienc.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotlicommon.dll "$(TargetDir)"
-
-xcopy /fy e:\DVR\lib\bz2.dll "$(TargetDir)bz2-1.dll"*
-
-xcopy /y e:\DVR\bin\jxl.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\jxl_threads.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\jxl_cms.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\hwy.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\freetype.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\Ptex.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\liblzma.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\turbojpeg.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\jpeg62.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\tiff.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\deflate.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\Imath-3_2.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\openjp2.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\openjph.0.21.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libexpat.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\gif.dll "$(TargetDir)"
-
-xcopy /y e:\GH\Little-CMS\bin\lcms2.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\OpenImageIO.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\OpenImageIO_Util.dll "$(TargetDir)"
-
-xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Core.dll "$(TargetDir)"
+      <Command>xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Core.dll "$(TargetDir)"
 xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Gui.dll "$(TargetDir)"
 xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Widgets.dll "$(TargetDir)"
 xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Svg.dll "$(TargetDir)"
@@ -184,12 +133,7 @@ xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qwebp.dll "$(TargetDir)\pl
 
 xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\styles\qmodernwindowsstyle.dll "$(TargetDir)\plugins\styles"
 xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\iconengines\qsvgicon.dll "$(TargetDir)\plugins\iconengines"
-
-xcopy /y e:\DVR\bin\libsharpyuv.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libwebp.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libwebpdecoder.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libwebpdemux.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libwebpmux.dll "$(TargetDir)"</Command>
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -197,8 +141,10 @@ xcopy /y e:\DVR\bin\libwebpmux.dll "$(TargetDir)"</Command>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>QT_QML_DEBUG;%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN</PreprocessorDefinitions>
+      <PreprocessorDefinitions>QT_QML_DEBUG;%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN;JXL_STATIC_DEFINE=1;OPJ_STATIC;LIBDE265_STATIC_BUILD;KVZ_STATIC_LIB;LIBHEIF_STATIC_BUILD;LIBRAW_NODLL;OIIO_STATIC_DEFINE=1</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <QtMoc>
       <PrependInclude>$(ProjectDir)src\pch.h;%(PrependInclude)</PrependInclude>
@@ -208,68 +154,13 @@ xcopy /y e:\DVR\bin\libwebpmux.dll "$(TargetDir)"</Command>
     <Link />
     <Link />
     <Link>
-      <AdditionalDependencies>DbgHelp.lib;OpenImageIO_d.lib;OpenImageIO_Util_d.lib;raw_rd.lib;rawd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>e:\DVS\lib\OpenImageIO_d.lib;e:\DVS\lib\OpenImageIO_Util_d.lib;e:\DVS\lib\heifd.lib;e:\DVS\lib\aomd.lib;E:\DVS\lib\libde265d.lib;e:\DVS\lib\x265-staticd.lib;e:\DVS\lib\libkvazaard.lib;E:\DVS\lib\bz2d.lib;E:\DVS\lib\deflatestaticd.lib;E:\DVS\lib\freetyped.lib;E:\DVS\lib\gifd.lib;E:\DVS\lib\Iex-3_4_d.lib;E:\DVS\lib\IlmThread-3_4_d.lib;E:\DVS\lib\Imath-3_2_d.lib;E:\DVS\lib\jasperd.lib;E:\DVS\lib\jpegd.lib;e:\DVS\lib\jxl_cmsd.lib;E:\DVS\lib\jxl_threadsd.lib;E:\DVS\lib\jxld.lib;e:\DVS\lib\hwyd.lib;e:\DVS\lib\brotlicommond.lib;e:\DVS\lib\brotlidecd.lib;e:\DVS\lib\brotliencd.lib;e:\DVS\lib\libavcodecd.lib;e:\DVS\lib\libavdeviced.lib;e:\DVS\lib\libavfilterd.lib;e:\DVS\lib\libavformatd.lib;E:\DVS\lib\libavutild.lib;e:\DVS\lib\libswresampled.lib;e:\DVS\lib\libswscaled.lib;E:\DVS\lib\libexpatdMT.lib;E:\DVS\lib\libpng18_staticd.lib;E:\DVS\lib\libsharpyuvd.lib;E:\DVS\lib\libwebpd.lib;E:\DVS\lib\libwebpdemuxd.lib;E:\DVS\lib\minizip-ngd.lib;E:\DVS\lib\OpenColorIO_d.lib;E:\DVS\lib\OpenEXR-3_4_d.lib;E:\DVS\lib\OpenEXRCore-3_4_d.lib;E:\DVS\lib\openjp2d.lib;e:\DVS\lib\openjph.0.21_d.lib;E:\DVS\lib\Ptexd.lib;E:\DVS\lib\pugixmld.lib;E:\DVS\lib\pystringd.lib;E:\DVS\lib\raw_rd.lib;E:\DVS\lib\rawd.lib;e:\GH\Little-CMS\Lib\ST\lcms2_staticd.lib;E:\DVS\lib\tiffd.lib;E:\DVS\lib\zlibd.lib;e:\DVS\lib\zstd_staticd.lib;e:\DVS\lib\lzmad.lib;E:\DVS\lib\uhdrd.lib;E:\DVS\lib\yaml-cppd.lib;e:\DVS\lib\XMPFilesStaticDebug.lib;e:\DVS\lib\XMPCoreStaticDebug.lib;w:\VisualStudio\dng_sdk_1_7_1\dng_sdk\projects\win\x64\Debug\dng_sdk.lib;C:\Qt\6.9.0\msvc2022_64\lib\Qt6Cored.lib;C:\Qt\6.9.0\msvc2022_64\lib\Qt6Guid.lib;C:\Qt\6.9.0\msvc2022_64\lib\Qt6Widgetsd.lib;mfplat.lib;mfuuid.lib;secur32.lib;bcrypt.lib;crypt32.lib;ncrypt.lib;strmiids.lib;advapi32.lib;comdlg32.lib;d3d11.lib;d3d12.lib;dxgi.lib;dxguid.lib;gdi32.lib;glu32.lib;kernel32.lib;mpr.lib;ole32.lib;oleaut32.lib;opengl32.lib;psapi.lib;shell32.lib;shlwapi.lib;user32.lib;userenv.lib;uuid.lib;windowscodecs.lib;winspool.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions> /VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y e:\DVR\bin\libpng16d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\zlibd1.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\yaml-cppd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\zstdd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\jasperd.dll "$(TargetDir)"
-
-xcopy /y e:\GH\libultrahdr\build\Debug\uhdrd.dll  "$(TargetDir)"
-xcopy /y e:\DVR\bin\OpenColorIO_d_2_5.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\OpenEXRUtil-3_4_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\OpenEXR-3_4_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\OpenEXRCore-3_4_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\IlmThread-3_4_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\Iex-3_4_d.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\raw_rd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\rawd.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\freetyped.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\heifd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libde265d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libx265d.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\lib\bz2d.dll "$(TargetDir)bz2-1.dll"*
-
-xcopy /y e:\DVR\bin\jxld.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\jxl_threadsd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\jxl_cmsd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\hwyd.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\kvazaard.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotliencd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotlidecd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotliencd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotlicommond.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\freetyped.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\Ptexd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\liblzmad.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\turbojpegd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\jpeg62d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\tiffd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\deflated.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\Imath-3_2_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\openjp2d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\openjph.0.21d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libexpatd.dll "$(TargetDir)"
-xcopy /y e:\DVR\debug\bin\gif.dll "$(TargetDir)"
-
-xcopy /y e:\GH\Little-CMS\bin\lcms2d.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\OpenImageIO_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\OpenImageIO_Util_d.dll "$(TargetDir)"
-
-xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Cored.dll "$(TargetDir)"
+      <Command>xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Cored.dll "$(TargetDir)"
 xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Guid.dll "$(TargetDir)"
 xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Widgetsd.dll "$(TargetDir)"
 xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Svgd.dll "$(TargetDir)"
@@ -292,13 +183,7 @@ xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qwbmpd.dll "$(TargetDir)\p
 xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qwebpd.dll "$(TargetDir)\plugins\imageformats"
 
 xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\styles\qmodernwindowsstyled.dll "$(TargetDir)\plugins\styles"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\iconengines\qsvgicond.dll "$(TargetDir)\plugins\iconengines"
-
-xcopy /y e:\DVR\bin\libsharpyuvd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libwebpd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libwebpdecoderd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libwebpdemuxd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
+xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\iconengines\qsvgicond.dll "$(TargetDir)\plugins\iconengines"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">

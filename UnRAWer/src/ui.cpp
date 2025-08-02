@@ -17,7 +17,7 @@
  */
 #include "pch.h"
 
-#include <DbgHelp.h>
+//#include <DbgHelp.h>
 #include "ui.h"
 
 #include "process.h"
@@ -462,9 +462,9 @@ MainWindow::MainWindow() {
     for (QAction* action : verbActions) {
 		connect(action, &QAction::triggered, this, &MainWindow::verbLevel);
 	}
-    for (QAction* action : dumpActions) {
-        connect(action, &QAction::triggered, this, &MainWindow::createMemoryDump);
-    }
+    //for (QAction* action : dumpActions) {
+    //    connect(action, &QAction::triggered, this, &MainWindow::createMemoryDump);
+    //}
 
     connect(con_enable, &QAction::toggled, this, &MainWindow::toggleConsole);
     connect(prnt_settings, &QAction::triggered, this, &MainWindow::prntSettings);
@@ -540,89 +540,89 @@ void ResumeAllThreadsExceptCurrent() {
     CloseHandle(snapshot);
 }
 
-void MainWindow::createMemoryDump() {
-	QAction* action = qobject_cast<QAction*>(sender());
-	MINIDUMP_TYPE dumpType = MiniDumpWithFullMemory;
-	if (action == dumpActions[0]) {
-		dumpType = MiniDumpNormal;
-		emit updateTextSignal("Normal dump");
-		spdlog::info("Normal dump");
-	}
-	else if (action == dumpActions[1]) {
-		dumpType = (MINIDUMP_TYPE)(
-			MiniDumpWithFullMemory |                 // Captures the full memory of the process
-			MiniDumpWithDataSegs |                   // Includes static and global variables
-			MiniDumpWithThreadInfo |                 // Includes detailed thread information
-			MiniDumpWithFullMemoryInfo |             // Includes detailed memory region info
-			MiniDumpWithHandleData                   // Includes handle information
-			);
-		//MiniDumpWithFullMemory;
-		emit updateTextSignal("Full dump");
-		spdlog::info("Full dump");
-	}
-
-	// Generate a unique dump file name
-	SYSTEMTIME st;
-	GetSystemTime(&st);
-	char dumpFileName[128];
-	sprintf_s(dumpFileName, "crash_dump_%04d%02d%02d_%02d%02d%02d.dmp",
-		st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-
-	HANDLE dumpFile = CreateFileA(dumpFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL, NULL);
-
-	if (dumpFile != INVALID_HANDLE_VALUE) {
-		//	MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
-		//	dumpInfo.ThreadId = GetCurrentThreadId();
-		//	dumpInfo.ExceptionPointers = NULL;
-		//	dumpInfo.ClientPointers = FALSE;
-
-		//	// Write the dump
-		//	MiniDumpWriteDump(
-		//		GetCurrentProcess(),
-		//		GetCurrentProcessId(),
-		//		dumpFile,
-		//		dumpType,
-		//		&dumpInfo,
-		//		NULL,
-		//		NULL);
-
-		// Suspend all threads to ensure consistency
-		SuspendAllThreadsExceptCurrent();
-
-		//// Define dump type
-		//MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(
-		//	MiniDumpWithFullMemory |
-		//	MiniDumpWithDataSegs |
-		//	MiniDumpWithThreadInfo |
-		//	MiniDumpWithHandleData |
-		//	MiniDumpWithFullMemoryInfo
-		//	);
-
-		// Write the dump
-		BOOL success = MiniDumpWriteDump(
-			GetCurrentProcess(),
-			GetCurrentProcessId(),
-			dumpFile,
-			dumpType,
-			NULL,  // No exception information
-			NULL,  // No custom streams (yet)
-			NULL
-		);
-
-		if (!success) {
-			DWORD error = GetLastError();
-			printf("MiniDumpWriteDump failed with error code: %lu\n", error);
-		}
-
-		// Resume all threads after dumping
-		ResumeAllThreadsExceptCurrent();
-
-		CloseHandle(dumpFile);
-	}
-	/// 
-	printf("UnRAWer has crashed. A dump file has been saved as %s\n", dumpFileName);
-};
+//void MainWindow::createMemoryDump() {
+//	QAction* action = qobject_cast<QAction*>(sender());
+//	MINIDUMP_TYPE dumpType = MiniDumpWithFullMemory;
+//	if (action == dumpActions[0]) {
+//		dumpType = MiniDumpNormal;
+//		emit updateTextSignal("Normal dump");
+//		spdlog::info("Normal dump");
+//	}
+//	else if (action == dumpActions[1]) {
+//		dumpType = (MINIDUMP_TYPE)(
+//			MiniDumpWithFullMemory |                 // Captures the full memory of the process
+//			MiniDumpWithDataSegs |                   // Includes static and global variables
+//			MiniDumpWithThreadInfo |                 // Includes detailed thread information
+//			MiniDumpWithFullMemoryInfo |             // Includes detailed memory region info
+//			MiniDumpWithHandleData                   // Includes handle information
+//			);
+//		//MiniDumpWithFullMemory;
+//		emit updateTextSignal("Full dump");
+//		spdlog::info("Full dump");
+//	}
+//
+//	// Generate a unique dump file name
+//	SYSTEMTIME st;
+//	GetSystemTime(&st);
+//	char dumpFileName[128];
+//	sprintf_s(dumpFileName, "crash_dump_%04d%02d%02d_%02d%02d%02d.dmp",
+//		st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+//
+//	HANDLE dumpFile = CreateFileA(dumpFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+//		FILE_ATTRIBUTE_NORMAL, NULL);
+//
+//	if (dumpFile != INVALID_HANDLE_VALUE) {
+//		//	MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
+//		//	dumpInfo.ThreadId = GetCurrentThreadId();
+//		//	dumpInfo.ExceptionPointers = NULL;
+//		//	dumpInfo.ClientPointers = FALSE;
+//
+//		//	// Write the dump
+//		//	MiniDumpWriteDump(
+//		//		GetCurrentProcess(),
+//		//		GetCurrentProcessId(),
+//		//		dumpFile,
+//		//		dumpType,
+//		//		&dumpInfo,
+//		//		NULL,
+//		//		NULL);
+//
+//		// Suspend all threads to ensure consistency
+//		SuspendAllThreadsExceptCurrent();
+//
+//		//// Define dump type
+//		//MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(
+//		//	MiniDumpWithFullMemory |
+//		//	MiniDumpWithDataSegs |
+//		//	MiniDumpWithThreadInfo |
+//		//	MiniDumpWithHandleData |
+//		//	MiniDumpWithFullMemoryInfo
+//		//	);
+//
+//		// Write the dump
+//		BOOL success = MiniDumpWriteDump(
+//			GetCurrentProcess(),
+//			GetCurrentProcessId(),
+//			dumpFile,
+//			dumpType,
+//			NULL,  // No exception information
+//			NULL,  // No custom streams (yet)
+//			NULL
+//		);
+//
+//		if (!success) {
+//			DWORD error = GetLastError();
+//			printf("MiniDumpWriteDump failed with error code: %lu\n", error);
+//		}
+//
+//		// Resume all threads after dumping
+//		ResumeAllThreadsExceptCurrent();
+//
+//		CloseHandle(dumpFile);
+//	}
+//	/// 
+//	printf("UnRAWer has crashed. A dump file has been saved as %s\n", dumpFileName);
+//};
 
 
 void MainWindow::prntSettings(){

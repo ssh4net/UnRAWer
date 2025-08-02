@@ -17,50 +17,50 @@
  */
 #include "pch.h"
 
-#include <DbgHelp.h>
+//#include <DbgHelp.h>
 
 #include "settings.h"
 #include "cli.h"
 ////////////////////////////////////////
 
-LONG WINAPI CustomExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
-    // Generate a unique dump file name
-    SYSTEMTIME st;
-    GetSystemTime(&st);
-    char dumpFileName[128];
-    sprintf_s(dumpFileName, "crash_dump_%04d%02d%02d_%02d%02d%02d.dmp",
-        st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-
-    HANDLE dumpFile = CreateFileA(dumpFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL, NULL);
-
-    if (dumpFile != INVALID_HANDLE_VALUE) {
-        MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
-        dumpInfo.ThreadId = GetCurrentThreadId();  // Fix ambiguity
-        dumpInfo.ExceptionPointers = exceptionInfo;
-        dumpInfo.ClientPointers = FALSE;            // Ensure FALSE is defined
-
-        // Write the dump
-        MiniDumpWriteDump(
-            GetCurrentProcess(),
-            GetCurrentProcessId(),
-            dumpFile,
-            MiniDumpWithFullMemory,
-            &dumpInfo,
-            NULL,
-            NULL);
-
-        CloseHandle(dumpFile);
-    }
-
-	printf("UnRAWer has crashed. A dump file has been saved as %s\n", dumpFileName);
-
-    // Return to terminate the application
-    return EXCEPTION_EXECUTE_HANDLER;
-}
+//LONG WINAPI CustomExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
+//    // Generate a unique dump file name
+//    SYSTEMTIME st;
+//    GetSystemTime(&st);
+//    char dumpFileName[128];
+//    sprintf_s(dumpFileName, "crash_dump_%04d%02d%02d_%02d%02d%02d.dmp",
+//        st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+//
+//    HANDLE dumpFile = CreateFileA(dumpFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+//        FILE_ATTRIBUTE_NORMAL, NULL);
+//
+//    if (dumpFile != INVALID_HANDLE_VALUE) {
+//        MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
+//        dumpInfo.ThreadId = GetCurrentThreadId();  // Fix ambiguity
+//        dumpInfo.ExceptionPointers = exceptionInfo;
+//        dumpInfo.ClientPointers = FALSE;            // Ensure FALSE is defined
+//
+//        // Write the dump
+//        MiniDumpWriteDump(
+//            GetCurrentProcess(),
+//            GetCurrentProcessId(),
+//            dumpFile,
+//            MiniDumpWithFullMemory,
+//            &dumpInfo,
+//            NULL,
+//            NULL);
+//
+//        CloseHandle(dumpFile);
+//    }
+//
+//	printf("UnRAWer has crashed. A dump file has been saved as %s\n", dumpFileName);
+//
+//    // Return to terminate the application
+//    return EXCEPTION_EXECUTE_HANDLER;
+//}
 
 int main(int argc, char* argv[]) {
-    SetUnhandledExceptionFilter(CustomExceptionHandler);
+    //SetUnhandledExceptionFilter(CustomExceptionHandler);
 
     HWND consoleWindow = GetConsoleWindow();
     if (consoleWindow == NULL) {
