@@ -22,11 +22,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <QtRcc Include="src\gui.qrc">
-      <Filter>Resource Files</Filter>
-    </QtRcc>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="src\ui.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -57,11 +52,6 @@
     <ClCompile Include="src\cli.cpp">
       <Filter>src</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <QtUic Include="src\gui.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -112,8 +102,12 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="src\ui.h">
-      <Filter>headers</Filter>
-    </QtMoc>
+    <CustomBuild Include="src\gui.qrc">
+      <Filter>Resource Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="src\gui.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="src\ui.h" />
   </ItemGroup>
 </Project>

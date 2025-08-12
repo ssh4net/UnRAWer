@@ -16,11 +16,9 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F4724139-79E9-4A7B-879F-8BBB14824647}</ProjectGuid>
-    <Keyword>QtVS_v304</Keyword>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">10.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0</WindowsTargetPlatformVersion>
-    <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -36,59 +34,34 @@
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
-    <Import Project="$(QtMsBuild)\qt_defaults.props" />
-  </ImportGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>6.9.0_msvc2022_64</QtInstall>
-    <QtModules>core;gui;widgets</QtModules>
-    <QtBuildConfig>debug</QtBuildConfig>
-    <QtQMLDebugEnable>true</QtQMLDebugEnable>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'" Label="QtSettings">
-    <QtInstall>6.2.4_msvc2019_64</QtInstall>
-    <QtModules>core;gui;widgets</QtModules>
-    <QtBuildConfig>debug</QtBuildConfig>
-    <QtQMLDebugEnable>true</QtQMLDebugEnable>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
-    <QtInstall>6.9.0_msvc2022_64</QtInstall>
-    <QtModules>core;gui;widgets</QtModules>
-    <QtBuildConfig>release</QtBuildConfig>
-  </PropertyGroup>
-  <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
-    <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
-  </Target>
   <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(QtMsBuild)\Qt.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(QtMsBuild)\Qt.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(QtMsBuild)\Qt.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
-    <ExternalIncludePath>C:\Qt\6.9.0\msvc2022_64\include;e:\DVS\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
+    <ExternalIncludePath>C:\Qt\6.9.0\msvc2022_64\include;C:\Qt\6.9.0\msvc2022_64\include\QtCore;C:\Qt\6.9.0\msvc2022_64\include\QtGui;C:\Qt\6.9.0\msvc2022_64\include\QtWidgets;e:\DVS\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
+    <LibraryPath>C:\Qt\6.9.0\msvc2022_64\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">
-    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;e:\DVR\include;e:\DVR\include\boost-1_89;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
-    <LibraryPath>e:\DVR\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Qt\6.2.4\msvc2019_64\include;C:\Qt\6.2.4\msvc2019_64\include\QtCore;C:\Qt\6.2.4\msvc2019_64\include\QtGui;C:\Qt\6.2.4\msvc2019_64\include\QtWidgets;e:\DVR\include;e:\DVR\include\boost-1_89;e:\GH\toml11\build\RELEASE\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Qt\6.2.4\msvc2019_64\lib;e:\DVR\lib;$(LibraryPath)</LibraryPath>
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
-    <LibraryPath>e:\DVS\lib;$(LibraryPath)</LibraryPath>
-    <ExternalIncludePath>C:\Qt\6.9.0\msvc2022_64\include;e:\DVS\include;e:\GH\toml11\build\RELEASE\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
+    <LibraryPath>C:\Qt\6.9.0\msvc2022_64\lib;e:\DVS\lib;$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>C:\Qt\6.9.0\msvc2022_64\include;C:\Qt\6.9.0\msvc2022_64\include\QtCore;C:\Qt\6.9.0\msvc2022_64\include\QtGui;C:\Qt\6.9.0\msvc2022_64\include\QtWidgets;e:\DVS\include;e:\GH\toml11\build\RELEASE\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'" Label="Vcpkg" />
@@ -96,44 +69,19 @@
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
-      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;JXL_STATIC_DEFINE=1;OPJ_STATIC;LIBDE265_STATIC_BUILD;KVZ_STATIC_LIB;LIBHEIF_STATIC_BUILD;LIBRAW_NODLL;OIIO_STATIC_DEFINE=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;JXL_STATIC_DEFINE=1;OPJ_STATIC;LIBDE265_STATIC_BUILD;KVZ_STATIC_LIB;LIBHEIF_STATIC_BUILD;LIBRAW_NODLL;OIIO_STATIC_DEFINE=1;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-    <QtMoc>
-      <PrependInclude>$(ProjectDir)src\pch.h;%(PrependInclude)</PrependInclude>
-    </QtMoc>
     <Link>
-      <AdditionalDependencies>e:\DVS\lib\OpenImageIO.lib;e:\DVS\lib\OpenImageIO_Util.lib;e:\DVS\lib\heif.lib;e:\DVS\lib\aom.lib;E:\DVS\lib\libde265.lib;e:\DVS\lib\x265-static.lib;e:\DVS\lib\libkvazaar.lib;E:\DVS\lib\bz2.lib;E:\DVS\lib\deflatestatic.lib;E:\DVS\lib\freetype.lib;E:\DVS\lib\gif.lib;E:\DVS\lib\Iex-3_4.lib;E:\DVS\lib\IlmThread-3_4.lib;E:\DVS\lib\Imath-3_2.lib;E:\DVS\lib\jasper.lib;E:\DVS\lib\jpeg.lib;e:\DVS\lib\jxl_cms.lib;E:\DVS\lib\jxl_threads.lib;E:\DVS\lib\jxl.lib;e:\DVS\lib\hwy.lib;e:\DVS\lib\brotlicommon.lib;e:\DVS\lib\brotlidec.lib;e:\DVS\lib\brotlienc.lib;e:\DVS\lib\libavcodec.lib;e:\DVS\lib\libavdevice.lib;e:\DVS\lib\libavfilter.lib;e:\DVS\lib\libavformat.lib;E:\DVS\lib\libavutil.lib;e:\DVS\lib\libswresample.lib;e:\DVS\lib\libswscale.lib;E:\DVS\lib\libexpatMT.lib;E:\DVS\lib\libpng18_static.lib;E:\DVS\lib\libsharpyuv.lib;E:\DVS\lib\libwebp.lib;E:\DVS\lib\libwebpdemux.lib;E:\DVS\lib\minizip-ng.lib;E:\DVS\lib\OpenColorIO.lib;E:\DVS\lib\OpenEXR-3_4.lib;E:\DVS\lib\OpenEXRCore-3_4.lib;E:\DVS\lib\openjp2.lib;e:\DVS\lib\openjph.0.21.lib;E:\DVS\lib\Ptex.lib;E:\DVS\lib\pugixml.lib;E:\DVS\lib\pystring.lib;E:\DVS\lib\raw_r.lib;E:\DVS\lib\raw.lib;e:\GH\Little-CMS\Lib\ST\lcms2_static.lib;E:\DVS\lib\tiff.lib;E:\DVS\lib\zlib.lib;e:\DVS\lib\zstd_static.lib;e:\DVS\lib\lzma.lib;E:\DVS\lib\uhdr.lib;E:\DVS\lib\yaml-cpp.lib;e:\DVS\lib\XMPFilesStaticRelease.lib;e:\DVS\lib\XMPCoreStaticRelease.lib;w:\VisualStudio\dng_sdk_1_7_1\dng_sdk\projects\win\x64\Release\dng_sdk.lib;C:\Qt\6.9.0\msvc2022_64\lib\Qt6Core.lib;C:\Qt\6.9.0\msvc2022_64\lib\Qt6Gui.lib;C:\Qt\6.9.0\msvc2022_64\lib\Qt6Widgets.lib;mfplat.lib;mfuuid.lib;secur32.lib;bcrypt.lib;crypt32.lib;ncrypt.lib;strmiids.lib;advapi32.lib;comdlg32.lib;d3d11.lib;d3d12.lib;dxgi.lib;dxguid.lib;gdi32.lib;glu32.lib;kernel32.lib;mpr.lib;ole32.lib;oleaut32.lib;opengl32.lib;psapi.lib;shell32.lib;shlwapi.lib;user32.lib;userenv.lib;uuid.lib;windowscodecs.lib;winspool.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>e:\DVS\lib\OpenImageIO.lib;e:\DVS\lib\OpenImageIO_Util.lib;e:\DVS\lib\heif.lib;e:\DVS\lib\aom.lib;E:\DVS\lib\libde265.lib;e:\DVS\lib\x265-static.lib;e:\DVS\lib\libkvazaar.lib;E:\DVS\lib\bz2.lib;E:\DVS\lib\deflatestatic.lib;E:\DVS\lib\freetype.lib;E:\DVS\lib\gif.lib;E:\DVS\lib\Iex-3_4.lib;E:\DVS\lib\IlmThread-3_4.lib;E:\DVS\lib\Imath-3_2.lib;E:\DVS\lib\jasper.lib;E:\DVS\lib\jpeg.lib;e:\DVS\lib\jxl_cms.lib;E:\DVS\lib\jxl_threads.lib;E:\DVS\lib\jxl.lib;e:\DVS\lib\hwy.lib;e:\DVS\lib\brotlicommon.lib;e:\DVS\lib\brotlidec.lib;e:\DVS\lib\brotlienc.lib;e:\DVS\lib\libavcodec.lib;e:\DVS\lib\libavdevice.lib;e:\DVS\lib\libavfilter.lib;e:\DVS\lib\libavformat.lib;E:\DVS\lib\libavutil.lib;e:\DVS\lib\libswresample.lib;e:\DVS\lib\libswscale.lib;E:\DVS\lib\libexpatMT.lib;E:\DVS\lib\libpng18_static.lib;E:\DVS\lib\libsharpyuv.lib;E:\DVS\lib\libwebp.lib;E:\DVS\lib\libwebpdemux.lib;E:\DVS\lib\minizip-ng.lib;E:\DVS\lib\OpenColorIO.lib;E:\DVS\lib\OpenEXR-3_4.lib;E:\DVS\lib\OpenEXRCore-3_4.lib;E:\DVS\lib\openjp2.lib;e:\DVS\lib\openjph.0.21.lib;E:\DVS\lib\Ptex.lib;E:\DVS\lib\pugixml.lib;E:\DVS\lib\pystring.lib;E:\DVS\lib\raw_r.lib;E:\DVS\lib\raw.lib;e:\GH\Little-CMS\Lib\ST\lcms2_static.lib;E:\DVS\lib\tiff.lib;E:\DVS\lib\zlib.lib;e:\DVS\lib\zstd_static.lib;e:\DVS\lib\lzma.lib;E:\DVS\lib\uhdr.lib;E:\DVS\lib\yaml-cpp.lib;e:\DVS\lib\XMPFilesStaticRelease.lib;e:\DVS\lib\XMPCoreStaticRelease.lib;w:\VisualStudio\dng_sdk_1_7_1\dng_sdk\projects\win\x64\Release\dng_sdk.lib;e:\DVS\lib\Qt6Core.lib;e:\DVS\lib\Qt6Gui.lib;e:\DVS\lib\Qt6Widgets.lib;e:\DVS\lib\pcre2-16-staticd.lib;mfplat.lib;mfuuid.lib;secur32.lib;bcrypt.lib;crypt32.lib;ncrypt.lib;strmiids.lib;advapi32.lib;comdlg32.lib;d3d11.lib;d3d12.lib;dxgi.lib;dxguid.lib;gdi32.lib;glu32.lib;kernel32.lib;mpr.lib;ole32.lib;oleaut32.lib;opengl32.lib;psapi.lib;shell32.lib;shlwapi.lib;user32.lib;userenv.lib;uuid.lib;windowscodecs.lib;winspool.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Core.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Gui.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Widgets.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Svg.dll "$(TargetDir)"
-
-mkdir "$(TargetDir)\plugins\platforms"
-mkdir "$(TargetDir)\plugins\imageformats"
-mkdir "$(TargetDir)\plugins\styles"
-mkdir "$(TargetDir)\plugins\iconengines"
-
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\platforms\qwindows.dll "$(TargetDir)\plugins\platforms"
-
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qgif.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qicns.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qico.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qjpeg.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qsvg.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qtga.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qtiff.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qwbmp.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qwebp.dll "$(TargetDir)\plugins\imageformats"
-
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\styles\qmodernwindowsstyle.dll "$(TargetDir)\plugins\styles"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\iconengines\qsvgicon.dll "$(TargetDir)\plugins\iconengines"
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -141,49 +89,24 @@ xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\iconengines\qsvgicon.dll "$(TargetDir)\
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>QT_QML_DEBUG;%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN;JXL_STATIC_DEFINE=1;OPJ_STATIC;LIBDE265_STATIC_BUILD;KVZ_STATIC_LIB;LIBHEIF_STATIC_BUILD;LIBRAW_NODLL;OIIO_STATIC_DEFINE=1</PreprocessorDefinitions>
+      <PreprocessorDefinitions>QT_QML_DEBUG;%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN;JXL_STATIC_DEFINE=1;OPJ_STATIC;LIBDE265_STATIC_BUILD;KVZ_STATIC_LIB;LIBHEIF_STATIC_BUILD;LIBRAW_NODLL;OIIO_STATIC_DEFINE=1;PCRE2_STATIC;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_STATIC;QT_STATICPLUGIN;QT_DEBUG_PLUGINS=1</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-    <QtMoc>
-      <PrependInclude>$(ProjectDir)src\pch.h;%(PrependInclude)</PrependInclude>
-    </QtMoc>
     <Link />
     <Link />
     <Link />
     <Link />
     <Link>
-      <AdditionalDependencies>e:\DVS\lib\OpenImageIO_d.lib;e:\DVS\lib\OpenImageIO_Util_d.lib;e:\DVS\lib\heifd.lib;e:\DVS\lib\aomd.lib;E:\DVS\lib\libde265d.lib;e:\DVS\lib\x265-staticd.lib;e:\DVS\lib\libkvazaard.lib;E:\DVS\lib\bz2d.lib;E:\DVS\lib\deflatestaticd.lib;E:\DVS\lib\freetyped.lib;E:\DVS\lib\gifd.lib;E:\DVS\lib\Iex-3_4_d.lib;E:\DVS\lib\IlmThread-3_4_d.lib;E:\DVS\lib\Imath-3_2_d.lib;E:\DVS\lib\jasperd.lib;E:\DVS\lib\jpegd.lib;e:\DVS\lib\jxl_cmsd.lib;E:\DVS\lib\jxl_threadsd.lib;E:\DVS\lib\jxld.lib;e:\DVS\lib\hwyd.lib;e:\DVS\lib\brotlicommond.lib;e:\DVS\lib\brotlidecd.lib;e:\DVS\lib\brotliencd.lib;e:\DVS\lib\libavcodecd.lib;e:\DVS\lib\libavdeviced.lib;e:\DVS\lib\libavfilterd.lib;e:\DVS\lib\libavformatd.lib;E:\DVS\lib\libavutild.lib;e:\DVS\lib\libswresampled.lib;e:\DVS\lib\libswscaled.lib;E:\DVS\lib\libexpatdMT.lib;E:\DVS\lib\libpng18_staticd.lib;E:\DVS\lib\libsharpyuvd.lib;E:\DVS\lib\libwebpd.lib;E:\DVS\lib\libwebpdemuxd.lib;E:\DVS\lib\minizip-ngd.lib;E:\DVS\lib\OpenColorIO_d.lib;E:\DVS\lib\OpenEXR-3_4_d.lib;E:\DVS\lib\OpenEXRCore-3_4_d.lib;E:\DVS\lib\openjp2d.lib;e:\DVS\lib\openjph.0.21_d.lib;E:\DVS\lib\Ptexd.lib;E:\DVS\lib\pugixmld.lib;E:\DVS\lib\pystringd.lib;E:\DVS\lib\raw_rd.lib;E:\DVS\lib\rawd.lib;e:\GH\Little-CMS\Lib\ST\lcms2_staticd.lib;E:\DVS\lib\tiffd.lib;E:\DVS\lib\zlibd.lib;e:\DVS\lib\zstd_staticd.lib;e:\DVS\lib\lzmad.lib;E:\DVS\lib\uhdrd.lib;E:\DVS\lib\yaml-cppd.lib;e:\DVS\lib\XMPFilesStaticDebug.lib;e:\DVS\lib\XMPCoreStaticDebug.lib;w:\VisualStudio\dng_sdk_1_7_1\dng_sdk\projects\win\x64\Debug\dng_sdk.lib;C:\Qt\6.9.0\msvc2022_64\lib\Qt6Cored.lib;C:\Qt\6.9.0\msvc2022_64\lib\Qt6Guid.lib;C:\Qt\6.9.0\msvc2022_64\lib\Qt6Widgetsd.lib;mfplat.lib;mfuuid.lib;secur32.lib;bcrypt.lib;crypt32.lib;ncrypt.lib;strmiids.lib;advapi32.lib;comdlg32.lib;d3d11.lib;d3d12.lib;dxgi.lib;dxguid.lib;gdi32.lib;glu32.lib;kernel32.lib;mpr.lib;ole32.lib;oleaut32.lib;opengl32.lib;psapi.lib;shell32.lib;shlwapi.lib;user32.lib;userenv.lib;uuid.lib;windowscodecs.lib;winspool.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>e:\DVS\lib\OpenImageIO_d.lib;e:\DVS\lib\OpenImageIO_Util_d.lib;e:\DVS\lib\heifd.lib;e:\DVS\lib\aomd.lib;E:\DVS\lib\libde265d.lib;e:\DVS\lib\x265-staticd.lib;e:\DVS\lib\libkvazaard.lib;E:\DVS\lib\bz2d.lib;E:\DVS\lib\deflatestaticd.lib;E:\DVS\lib\freetyped.lib;E:\DVS\lib\gifd.lib;E:\DVS\lib\Iex-3_4_d.lib;E:\DVS\lib\IlmThread-3_4_d.lib;E:\DVS\lib\Imath-3_2_d.lib;E:\DVS\lib\jasperd.lib;E:\DVS\lib\jpegd.lib;e:\DVS\lib\jxl_cmsd.lib;E:\DVS\lib\jxl_threadsd.lib;E:\DVS\lib\jxld.lib;e:\DVS\lib\hwyd.lib;e:\DVS\lib\brotlicommond.lib;e:\DVS\lib\brotlidecd.lib;e:\DVS\lib\brotliencd.lib;e:\DVS\lib\libavcodecd.lib;e:\DVS\lib\libavdeviced.lib;e:\DVS\lib\libavfilterd.lib;e:\DVS\lib\libavformatd.lib;E:\DVS\lib\libavutild.lib;e:\DVS\lib\libswresampled.lib;e:\DVS\lib\libswscaled.lib;E:\DVS\lib\libexpatdMT.lib;E:\DVS\lib\libpng18_staticd.lib;E:\DVS\lib\libsharpyuvd.lib;E:\DVS\lib\libwebpd.lib;E:\DVS\lib\libwebpdemuxd.lib;E:\DVS\lib\minizip-ngd.lib;E:\DVS\lib\OpenColorIO_d.lib;E:\DVS\lib\OpenEXR-3_4_d.lib;E:\DVS\lib\OpenEXRCore-3_4_d.lib;E:\DVS\lib\openjp2d.lib;e:\DVS\lib\openjph.0.21_d.lib;E:\DVS\lib\Ptexd.lib;E:\DVS\lib\pugixmld.lib;E:\DVS\lib\pystringd.lib;E:\DVS\lib\raw_rd.lib;E:\DVS\lib\rawd.lib;e:\GH\Little-CMS\Lib\ST\lcms2_staticd.lib;E:\DVS\lib\tiffd.lib;E:\DVS\lib\zlibd.lib;e:\DVS\lib\zstd_staticd.lib;e:\DVS\lib\lzmad.lib;E:\DVS\lib\uhdrd.lib;E:\DVS\lib\yaml-cppd.lib;e:\DVS\lib\XMPFilesStaticDebug.lib;e:\DVS\lib\XMPCoreStaticDebug.lib;w:\VisualStudio\dng_sdk_1_7_1\dng_sdk\projects\win\x64\Debug\dng_sdk.lib;e:\DVS\lib\Qt6Cored.lib;e:\DVS\lib\Qt6Guid.lib;e:\DVS\lib\Qt6Widgetsd.lib;e:\DVS\plugins\platforms\qwindowsd.lib;e:\DVS\plugins\platforms\qoffscreend.lib;e:\DVS\plugins\styles\qmodernwindowsstyled.lib;e:\DVS\plugins\platforms\qminimald.lib;e:\DVS\plugins\platforms\qdirect2dd.lib;e:\VCS\packages\harfbuzz_x64-windows-static\debug\lib\harfbuzz-subset.lib;e:\VCS\packages\harfbuzz_x64-windows-static\debug\lib\harfbuzz.lib;e:\DVS\lib\pcre2-16-staticd.lib;mfplat.lib;mfuuid.lib;secur32.lib;bcrypt.lib;crypt32.lib;ncrypt.lib;strmiids.lib;advapi32.lib;comdlg32.lib;d3d11.lib;d3d12.lib;dxgi.lib;dxguid.lib;gdi32.lib;glu32.lib;Version.lib;Winmm.lib;WindowsApp.lib;RuntimeObject.lib;Wtsapi32.lib;D3d9.lib;Dwmapi.lib;Shcore.lib;Setupapi.lib;Imm32.lib;UxTheme.lib;Ole32.lib;Oleaut32.lib;Uuid.lib;Shlwapi.lib;Ws2_32.lib;Authz.lib;kernel32.lib;mpr.lib;ole32.lib;oleaut32.lib;opengl32.lib;psapi.lib;shell32.lib;shlwapi.lib;user32.lib;userenv.lib;uuid.lib;windowscodecs.lib;winspool.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions> /VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Cored.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Guid.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Widgetsd.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\bin\Qt6Svgd.dll "$(TargetDir)"
-
-mkdir "$(TargetDir)\plugins\platforms"
-mkdir "$(TargetDir)\plugins\imageformats"
-mkdir "$(TargetDir)\plugins\styles"
-mkdir "$(TargetDir)\plugins\iconengines"
-
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\platforms\qwindowsd.dll "$(TargetDir)\plugins\platforms"
-
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qgifd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qicnsd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qicod.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qjpegd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qsvgd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qtgad.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qtiffd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qwbmpd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\imageformats\qwebpd.dll "$(TargetDir)\plugins\imageformats"
-
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\styles\qmodernwindowsstyled.dll "$(TargetDir)\plugins\styles"
-xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\iconengines\qsvgicond.dll "$(TargetDir)\plugins\iconengines"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">
@@ -191,12 +114,10 @@ xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\iconengines\qsvgicond.dll "$(TargetDir)
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>QT_QML_DEBUG;%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN</PreprocessorDefinitions>
+      <PreprocessorDefinitions>QT_QML_DEBUG;%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-    <QtMoc>
-      <PrependInclude>$(ProjectDir)src\pch.h;%(PrependInclude)</PrependInclude>
-    </QtMoc>
     <Link />
     <Link />
     <Link />
@@ -208,92 +129,8 @@ xcopy /y c:\Qt\6.9.0\msvc2022_64\plugins\iconengines\qsvgicond.dll "$(TargetDir)
       </IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y e:\DVR\bin\libpng16d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\zlibd1.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\yaml-cppd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\zstdd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\jasperd.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\OpenColorIO_d_2_4.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\OpenEXRUtil-3_4_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\OpenEXR-3_4_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\OpenEXRCore-3_4_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\IlmThread-3_4_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\Iex-3_4_d.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\raw_rd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\rawd.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\freetyped.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\heifd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libde265d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libx265d.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\lib\bz2d.dll "$(TargetDir)bz2-1.dll"*
-
-xcopy /y e:\DVR\bin\jxld.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\jxl_threadsd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\jxl_cmsd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\hwyd.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\kvazaard.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotliencd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotlidecd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotliencd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\brotlicommond.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\freetyped.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\Ptexd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\liblzmad.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\turbojpegd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\jpeg62d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\tiffd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\deflated.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\Imath-3_2_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\openjp2d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libexpatd.dll "$(TargetDir)"
-xcopy /y e:\DVR\debug\bin\gif.dll "$(TargetDir)"
-
-xcopy /y e:\GH\Little-CMS\bin\lcms2d.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\bin\OpenImageIO_d.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\OpenImageIO_Util_d.dll "$(TargetDir)"
-
-xcopy /y e:\DVR\lib\boost_log_setup-vc143-mt-gd-x64-1_89.dll "$(TargetDir)"
-xcopy /y e:\DVR\lib\boost_log-vc143-mt-gd-x64-1_89.dll "$(TargetDir)"
-
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Cored.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Guid.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Widgetsd.dll "$(TargetDir)"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\bin\Qt6Svgd.dll "$(TargetDir)"
-
-mkdir "$(TargetDir)\plugins\platforms"
-mkdir "$(TargetDir)\plugins\imageformats"
-mkdir "$(TargetDir)\plugins\styles"
-mkdir "$(TargetDir)\plugins\iconengines"
-
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\platforms\qwindowsd.dll "$(TargetDir)\plugins\platforms"
-
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qgifd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qicnsd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qicod.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qjpegd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qsvgd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qtgad.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qtiffd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qwbmpd.dll "$(TargetDir)\plugins\imageformats"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\imageformats\qwebpd.dll "$(TargetDir)\plugins\imageformats"
-
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\styles\qwindowsvistastyled.dll "$(TargetDir)\plugins\styles"
-xcopy /y c:\Qt\6.2.4\msvc2019_64\plugins\iconengines\qsvgicond.dll "$(TargetDir)\plugins\iconengines"
-
-xcopy /y e:\DVR\bin\libsharpyuvd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libwebpd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libwebpdecoderd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libwebpdemuxd.dll "$(TargetDir)"
-xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -339,9 +176,42 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <QtRcc Include="src\gui.qrc" />
-    <QtUic Include="src\gui.ui" />
-    <QtMoc Include="src\ui.h" />
+    <CustomBuild Include="src\gui.qrc">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">C:\Qt\6.9.0\msvc2022_64\bin\rcc.exe -name gui "%(FullPath)" -o "$(ProjectDir)src\qrc_gui.cpp"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">C:\Qt\6.9.0\msvc2022_64\bin\rcc.exe -name gui "%(FullPath)" -o "$(ProjectDir)src\qrc_gui.cpp"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)' == 'Release (Debug symbols)|x64'">C:\Qt\6.2.4\msvc2019_64\bin\rcc.exe -name gui "%(FullPath)" -o "$(ProjectDir)src\qrc_gui.cpp"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">RCC %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">RCC %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)' == 'Release (Debug symbols)|x64'">RCC %(Identity)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">$(ProjectDir)src\qrc_gui.cpp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">$(ProjectDir)src\qrc_gui.cpp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Release (Debug symbols)|x64'">$(ProjectDir)src\qrc_gui.cpp</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="src\gui.ui">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">C:\Qt\6.9.0\msvc2022_64\bin\uic.exe "%(FullPath)" -o "$(ProjectDir)src\ui_gui.h"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">C:\Qt\6.9.0\msvc2022_64\bin\uic.exe "%(FullPath)" -o "$(ProjectDir)src\ui_gui.h"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)' == 'Release (Debug symbols)|x64'">C:\Qt\6.2.4\msvc2019_64\bin\uic.exe "%(FullPath)" -o "$(ProjectDir)src\ui_gui.h"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">UIC %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">UIC %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)' == 'Release (Debug symbols)|x64'">UIC %(Identity)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">$(ProjectDir)src\ui_gui.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">$(ProjectDir)src\ui_gui.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Release (Debug symbols)|x64'">$(ProjectDir)src\ui_gui.h</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="src\ui.h">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">C:\Qt\6.9.0\msvc2022_64\bin\moc.exe -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I"C:\Qt\6.9.0\msvc2022_64\include" -I"C:\Qt\6.9.0\msvc2022_64\include\QtCore" -I"C:\Qt\6.9.0\msvc2022_64\include\QtGui" -I"C:\Qt\6.9.0\msvc2022_64\include\QtWidgets" "%(FullPath)" -o "$(ProjectDir)src\moc_ui.cpp"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">C:\Qt\6.9.0\msvc2022_64\bin\moc.exe -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I"C:\Qt\6.9.0\msvc2022_64\include" -I"C:\Qt\6.9.0\msvc2022_64\include\QtCore" -I"C:\Qt\6.9.0\msvc2022_64\include\QtGui" -I"C:\Qt\6.9.0\msvc2022_64\include\QtWidgets" "%(FullPath)" -o "$(ProjectDir)src\moc_ui.cpp"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)' == 'Release (Debug symbols)|x64'">C:\Qt\6.2.4\msvc2019_64\bin\moc.exe -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I"C:\Qt\6.2.4\msvc2019_64\include" -I"C:\Qt\6.2.4\msvc2019_64\include\QtCore" -I"C:\Qt\6.2.4\msvc2019_64\include\QtGui" -I"C:\Qt\6.2.4\msvc2019_64\include\QtWidgets" "%(FullPath)" -o "$(ProjectDir)src\moc_ui.cpp"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">MOC %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">MOC %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)' == 'Release (Debug symbols)|x64'">MOC %(Identity)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">$(ProjectDir)src\moc_ui.cpp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">$(ProjectDir)src\moc_ui.cpp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Release (Debug symbols)|x64'">$(ProjectDir)src\moc_ui.cpp</Outputs>
+    </CustomBuild>
     <ClCompile Include="src\cli.cpp" />
     <ClCompile Include="src\exif_parser.cpp" />
     <ClCompile Include="src\fileProcessor.cpp" />
@@ -359,6 +229,18 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
     </ClCompile>
     <ClCompile Include="src\ui.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\moc_ui.cpp">
+      <DependentUpon>src\ui.h</DependentUpon>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\qrc_gui.cpp">
+      <DependentUpon>src\gui.qrc</DependentUpon>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release (Debug symbols)|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -373,6 +255,9 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\threadpool.h" />
     <ClInclude Include="src\Timer.h" />
+    <ClInclude Include="src\ui_gui.h">
+      <DependentUpon>src\gui.ui</DependentUpon>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="src\unrw_config.toml">
@@ -386,9 +271,6 @@ xcopy /y e:\DVR\bin\libwebpmuxd.dll "$(TargetDir)"</Command>
     <ResourceCompile Include="Unrawer.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
-    <Import Project="$(QtMsBuild)\qt.targets" />
-  </ImportGroup>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
