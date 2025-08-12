@@ -59,7 +59,7 @@
 #include <QtCore/QRandomGenerator>
 #include <QtCore/QRegularExpression>
 #include <QtCore/QUrl>
-#include <QtPlugin>
+#include <QtCore/QtPlugin>
 #include <QtGui/QDragEnterEvent>
 #include <QtGui/QDropEvent>
 #include <QtWidgets/QApplication>
