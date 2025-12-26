@@ -17,11 +17,13 @@
  */
 
 #pragma once
-#include "ui.h"
-#include <QtCore/QList>
-#include <QtCore/QUrl>
+#include <vector>
+#include <string>
+#include <functional>
 
-class MainWindow; // forward declaration
-class QProgressBar; // forward declaration
-
-bool doProcessing(QList<QUrl> URLs, QProgressBar* progressBar, MainWindow* mainWindow);
+// Replaced Qt types with std types
+// progressBar and mainWindow are removed for now;
+// in a real implementation, you might pass a std::function<void(float)> progressCallback
+bool
+doProcessing(const std::vector<std::string>& filePaths,
+             std::function<void(float, std::string)> progressCallback = nullptr);

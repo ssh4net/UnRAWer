@@ -16,11 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
-#include <tlhelp32.h>
-
+#include <thread>
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -45,34 +41,31 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <thread>
 #include <vector>
 
-#include <QtConcurrent/QtConcurrentRun>
-#include <QtCore/QDebug>
-#include <QtCore/QDir>
-#include <QtCore/QFileInfo>
-#include <QtCore/QFutureWatcher>
-#include <QtCore/QList>
-#include <QtCore/QMimeData>
-#include <QtCore/QProcess>
-#include <QtCore/QRandomGenerator>
-#include <QtCore/QRegularExpression>
-#include <QtCore/QUrl>
-#include <QtCore/QtPlugin>
-#include <QtGui/QDragEnterEvent>
-#include <QtGui/QDropEvent>
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QMainWindow>
-#include <QtWidgets/QMenu>
-#include <QtWidgets/QMenuBar>
-#include <QtWidgets/QProgressBar>
-#include <QtWidgets/QStatusBar>
-#include <QtWidgets/QtWidgets>
-#include <QtWidgets/QVBoxLayout>
+#ifdef _WIN32
+#    define WIN32_LEAN_AND_MEAN
+#    define NOMINMAX
+#    include <windows.h>
+#    include <tlhelp32.h>
+#    include <process.h>
+#else
+#    include <unistd.h>
+#    include <sys/types.h>
+#    include <signal.h>
+#endif
 
-Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
+// ImGui and backends
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
+// GLFW
+#include <GLFW/glfw3.h>
+
+// dnd_glfw
+#define DND_GLFW_IMPLEMENTATION
+#include <dnd_glfw.h>
 
 #include <OpenImageIO/color.h>
 #include <OpenImageIO/imagebuf.h>
@@ -82,13 +75,7 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #include <OpenImageIO/strutil.h>
 #include <OpenImageIO/sysutil.h>
 
-//#include <boost/log/expressions.hpp>
-//#include <boost/log/utility/setup.hpp>
-//#include <boost/log/utility/setup/console.hpp>
-//#include <boost/log/core.hpp>
-//#include <boost/log/trivial.hpp>
-
-#define SPDLOG_USE_STD_FORMAT
+//#define SPDLOG_USE_STD_FORMAT
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>

@@ -38,27 +38,33 @@
     <LinkIncremental>true</LinkIncremental>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
-    <ExternalIncludePath>e:\DVS\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
+    <ExternalIncludePath>w:\VisualStudio\dnd_glfw;e:\GH\imgui;e:\GH\imgui\backends;e:\DVS\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
     <LibraryPath>e:\DVS\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <SourcePath>E:\GH\LibRaw\src;E:\GH\OpenColorIO\src;E:\GH\OpenImageIO\src;$(SourcePath)</SourcePath>
     <LibraryPath>e:\DVS\lib;e:\DVS\lib;$(LibraryPath)</LibraryPath>
-    <ExternalIncludePath>e:\DVS\include;e:\GH\toml11\build\RELEASE\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
+    <ExternalIncludePath>w:\VisualStudio\dnd_glfw;e:\GH\imgui;e:\GH\imgui\backends;e:\DVS\include;e:\GH\toml11\build\RELEASE\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
-      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;JXL_STATIC_DEFINE=1;OPJ_STATIC;LIBDE265_STATIC_BUILD;KVZ_STATIC_LIB;LIBHEIF_STATIC_BUILD;LIBRAW_NODLL;OIIO_STATIC_DEFINE=1;PCRE2_STATIC;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_STATIC;QT_STATICPLUGIN</PreprocessorDefinitions>
+      <PreprocessorDefinitions> SPDLOG_USE_STD_FORMAT;WIN32_LEAN_AND_MEAN;WIN32_LEAN_AND_MEAN;JXL_STATIC_DEFINE=1;OPJ_STATIC;LIBDE265_STATIC_BUILD;KVZ_STATIC_LIB;LIBHEIF_STATIC_BUILD;LIBRAW_NODLL;OIIO_STATIC_DEFINE=1;PCRE2_STATIC;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_STATIC;QT_STATICPLUGIN</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>advapi32.lib;Authz.lib;bcrypt.lib;comdlg32.lib;crypt32.lib;d3d11.lib;d3d12.lib;D3d9.lib;Dwmapi.lib;dxgi.lib;dxguid.lib;aom.lib;brotlicommon.lib;brotlidec.lib;brotlienc.lib;bz2.lib;deflatestatic.lib;freetype.lib;gif.lib;heif.lib;hwy.lib;Iex-3_4.lib;IlmThread-3_4.lib;Imath-3_2.lib;jasper.lib;jpeg.lib;jxl_cms.lib;jxl_threads.lib;jxl.lib;libavcodec.lib;libavdevice.lib;libavfilter.lib;libavformat.lib;libavutil.lib;libde265.lib;libexpatMT.lib;libkvazaar.lib;libpng18_static.lib;libsharpyuv.lib;libswresample.lib;libswscale.lib;libwebp.lib;libwebpdemux.lib;lzma.lib;minizip-ng.lib;OpenColorIO.lib;OpenEXR-3_4.lib;OpenEXRCore-3_4.lib;OpenImageIO.lib;OpenImageIO_Util.lib;openjp2.lib;openjph.0.21.lib;pcre2-16-static.lib;Ptex.lib;pugixml.lib;pystring.lib;Qt6Core.lib;Qt6Gui.lib;Qt6Widgets.lib;raw_r.lib;raw.lib;tiff.lib;uhdr.lib;x265-static.lib;XMPCoreStaticRelease.lib;XMPFilesStaticRelease.lib;yaml-cpp.lib;zlib.lib;zstd_static.lib;e:\DVS\plugins\platforms\qwindows.lib;e:\GH\Little-CMS\Lib\ST\lcms2_static.lib;e:\VCS\packages\harfbuzz_x64-windows-static\lib\harfbuzz-subset.lib;e:\VCS\packages\harfbuzz_x64-windows-static\lib\harfbuzz.lib;gdi32.lib;Imm32.lib;kernel32.lib;mfplat.lib;mfuuid.lib;mpr.lib;ncrypt.lib;Ole32.lib;ole32.lib;Oleaut32.lib;psapi.lib;RuntimeObject.lib;secur32.lib;Setupapi.lib;Shcore.lib;shell32.lib;Shlwapi.lib;strmiids.lib;user32.lib;userenv.lib;Uuid.lib;UxTheme.lib;Version.lib;w:\VisualStudio\dng_sdk_1_7_1\dng_sdk\projects\win\x64\Release\dng_sdk.lib;WindowsApp.lib;windowscodecs.lib;Winmm.lib;winspool.lib;Ws2_32.lib;Wtsapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;Authz.lib;comdlg32.lib;crypt32.lib;d3d11.lib;d3d12.lib;D3d9.lib;Dwmapi.lib;dxgi.lib;dxguid.lib;aom.lib;brotlicommon.lib;brotlidec.lib;brotlienc.lib;bz2.lib;deflatestatic.lib;freetype.lib;gif.lib;heif.lib;hwy.lib;Iex-3_4.lib;IlmThread-3_4.lib;Imath-3_2.lib;jasper.lib;jpeg-static.lib;jxl_cms.lib;jxl_threads.lib;jxl.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;libde265.lib;libexpatMT.lib;libkvazaar.lib;libpng18_static.lib;libsharpyuv.lib;swresample.lib;swscale.lib;libwebp.lib;libwebpdecoder.lib;libwebpdemux.lib;libwebpmux.lib;lzma.lib;minizip-ng.lib;OpenColorIO.lib;OpenEXR-3_4.lib;OpenEXRCore-3_4.lib;OpenImageIO.lib;OpenImageIO_Util.lib;openjp2.lib;openjph.0.21.lib;glfw3.lib;opengl32.lib;libglew32.lib;Ptex.lib;pugixml.lib;pystring.lib;raw_r.lib;raw.lib;tiff.lib;uhdr.lib;x265-static.lib;XMPCoreStaticRelease.lib;XMPFilesStaticRelease.lib;yaml-cpp.lib;zlibstatic.lib;zstd_static.lib;e:\GH\Little-CMS\Lib\ST\lcms2_static.lib;harfbuzz-subset.lib;harfbuzz.lib;gdi32.lib;Imm32.lib;kernel32.lib;mfplat.lib;mfuuid.lib;mpr.lib;ncrypt.lib;Ole32.lib;ole32.lib;Oleaut32.lib;psapi.lib;RuntimeObject.lib;secur32.lib;Setupapi.lib;Shcore.lib;shell32.lib;Shlwapi.lib;strmiids.lib;user32.lib;userenv.lib;Uuid.lib;UxTheme.lib;Version.lib;w:\VisualStudio\dng_sdk_1_7_1\dng_sdk\projects\win\x64\Release\dng_sdk.lib;WindowsApp.lib;windowscodecs.lib;Winmm.lib;winspool.lib;Ws2_32.lib;Wtsapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
@@ -70,8 +76,8 @@
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>QT_QML_DEBUG;%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN;JXL_STATIC_DEFINE=1;OPJ_STATIC;LIBDE265_STATIC_BUILD;KVZ_STATIC_LIB;LIBHEIF_STATIC_BUILD;LIBRAW_NODLL;OIIO_STATIC_DEFINE=1;PCRE2_STATIC;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_STATIC;QT_STATICPLUGIN;QT_DEBUG_PLUGINS=1</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions>SPDLOG_USE_STD_FORMAT;WIN32_LEAN_AND_MEAN;QT_QML_DEBUG;JXL_STATIC_DEFINE=1;OPJ_STATIC;LIBDE265_STATIC_BUILD;KVZ_STATIC_LIB;LIBHEIF_STATIC_BUILD;LIBRAW_NODLL;OIIO_STATIC_DEFINE=1;PCRE2_STATIC;QT_CORE_LIB;QT_GUI_LIB;QT_WIDGETS_LIB;QT_STATIC;QT_STATICPLUGIN;QT_DEBUG_PLUGINS=1</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
@@ -81,7 +87,7 @@
     <Link />
     <Link />
     <Link>
-      <AdditionalDependencies>advapi32.lib;Authz.lib;bcrypt.lib;comdlg32.lib;crypt32.lib;d3d11.lib;d3d12.lib;D3d9.lib;Dwmapi.lib;dxgi.lib;dxguid.lib;aomd.lib;brotlicommond.lib;brotlidecd.lib;brotliencd.lib;bz2d.lib;deflatestaticd.lib;freetyped.lib;gifd.lib;heifd.lib;hwyd.lib;Iex-3_4_d.lib;IlmThread-3_4_d.lib;Imath-3_2_d.lib;jasperd.lib;jpegd.lib;jxl_cmsd.lib;jxl_threadsd.lib;jxld.lib;libavcodecd.lib;libavdeviced.lib;libavfilterd.lib;libavformatd.lib;libavutild.lib;libde265d.lib;libexpatdMT.lib;libkvazaard.lib;libpng18_staticd.lib;libsharpyuvd.lib;libswresampled.lib;libswscaled.lib;libwebpd.lib;libwebpdemuxd.lib;lzmad.lib;minizip-ngd.lib;OpenColorIO_d.lib;OpenEXR-3_4_d.lib;OpenEXRCore-3_4_d.lib;OpenImageIO_d.lib;OpenImageIO_Util_d.lib;openjp2d.lib;openjph.0.21_d.lib;pcre2-16-staticd.lib;Ptexd.lib;pugixmld.lib;pystringd.lib;Qt6Cored.lib;Qt6Guid.lib;Qt6Widgetsd.lib;raw_rd.lib;rawd.lib;tiffd.lib;uhdrd.lib;x265-staticd.lib;XMPCoreStaticDebug.lib;XMPFilesStaticDebug.lib;yaml-cppd.lib;zlibd.lib;zstd_staticd.lib;e:\DVS\plugins\platforms\qwindowsd.lib;e:\GH\Little-CMS\Lib\ST\lcms2_staticd.lib;e:\VCS\packages\harfbuzz_x64-windows-static\debug\lib\harfbuzz-subset.lib;e:\VCS\packages\harfbuzz_x64-windows-static\debug\lib\harfbuzz.lib;gdi32.lib;Imm32.lib;kernel32.lib;mfplat.lib;mfuuid.lib;mpr.lib;ncrypt.lib;Ole32.lib;ole32.lib;Oleaut32.lib;psapi.lib;RuntimeObject.lib;secur32.lib;Setupapi.lib;Shcore.lib;shell32.lib;Shlwapi.lib;strmiids.lib;user32.lib;userenv.lib;Uuid.lib;UxTheme.lib;Version.lib;w:\VisualStudio\dng_sdk_1_7_1\dng_sdk\projects\win\x64\Debug\dng_sdk.lib;WindowsApp.lib;windowscodecs.lib;Winmm.lib;winspool.lib;Ws2_32.lib;Wtsapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;Authz.lib;comdlg32.lib;crypt32.lib;d3d11.lib;d3d12.lib;D3d9.lib;Dwmapi.lib;dxgi.lib;dxguid.lib;aomd.lib;brotlicommond.lib;brotlidecd.lib;brotliencd.lib;bz2d.lib;deflatestaticd.lib;freetyped.lib;gifd.lib;heifd.lib;hwyd.lib;Iex-3_4_d.lib;IlmThread-3_4_d.lib;Imath-3_2_d.lib;jasperd.lib;jpeg-staticd.lib;jxl_cmsd.lib;jxl_threadsd.lib;jxld.lib;avcodecd.lib;avdeviced.lib;avfilterd.lib;avformatd.lib;avutild.lib;libde265d.lib;libexpatdMT.lib;libkvazaard.lib;libpng18_staticd.lib;libsharpyuvd.lib;swresampled.lib;swscaled.lib;libwebpd.lib;libwebpdecoderd.lib;libwebpdemuxd.lib;libwebpmuxd.lib;lzmad.lib;minizip-ngd.lib;OpenColorIO_d.lib;OpenEXR-3_4_d.lib;OpenEXRCore-3_4_d.lib;OpenImageIO_d.lib;OpenImageIO_Util_d.lib;openjp2d.lib;openjph.0.21d.lib;glfw3d.lib;opengl32.lib;libglew32.lib;Ptexd.lib;pugixmld.lib;pystringd.lib;raw_rd.lib;rawd.lib;tiffd.lib;uhdrd.lib;x265-staticd.lib;XMPCoreStaticDebug.lib;XMPFilesStaticDebug.lib;yaml-cppd.lib;zlibstaticd.lib;zstd_staticd.lib;e:\GH\Little-CMS\Lib\ST\lcms2_staticd.lib;harfbuzz-subsetd.lib;harfbuzzd.lib;gdi32.lib;Imm32.lib;kernel32.lib;mfplat.lib;mfuuid.lib;mpr.lib;ncrypt.lib;Ole32.lib;ole32.lib;Oleaut32.lib;psapi.lib;RuntimeObject.lib;secur32.lib;Setupapi.lib;Shcore.lib;shell32.lib;Shlwapi.lib;strmiids.lib;user32.lib;userenv.lib;Uuid.lib;UxTheme.lib;Version.lib;w:\VisualStudio\dng_sdk_1_7_1\dng_sdk\projects\win\x64\Debug\dng_sdk.lib;WindowsApp.lib;windowscodecs.lib;Winmm.lib;winspool.lib;Ws2_32.lib;Wtsapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions> /VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
@@ -120,38 +126,36 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="src\gui.qrc">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">C:\Qt\6.9.0\msvc2022_64\bin\rcc.exe -name gui "%(FullPath)" -o "$(ProjectDir)src\qrc_gui.cpp"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">C:\Qt\6.9.0\msvc2022_64\bin\rcc.exe -name gui "%(FullPath)" -o "$(ProjectDir)src\qrc_gui.cpp"</Command>
-      <Message Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">RCC %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">RCC %(Identity)</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">$(ProjectDir)src\qrc_gui.cpp</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">$(ProjectDir)src\qrc_gui.cpp</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="src\gui.ui">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">C:\Qt\6.9.0\msvc2022_64\bin\uic.exe "%(FullPath)" -o "$(ProjectDir)src\ui_gui.h"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">C:\Qt\6.9.0\msvc2022_64\bin\uic.exe "%(FullPath)" -o "$(ProjectDir)src\ui_gui.h"</Command>
-      <Message Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">UIC %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">UIC %(Identity)</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">$(ProjectDir)src\ui_gui.h</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">$(ProjectDir)src\ui_gui.h</Outputs>
-    </CustomBuild>
-    <CustomBuild Include="src\ui.h">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">C:\Qt\6.9.0\msvc2022_64\bin\moc.exe -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I"C:\Qt\6.9.0\msvc2022_64\include" -I"C:\Qt\6.9.0\msvc2022_64\include\QtCore" -I"C:\Qt\6.9.0\msvc2022_64\include\QtGui" -I"C:\Qt\6.9.0\msvc2022_64\include\QtWidgets" "%(FullPath)" -o "$(ProjectDir)src\moc_ui.cpp"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">C:\Qt\6.9.0\msvc2022_64\bin\moc.exe -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I"C:\Qt\6.9.0\msvc2022_64\include" -I"C:\Qt\6.9.0\msvc2022_64\include\QtCore" -I"C:\Qt\6.9.0\msvc2022_64\include\QtGui" -I"C:\Qt\6.9.0\msvc2022_64\include\QtWidgets" "%(FullPath)" -o "$(ProjectDir)src\moc_ui.cpp"</Command>
-      <Message Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">MOC %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">MOC %(Identity)</Message>
-      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">$(ProjectDir)src\moc_ui.cpp</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">$(ProjectDir)src\moc_ui.cpp</Outputs>
-    </CustomBuild>
+    <ClCompile Include="E:\GH\imgui\backends\imgui_impl_glfw.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="E:\GH\imgui\backends\imgui_impl_opengl3.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="E:\GH\imgui\imgui.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="E:\GH\imgui\imgui_draw.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="E:\GH\imgui\imgui_tables.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="E:\GH\imgui\imgui_widgets.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="src\cli.cpp" />
     <ClCompile Include="src\exif_parser.cpp" />
     <ClCompile Include="src\fileProcessor.cpp" />
+    <ClCompile Include="src\gui.cpp" />
     <ClCompile Include="src\imageio.cpp" />
-    <ClCompile Include="src\process.cpp" />
+    <ClCompile Include="src\do_process.cpp" />
     <ClCompile Include="src\processors.cpp" />
     <ClCompile Include="src\settings.cpp" />
     <ClCompile Include="src\pch.cpp">
@@ -160,35 +164,30 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="src\ui.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\moc_ui.cpp">
-      <DependentUpon>src\ui.h</DependentUpon>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="src\qrc_gui.cpp">
-      <DependentUpon>src\gui.qrc</DependentUpon>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="E:\GH\imgui\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="E:\GH\imgui\backends\imgui_impl_opengl3.h" />
+    <ClInclude Include="E:\GH\imgui\backends\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="E:\GH\imgui\imconfig.h" />
+    <ClInclude Include="E:\GH\imgui\imgui.h" />
+    <ClInclude Include="E:\GH\imgui\imgui_internal.h" />
+    <ClInclude Include="E:\GH\imgui\imstb_rectpack.h" />
+    <ClInclude Include="E:\GH\imgui\imstb_textedit.h" />
+    <ClInclude Include="E:\GH\imgui\imstb_truetype.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\cli.h" />
-    <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\exif_parser.h" />
     <ClInclude Include="src\fileProcessor.h" />
+    <ClInclude Include="src\gui.h" />
     <ClInclude Include="src\imageio.h" />
-    <ClInclude Include="src\process.h" />
+    <ClInclude Include="src\do_process.h" />
     <ClInclude Include="src\processors.h" />
     <ClInclude Include="src\settings.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\threadpool.h" />
     <ClInclude Include="src\Timer.h" />
-    <ClInclude Include="src\ui_gui.h">
-      <DependentUpon>src\gui.ui</DependentUpon>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="src\unrw_config.toml">

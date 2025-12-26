@@ -19,8 +19,7 @@
 
 #include <string>
 #include <vector>
-#include "ui.h"
-//#include "log.h"
+#include <map>
 
 #ifndef SETTINGS_H
 #define SETTINGS_H
@@ -31,6 +30,9 @@ typedef unsigned int uint;
 typedef unsigned long ulong;
 
 struct Settings {
+    // UI state
+    bool show_settings_window = true;
+
 	bool conEnable, useSbFldr, perCamera;
 	std::string pathPrefix;
 
@@ -41,7 +43,7 @@ struct Settings {
 	int bitDepth, defBDepth;
 	int quality;
 	int rawRot;
-	uint rawSpace, numThreads;
+	uint rawSpace, threads;
 	int dDemosaic;
 	float mltThreads;
 	uint verbosity;
@@ -65,13 +67,13 @@ struct Settings {
 	const std::string demosaic[15] = { "raw data", "none", "linear", "VNG", "PPG", "AHD", "DCB", "", "", "", "", "", "", "DHT", "AAHD"};
 
 	struct rawparms {
-		int use_camera_wb;
+		bool use_camera_wb;
 		int use_camera_matrix;
-		int use_auto_wb;
+		bool use_auto_wb;
 		int highlight;
 		float aber[2];
 		// int exp_correc;
-		int half_size;
+		bool half_size;
 		float denoise_thr;
 		int fbdd_noiserd; // Controls FBDD noise reduction before demosaic.
 		// 0 - do not use FBDD noise reduction
@@ -94,7 +96,7 @@ struct Settings {
 		crop_mode = 0;		// Crop mode: -1 - disabled, 0 - Smart, 1 - Force
 		dLutPreset = "";	// Default LUT preset, top one
 
-		numThreads = 5;		// Number of threads: 0 - auto, >0 - number of threads
+		threads = 5;		// Number of threads: 0 - auto, >0 - number of threads
 		rangeMode = 0;		// Float type: 0 - unsigned, 1 - signed, 2 - unsigned -> signed, 3 - signed -> unsigned
 		fileFormat = -1;	// File format: -1 - original, 0 - TIFF, 1 - OpenEXR, 2 - PNG, 3 - JPEG, 4 - JPEG-2000, 5 - JPEG-XL, 6 - HEIC, 7 - PPM
 		defFormat = 0;		// Default file format = TIFF
@@ -116,8 +118,8 @@ struct Settings {
 
 		denoise_mode = 1;	// 0 - disabled, 1 - wavelength, 2 - fbdd, 3 - both
 
-		rawParms.use_camera_wb = 1;		// If possible, use the white balance from the camera. 
-		rawParms.use_auto_wb = 0;		// use auto white balance.
+		rawParms.use_camera_wb = true;		// If possible, use the white balance from the camera. 
+		rawParms.use_auto_wb = false;		// use auto white balance.
 		rawParms.use_camera_matrix = 1;
 		// 0: do not use embedded color profile
 		// 1 (default) : use embedded color profile(if present) for DNG files(always); for other files only if use_camera_wb is set;
@@ -126,7 +128,7 @@ struct Settings {
 		rawParms.aber[0] = 1.0f;
 		rawParms.aber[1] = 1.0f;
 		//rawParms.exp_correc = 1;
-		rawParms.half_size = 0;			// Half-size raw image (1=yes). For some formats, it affects RAW data reading.
+		rawParms.half_size = false;			// Half-size raw image (1=yes). For some formats, it affects RAW data reading.
 		rawParms.denoise_thr = 0.0f;	// Threshold for wavelet denoising
 	}
 

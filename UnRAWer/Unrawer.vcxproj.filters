@@ -9,10 +9,6 @@
       <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
       <Extensions>ui</Extensions>
     </Filter>
-    <Filter Include="Translation Files">
-      <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
-      <Extensions>ts</Extensions>
-    </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>qml;cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
@@ -20,15 +16,15 @@
     <Filter Include="headers">
       <UniqueIdentifier>{0a9acd6a-c149-4d31-8333-40925a835eff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="imgui">
+      <UniqueIdentifier>{f6db6bbd-a185-4c35-bc44-ca3a79fc3fcc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\ui.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\process.cpp">
+    <ClCompile Include="src\do_process.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\pch.cpp">
@@ -52,6 +48,27 @@
     <ClCompile Include="src\cli.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\gui.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\GH\imgui\imgui.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\GH\imgui\imgui_draw.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\GH\imgui\imgui_tables.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\GH\imgui\imgui_widgets.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\GH\imgui\backends\imgui_impl_opengl3.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\GH\imgui\backends\imgui_impl_glfw.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -60,7 +77,7 @@
     <ClInclude Include="src\imageio.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="src\process.h">
+    <ClInclude Include="src\do_process.h">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="src\processors.h">
@@ -78,9 +95,6 @@
     <ClInclude Include="src\fileProcessor.h">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="src\Common.h">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="src\exif_parser.h">
       <Filter>headers</Filter>
     </ClInclude>
@@ -89,6 +103,36 @@
     </ClInclude>
     <ClInclude Include="src\threadpool.h">
       <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gui.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\GH\imgui\imconfig.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\GH\imgui\imgui.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\GH\imgui\imgui_internal.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\GH\imgui\imstb_rectpack.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\GH\imgui\imstb_textedit.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\GH\imgui\imstb_truetype.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\GH\imgui\backends\imgui_impl_opengl3.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\GH\imgui\backends\imgui_impl_opengl3_loader.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\GH\imgui\backends\imgui_impl_glfw.h">
+      <Filter>imgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -100,14 +144,5 @@
     <ResourceCompile Include="Unrawer.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="src\gui.qrc">
-      <Filter>Resource Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="src\gui.ui">
-      <Filter>Form Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="src\ui.h" />
   </ItemGroup>
 </Project>

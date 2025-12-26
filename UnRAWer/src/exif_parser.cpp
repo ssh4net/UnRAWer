@@ -19,109 +19,119 @@
 
 #include "exif_parser.h"
 
-template<typename T> static bool allval(OIIO::cspan<T> d, T v = T(0))
+template<typename T>
+static bool
+allval(OIIO::cspan<T> d, T v = T(0))
 {
-	return std::all_of(d.begin(), d.end(), [&](const T& a) { return a == v; });
+    return std::all_of(d.begin(), d.end(), [&](const T& a) { return a == v; });
 }
 
-static std::string prefixedname(OIIO::string_view prefix, std::string& name)
+static std::string
+prefixedname(OIIO::string_view prefix, std::string& name)
 {
-	return prefix.size() ? (std::string(prefix) + ':' + name) : name;
+    return prefix.size() ? (std::string(prefix) + ':' + name) : name;
 }
 
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, int data, bool force = true,
-    int ignval = 0)
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, int data, bool force = true, int ignval = 0)
 {
     if (force || data != ignval)
         m_spec->attribute(prefixedname(prefix, name), data);
 }
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, float data,
-    bool force = true, float ignval = 0)
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, float data, bool force = true,
+    float ignval = 0)
 {
     if (force || data != ignval)
         m_spec->attribute(prefixedname(prefix, name), data);
 }
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::string_view data,
-    bool force = true, int /*ignval*/ = 0)
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::string_view data, bool force = true,
+    int /*ignval*/ = 0)
 {
     if (force || (data.size() && data[0]))
         m_spec->attribute(prefixedname(prefix, name), data);
 }
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, unsigned long long data,
-    bool force = true, unsigned long long ignval = 0)
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, unsigned long long data, bool force = true,
+    unsigned long long ignval = 0)
 {
     if (force || data != ignval)
-        m_spec->attribute(prefixedname(prefix, name), OIIO::TypeDesc::UINT64,
-            &data);
+        m_spec->attribute(prefixedname(prefix, name), OIIO::TypeDesc::UINT64, &data);
 }
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, unsigned int data,
-    bool force = true, int ignval = 0)
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, unsigned int data, bool force = true,
+    int ignval = 0)
 {
     add(m_spec, prefix, name, (int)data, force, ignval);
 }
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, unsigned short data,
-    bool force = true, int ignval = 0)
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, unsigned short data, bool force = true,
+    int ignval = 0)
 {
     add(m_spec, prefix, name, (int)data, force, ignval);
 }
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, unsigned char data,
-    bool force = true, int ignval = 0)
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, unsigned char data, bool force = true,
+    int ignval = 0)
 {
     add(m_spec, prefix, name, (int)data, force, ignval);
 }
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, double data,
-    bool force = true, float ignval = 0)
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, double data, bool force = true,
+    float ignval = 0)
 {
     add(m_spec, prefix, name, float(data), force, ignval);
 }
 
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::cspan<int> data,
-    bool force = true, int ignval = 0)
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::cspan<int> data, bool force = true,
+    int ignval = 0)
 {
     if (force || !allval(data, ignval)) {
         int size = data.size() > 1 ? data.size() : 0;
-        m_spec->attribute(prefixedname(prefix, name),
-            OIIO::TypeDesc(OIIO::TypeDesc::INT, size), data.data());
+        m_spec->attribute(prefixedname(prefix, name), OIIO::TypeDesc(OIIO::TypeDesc::INT, size), data.data());
     }
 }
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::cspan<short> data,
-    bool force = true, short ignval = 0)
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::cspan<short> data, bool force = true,
+    short ignval = 0)
 {
     if (force || !allval(data, ignval)) {
         int size = data.size() > 1 ? data.size() : 0;
-        m_spec->attribute(prefixedname(prefix, name),
-            OIIO::TypeDesc(OIIO::TypeDesc::INT16, size), data.data());
+        m_spec->attribute(prefixedname(prefix, name), OIIO::TypeDesc(OIIO::TypeDesc::INT16, size), data.data());
     }
 }
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::cspan<unsigned short> data,
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::cspan<unsigned short> data,
     bool force = true, unsigned short ignval = 0)
 {
     if (force || !allval(data, ignval)) {
         int size = data.size() > 1 ? data.size() : 0;
-        m_spec->attribute(prefixedname(prefix, name),
-            OIIO::TypeDesc(OIIO::TypeDesc::UINT16, size), data.data());
+        m_spec->attribute(prefixedname(prefix, name), OIIO::TypeDesc(OIIO::TypeDesc::UINT16, size), data.data());
     }
 }
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::cspan<unsigned char> data,
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::cspan<unsigned char> data,
     bool force = true, unsigned char ignval = 0)
 {
     if (force || !allval(data, ignval)) {
         int size = data.size() > 1 ? data.size() : 0;
-        m_spec->attribute(prefixedname(prefix, name),
-            OIIO::TypeDesc(OIIO::TypeDesc::UINT8, size), data.data());
+        m_spec->attribute(prefixedname(prefix, name), OIIO::TypeDesc(OIIO::TypeDesc::UINT8, size), data.data());
     }
 }
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::cspan<float> data,
-    bool force = true, float ignval = 0)
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::cspan<float> data, bool force = true,
+    float ignval = 0)
 {
     if (force || !allval(data, ignval)) {
         int size = data.size() > 1 ? data.size() : 0;
-        m_spec->attribute(prefixedname(prefix, name),
-            OIIO::TypeDesc(OIIO::TypeDesc::FLOAT, size), data.data());
+        m_spec->attribute(prefixedname(prefix, name), OIIO::TypeDesc(OIIO::TypeDesc::FLOAT, size), data.data());
     }
 }
-void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::cspan<double> data,
-    bool force = true, float ignval = 0)
+void
+add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OIIO::cspan<double> data, bool force = true,
+    float ignval = 0)
 {
     float* d = OIIO_ALLOCA(float, data.size());
     for (auto i = 0; i < data.size(); ++i)
@@ -129,8 +139,10 @@ void add(OIIO::ImageSpec* m_spec, OIIO::string_view prefix, std::string name, OI
     add(m_spec, prefix, name, OIIO::cspan<float>(d, data.size()), force, ignval);
 }
 
-bool get_soft(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec) {
-	spdlog::trace("EXIF::get_soft()");
+bool
+get_soft(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
+{
+    spdlog::trace("EXIF::get_soft()");
 
     const libraw_image_sizes_t& sizes(m_processor->imgdata.sizes);
     m_spec.attribute("PixelAspectRatio", (float)sizes.pixel_aspect);
@@ -141,8 +153,7 @@ bool get_soft(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::I
     if (idata.make[0]) {
         m_make = std::string(idata.make);
         m_spec.attribute("Make", idata.make);
-    }
-    else {
+    } else {
         m_make.clear();
     }
     if (idata.model[0])
@@ -204,17 +215,18 @@ bool get_soft(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::I
     add(&m_spec, "Exif", "CameraElevationAngle", common.exifCameraElevationAngle, false, 0.0f);
     // float real_ISO;
 
-	return true;
+    return true;
 }
 
-bool EXIF::get_exif(std::unique_ptr<LibRaw>& m_processor, OIIO::ImageSpec& inp_spec)
+bool
+EXIF::get_exif(std::unique_ptr<LibRaw>& m_processor, OIIO::ImageSpec& inp_spec)
 {
-	spdlog::trace("EXIF::get_exif()");
+    spdlog::trace("EXIF::get_exif()");
 
-	std::string m_make;
+    std::string m_make;
 
-	if (!get_soft(m_processor, m_make, inp_spec))
-		return false;
+    if (!get_soft(m_processor, m_make, inp_spec))
+        return false;
 
     EXIF::get_lensinfo(m_processor, m_make, inp_spec);
     EXIF::get_shootinginfo(m_processor, m_make, inp_spec);
@@ -232,26 +244,27 @@ bool EXIF::get_exif(std::unique_ptr<LibRaw>& m_processor, OIIO::ImageSpec& inp_s
     return true;
 };
 
-void EXIF::get_makernotes(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec) 
+void
+EXIF::get_makernotes(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	spdlog::trace("EXIF::get_makernotes()");
+    spdlog::trace("EXIF::get_makernotes()");
 
-	if (OIIO::Strutil::istarts_with(m_make, "Canon"))
-		get_makernotes_canon(m_processor, m_make, m_spec);
-	else if (OIIO::Strutil::istarts_with(m_make, "Nikon"))
-		get_makernotes_nikon(m_processor, m_make, m_spec);
-	else if (OIIO::Strutil::istarts_with(m_make, "Olympus"))
-		get_makernotes_olympus(m_processor, m_make, m_spec);
-	else if (OIIO::Strutil::istarts_with(m_make, "Fuji"))
-		get_makernotes_fuji(m_processor, m_make, m_spec);
-	else if (OIIO::Strutil::istarts_with(m_make, "Kodak"))
-		get_makernotes_kodak(m_processor, m_make, m_spec);
-	else if (OIIO::Strutil::istarts_with(m_make, "Panasonic"))
-		get_makernotes_panasonic(m_processor, m_make, m_spec);
-	else if (OIIO::Strutil::istarts_with(m_make, "Pentax"))
-		get_makernotes_pentax(m_processor, m_make, m_spec);
-	else if (OIIO::Strutil::istarts_with(m_make, "Sony"))
-		get_makernotes_sony(m_processor, m_make, m_spec);
+    if (OIIO::Strutil::istarts_with(m_make, "Canon"))
+        get_makernotes_canon(m_processor, m_make, m_spec);
+    else if (OIIO::Strutil::istarts_with(m_make, "Nikon"))
+        get_makernotes_nikon(m_processor, m_make, m_spec);
+    else if (OIIO::Strutil::istarts_with(m_make, "Olympus"))
+        get_makernotes_olympus(m_processor, m_make, m_spec);
+    else if (OIIO::Strutil::istarts_with(m_make, "Fuji"))
+        get_makernotes_fuji(m_processor, m_make, m_spec);
+    else if (OIIO::Strutil::istarts_with(m_make, "Kodak"))
+        get_makernotes_kodak(m_processor, m_make, m_spec);
+    else if (OIIO::Strutil::istarts_with(m_make, "Panasonic"))
+        get_makernotes_panasonic(m_processor, m_make, m_spec);
+    else if (OIIO::Strutil::istarts_with(m_make, "Pentax"))
+        get_makernotes_pentax(m_processor, m_make, m_spec);
+    else if (OIIO::Strutil::istarts_with(m_make, "Sony"))
+        get_makernotes_sony(m_processor, m_make, m_spec);
 }
 
 // Helper macro: add metadata with the same name as mn.name, but don't
@@ -261,9 +274,10 @@ void EXIF::get_makernotes(std::unique_ptr<LibRaw>& m_processor, std::string& m_m
 // Helper: add metadata, no matter what the value.
 #define MAKERF(name) add(&m_spec, m_make, #name, mn.name, true)
 
-void EXIF::get_makernotes_canon(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
+void
+EXIF::get_makernotes_canon(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	spdlog::trace("EXIF::get_makernotes_canon()");
+    spdlog::trace("EXIF::get_makernotes_canon()");
 
     auto const& mn(m_processor->imgdata.makernotes.canon);
     // MAKER (CanonColorDataVer, 0);
@@ -301,9 +315,10 @@ void EXIF::get_makernotes_canon(std::unique_ptr<LibRaw>& m_processor, std::strin
     MAKER(AFMicroAdjValue, 0.0f);
 }
 
-void EXIF::get_makernotes_nikon(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
+void
+EXIF::get_makernotes_nikon(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	spdlog::trace("EXIF::get_makernotes_nikon()");
+    spdlog::trace("EXIF::get_makernotes_nikon()");
 
     auto const& mn(m_processor->imgdata.makernotes.nikon);
     MAKER(ExposureBracketValue, 0.0f);
@@ -342,9 +357,10 @@ void EXIF::get_makernotes_nikon(std::unique_ptr<LibRaw>& m_processor, std::strin
     MAKERF(AFFineTuneAdj);
 }
 
-void EXIF::get_makernotes_olympus(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
+void
+EXIF::get_makernotes_olympus(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	spdlog::trace("EXIF::get_makernotes_olympus()");
+    spdlog::trace("EXIF::get_makernotes_olympus()");
 
     auto const& mn(m_processor->imgdata.makernotes.olympus);
     MAKERF(SensorCalibration);
@@ -361,9 +377,10 @@ void EXIF::get_makernotes_olympus(std::unique_ptr<LibRaw>& m_processor, std::str
         MAKERF(AFFineTuneAdj);
 }
 
-void EXIF::get_makernotes_panasonic(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
+void
+EXIF::get_makernotes_panasonic(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	spdlog::trace("EXIF::get_makernotes_panasonic()");
+    spdlog::trace("EXIF::get_makernotes_panasonic()");
 
     auto const& mn(m_processor->imgdata.makernotes.panasonic);
     MAKERF(Compression);
@@ -371,9 +388,10 @@ void EXIF::get_makernotes_panasonic(std::unique_ptr<LibRaw>& m_processor, std::s
     MAKERF(BlackLevel);
 }
 
-void EXIF::get_makernotes_pentax(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
+void
+EXIF::get_makernotes_pentax(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	spdlog::trace("EXIF::get_makernotes_pentax()");
+    spdlog::trace("EXIF::get_makernotes_pentax()");
 
     auto const& mn(m_processor->imgdata.makernotes.pentax);
     MAKERF(FocusMode);
@@ -384,9 +402,10 @@ void EXIF::get_makernotes_pentax(std::unique_ptr<LibRaw>& m_processor, std::stri
     MAKERF(AFAdjustment);
 }
 
-void EXIF::get_makernotes_kodak(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
+void
+EXIF::get_makernotes_kodak(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	spdlog::trace("EXIF::get_makernotes_kodak()");
+    spdlog::trace("EXIF::get_makernotes_kodak()");
 
     auto const& mn(m_processor->imgdata.makernotes.kodak);
     MAKERF(BlackLevelTop);
@@ -403,9 +422,10 @@ void EXIF::get_makernotes_kodak(std::unique_ptr<LibRaw>& m_processor, std::strin
     // float romm_camAuto[3][3];
 }
 
-void EXIF::get_makernotes_fuji(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
+void
+EXIF::get_makernotes_fuji(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	spdlog::trace("EXIF::get_makernotes_fuji()");
+    spdlog::trace("EXIF::get_makernotes_fuji()");
 
     auto const& mn(m_processor->imgdata.makernotes.fuji);
 
@@ -428,9 +448,10 @@ void EXIF::get_makernotes_fuji(std::unique_ptr<LibRaw>& m_processor, std::string
     MAKERF(Rating);
 }
 
-void EXIF::get_makernotes_sony(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
+void
+EXIF::get_makernotes_sony(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	spdlog::trace("EXIF::get_makernotes_sony()");
+    spdlog::trace("EXIF::get_makernotes_sony()");
 
     auto const& mn(m_processor->imgdata.makernotes.sony);
 
@@ -451,18 +472,18 @@ void EXIF::get_makernotes_sony(std::unique_ptr<LibRaw>& m_processor, std::string
     MAKERF(firmware);
     MAKERF(ImageCount3_offset);
     MAKER(ImageCount3, 0);
-    if (mn.ElectronicFrontCurtainShutter == 0
-        || mn.ElectronicFrontCurtainShutter == 1)
+    if (mn.ElectronicFrontCurtainShutter == 0 || mn.ElectronicFrontCurtainShutter == 1)
         MAKERF(ElectronicFrontCurtainShutter);
     MAKER(MeteringMode2, 0);
     add(&m_spec, m_make, "DateTime", mn.SonyDateTime);
     // MAKERF(TimeStamp);  Removed after 0.19, is in 'other'
     MAKER(ShotNumberSincePowerUp, 0);
 }
- 
-void EXIF::get_lensinfo(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
+
+void
+EXIF::get_lensinfo(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	spdlog::trace("EXIF::get_lensinfo()");
+    spdlog::trace("EXIF::get_lensinfo()");
 
     {
         auto const& mn(m_processor->imgdata.lens);
@@ -532,9 +553,10 @@ void EXIF::get_lensinfo(std::unique_ptr<LibRaw>& m_processor, std::string& m_mak
     }
 }
 
-void EXIF::get_shootinginfo(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
+void
+EXIF::get_shootinginfo(std::unique_ptr<LibRaw>& m_processor, std::string& m_make, OIIO::ImageSpec& m_spec)
 {
-	spdlog::trace("EXIF::get_shootinginfo()");
+    spdlog::trace("EXIF::get_shootinginfo()");
 
     auto const& mn(m_processor->imgdata.shootinginfo);
     MAKER(DriveMode, -1);
@@ -547,16 +569,21 @@ void EXIF::get_shootinginfo(std::unique_ptr<LibRaw>& m_processor, std::string& m
     MAKER(InternalBodySerial, 0);
 }
 
-void EXIF::get_colorinfo(std::unique_ptr<LibRaw>& m_processor, OIIO::ImageSpec& m_spec)
+void
+EXIF::get_colorinfo(std::unique_ptr<LibRaw>& m_processor, OIIO::ImageSpec& m_spec)
 {
-	spdlog::trace("EXIF::get_colorinfo()");
+    spdlog::trace("EXIF::get_colorinfo()");
 
-    add(&m_spec, "raw", "pre_mul", OIIO::cspan<float>(&(m_processor->imgdata.color.pre_mul[0]),
-        &(m_processor->imgdata.color.pre_mul[4])), false, 0.f);
-    add(&m_spec, "raw", "cam_mul", OIIO::cspan<float>(&(m_processor->imgdata.color.cam_mul[0]),
-        &(m_processor->imgdata.color.cam_mul[4])), false, 0.f);
-    add(&m_spec, "raw", "rgb_cam", OIIO::cspan<float>(&(m_processor->imgdata.color.rgb_cam[0][0]),
-        &(m_processor->imgdata.color.rgb_cam[2][4])), false, 0.f);
-    add(&m_spec, "raw", "cam_xyz", OIIO::cspan<float>(&(m_processor->imgdata.color.cam_xyz[0][0]),
-            &(m_processor->imgdata.color.cam_xyz[3][3])), false, 0.f);
+    add(&m_spec, "raw", "pre_mul",
+        OIIO::cspan<float>(&(m_processor->imgdata.color.pre_mul[0]), &(m_processor->imgdata.color.pre_mul[4])), false,
+        0.f);
+    add(&m_spec, "raw", "cam_mul",
+        OIIO::cspan<float>(&(m_processor->imgdata.color.cam_mul[0]), &(m_processor->imgdata.color.cam_mul[4])), false,
+        0.f);
+    add(&m_spec, "raw", "rgb_cam",
+        OIIO::cspan<float>(&(m_processor->imgdata.color.rgb_cam[0][0]), &(m_processor->imgdata.color.rgb_cam[2][4])),
+        false, 0.f);
+    add(&m_spec, "raw", "cam_xyz",
+        OIIO::cspan<float>(&(m_processor->imgdata.color.cam_xyz[0][0]), &(m_processor->imgdata.color.cam_xyz[3][3])),
+        false, 0.f);
 }

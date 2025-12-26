@@ -19,76 +19,85 @@
 
 #include "pch.h"
 
-#include "ui.h"
 #include "cli.h"
 #include "settings.h"
-#include "process.h"
+#include "do_process.h"
 
 // Check if the string ends with the given suffix (case-insensitive)
-bool endsWith(const std::string& str, const std::string& suffix) {
-    if (str.size() < suffix.size()) return false;
+bool
+endsWith(const std::string& str, const std::string& suffix)
+{
+    if (str.size() < suffix.size())
+        return false;
     return std::equal(suffix.rbegin(), suffix.rend(), str.rbegin(),
-        [](char a, char b) { return std::tolower(a) == std::tolower(b); });
+                      [](char a, char b) { return std::tolower(a) == std::tolower(b); });
 }
 
 // Check if the string starts with the given prefix (case-insensitive)
-bool startsWith(const std::string& str, const std::string& prefix) {
-    if (str.size() < prefix.size()) return false;
+bool
+startsWith(const std::string& str, const std::string& prefix)
+{
+    if (str.size() < prefix.size())
+        return false;
     return std::equal(prefix.begin(), prefix.end(), str.begin(),
-        [](char a, char b) { return std::tolower(a) == std::tolower(b); });
+                      [](char a, char b) { return std::tolower(a) == std::tolower(b); });
 }
 
 // Check if the string is a batch file - ends with ".txt"
-bool isBatchFile(const std::string& str) {
+bool
+isBatchFile(const std::string& str)
+{
     const std::string suffix = ".txt";
     return endsWith(str, suffix);
 }
 
 // Read the batch file and return the list of URLs
-std::vector<std::string> readBatchFile(const std::string& file) {
-	std::vector<std::string> URLs;
-	std::ifstream batchFile(file);
-	if (!batchFile.is_open()) {
-		std::cerr << "Error: Can not open the batch file [" << file << "]" << std::endl;
-		return URLs;
-	}
+std::vector<std::string>
+readBatchFile(const std::string& file)
+{
+    std::vector<std::string> URLs;
+    std::ifstream batchFile(file);
+    if (!batchFile.is_open()) {
+        std::cerr << "Error: Can not open the batch file [" << file << "]" << std::endl;
+        return URLs;
+    }
 
-	std::string line;
-	while (std::getline(batchFile, line)) {
-		URLs.push_back(line);
-	}
+    std::string line;
+    while (std::getline(batchFile, line)) {
+        URLs.push_back(line);
+    }
 
-	return URLs;
+    return URLs;
 }
 
-int cli_main(int argc, char* argv[]) {
-	int i = 1;
-	int verbosity = 3;
+int
+cli_main(int argc, char* argv[])
+{
+    int i         = 1;
+    int verbosity = 3;
 
     const std::string shortFlag = "-v=";
-    const std::string longFlag = "-verbose=";
-	if (std::string(argv[1]).find(shortFlag) != std::string::npos || std::string(argv[1]).find(longFlag) != std::string::npos) {
-		//verbosity = std::stoi(std::string(argv[1]).substr(std::string(argv[1]).find("=") + 1));
-		//i++;
-		if (std::string(argv[1]).find("=") != std::string::npos) {
-			verbosity = std::stoi(std::string(argv[1]).substr(std::string(argv[1]).find("=") + 1));
-			i++;
+    const std::string longFlag  = "-verbose=";
+    if (std::string(argv[1]).find(shortFlag) != std::string::npos
+        || std::string(argv[1]).find(longFlag) != std::string::npos) {
+        if (std::string(argv[1]).find("=") != std::string::npos) {
+            verbosity = std::stoi(std::string(argv[1]).substr(std::string(argv[1]).find("=") + 1));
+            i++;
+        } else {
+            std::cerr << "Error: Invalid verbosity flag. Using default verbosity." << std::endl;
         }
-        else {
-			std::cerr << "Error: Invalid verbosity flag. Using default verbosity." << std::endl;
-        }
-	}
-	std::cout << "Verbosity: " << verbosity << std::endl;
-	spdlog::set_level(static_cast<spdlog::level::level_enum>(5 - verbosity));
-	//Log_SetVerbosity(std::max(0, std::min(verbosity, 5)));
-////////////////////////////////////////////////////
+    }
+    std::cout << "Verbosity: " << verbosity << std::endl;
+    spdlog::set_level(static_cast<spdlog::level::level_enum>(5 - verbosity));
+
+    ////////////////////////////////////////////////////
 
     const std::string configSuffix = ".toml";
 
     // Variables to store categorized arguments
     std::string configFile = "";
     std::vector<std::string> batchFiles;
-	QList<QUrl> URLs;
+    std::vector<std::string> filePaths;
 
     // Iterate through command-line arguments
     for (; i < argc; ++i) {
@@ -97,26 +106,22 @@ int cli_main(int argc, char* argv[]) {
         if (endsWith(arg, configSuffix)) {
             if (configFile.empty()) {
                 configFile = arg;
+            } else {
+                std::cerr << "Warning: Multiple config files provided. Using the first one: " << configFile
+                          << std::endl;
             }
-            else {
-                std::cerr << "Warning: Multiple config files provided. Using the first one: "
-                    << configFile << std::endl;
-            }
-        }
-        else if (isBatchFile(arg)) {
+        } else if (isBatchFile(arg)) {
             batchFiles.push_back(arg);
-        }
-        else {
-			URLs.append(QUrl::fromLocalFile(QString(argv[i])));
+        } else {
+            filePaths.push_back(arg);
         }
     }
 
-	// Output the categorized arguments
+    // Output the categorized arguments
     std::cout << "Config File: ";
     if (!configFile.empty()) {
         std::cout << configFile << std::endl;
-    }
-    else {
+    } else {
         std::cout << "Use default settings" << std::endl;
         configFile = "unrw_config.toml";
     }
@@ -124,44 +129,32 @@ int cli_main(int argc, char* argv[]) {
     std::cout << "Batch Files (" << batchFiles.size() << "):" << std::endl;
     for (const auto& file : batchFiles) {
         std::cout << "  " << file << std::endl;
-		for (const auto& url : readBatchFile(file)) {
-			URLs.append(QUrl::fromLocalFile(QString(url.c_str())));
-		}
+        for (const auto& url : readBatchFile(file)) {
+            filePaths.push_back(url);
+        }
     }
 
-	std::cout << "URLs/Paths (" << URLs.size() << "):" << std::endl;
-	for (const auto& url : URLs) {
-		std::cout << "  " << url.toLocalFile().toStdString() << std::endl;
-	}
+    std::cout << "URLs/Paths (" << filePaths.size() << "):" << std::endl;
+    for (const auto& url : filePaths) {
+        std::cout << "  " << url << std::endl;
+    }
 
-	// Load settings from the config file
-	if (!loadSettings(settings, configFile)) {
-		std::cerr << "Error: Can not load [" << configFile << "]. Using default settings." << std::endl;
-		settings.reSettings();
-	}
+    // Load settings from the config file
+    if (!loadSettings(settings, configFile)) {
+        std::cerr << "Error: Can not load [" << configFile << "]. Using default settings." << std::endl;
+        settings.reSettings();
+    }
 
-	if (verbosity > 2) {
-		printSettings(settings);
-	}
+    if (verbosity > 2) {
+        printSettings(settings);
+    }
 
-	//Log_SetVerbosity(std::max(0, std::min(verbosity, 5)));
-	spdlog::set_level(static_cast<spdlog::level::level_enum>(5 - settings.verbosity));
+    spdlog::set_level(static_cast<spdlog::level::level_enum>(5 - settings.verbosity));
 
-	//// construct URLs from command line arguments
-	//for (; i < argc; i++) {
-	//	URLs.append(QUrl::fromLocalFile(QString(argv[i])));
-	//}
-	QApplication app(argc, argv);
-
-	DummyWindow dummyWindow;
-	DummyProgressBar dummyProgressBar;
-
-	bool ok = doProcessing(URLs, &dummyProgressBar, &dummyWindow);
-	if (!ok) {
-		std::cerr << "Error: No raw files found!" << std::endl;
-		return 1;
-	}
-	return 0;
+    bool ok = doProcessing(filePaths);
+    if (!ok) {
+        std::cerr << "Error: No raw files found!" << std::endl;
+        return 1;
+    }
+    return 0;
 }
-
-/////////////////////////////////////////////////////

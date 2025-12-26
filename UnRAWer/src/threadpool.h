@@ -30,7 +30,7 @@
 //#include <thread>
 
 #ifndef SAFEQUEUE_H
-#define SAFEQUEUE_H
+#    define SAFEQUEUE_H
 
 //template <typename T>
 //class SafeQueue {
@@ -69,8 +69,7 @@
 //
 
 //};
-template <typename T>
-class SafeQueue {
+template<typename T> class SafeQueue {
 private:
     std::queue<T> queue;
     std::mutex mtx;
@@ -78,11 +77,18 @@ private:
     int maxSize;
 
 public:
-    SafeQueue() : maxSize(-1) {}
+    SafeQueue()
+        : maxSize(-1)
+    {
+    }
 
-    SafeQueue(int maxSize) : maxSize(maxSize) {}
+    SafeQueue(int maxSize)
+        : maxSize(maxSize)
+    {
+    }
 
-    T pop() {
+    T pop()
+    {
         std::unique_lock<std::mutex> lock(mtx);
         while (queue.empty()) {
             cv.wait(lock);
@@ -92,7 +98,8 @@ public:
         return item;
     }
 
-    void push(const T& item) {
+    void push(const T& item)
+    {
         std::unique_lock<std::mutex> lock(mtx);
         while (maxSize != -1 && queue.size() >= maxSize) {
             cv.wait(lock);
@@ -103,7 +110,8 @@ public:
         //cv.notify_one();
     }
 
-    std::optional<T> try_pop() {
+    std::optional<T> try_pop()
+    {
         std::unique_lock<std::mutex> lock(mtx);
         if (queue.empty()) {
             return {};
@@ -113,7 +121,8 @@ public:
         return item;
     }
 
-    bool try_push(const T& item) {
+    bool try_push(const T& item)
+    {
         std::unique_lock<std::mutex> lock(mtx);
         if (maxSize != -1 && queue.size() >= maxSize) {
             return false;
@@ -126,25 +135,26 @@ public:
     }
 
 
-    bool isEmpty() {
+    bool isEmpty()
+    {
         std::unique_lock<std::mutex> lock(mtx);
         return queue.empty();
     }
 };
 
-#endif // SAFEQUEUE_H
+#endif  // SAFEQUEUE_H
 
 #ifndef THREADPOOL_H
-#define THREADPOOL_H
+#    define THREADPOOL_H
 
 class ThreadPool {
 public:
     // Constructor: Initializes the thread pool with a given number of threads and max queue size
     ThreadPool(size_t threads, size_t maxQueueSize)
-        : stop(false),
-        working(0),
-        maxQueueSize(maxQueueSize),
-        tasks_count(0)
+        : stop(false)
+        , working(0)
+        , maxQueueSize(maxQueueSize)
+        , tasks_count(0)
     {
         // Create worker threads
         for (size_t i = 0; i < threads; ++i) {
@@ -155,12 +165,10 @@ public:
                     {
                         std::unique_lock<std::mutex> lock(this->queue_mutex);
                         // Wait until there is a task or the ThreadPool is stopped
-                        this->condition.wait(lock, [this] {
-                            return this->stop || !this->tasks.empty();
-                            });
+                        this->condition.wait(lock, [this] { return this->stop || !this->tasks.empty(); });
 
                         if (this->stop && this->tasks.empty()) {
-                            return; // Exit the thread when ThreadPool is stopped
+                            return;  // Exit the thread when ThreadPool is stopped
                         }
 
                         // Fetch the next task
@@ -172,8 +180,7 @@ public:
                     // Execute the task outside the lock
                     try {
                         task();
-                    }
-                    catch (...) {
+                    } catch (...) {
                         // Handle exceptions to prevent thread termination
                         // You can log the exception or handle it as needed
                     }
@@ -188,27 +195,25 @@ public:
                         this->condition.notify_one();
                     }
                 }
-                });
+            });
         }
     }
 
     // Deleted copy constructor and assignment operator to prevent copying
-    ThreadPool(const ThreadPool&) = delete;
+    ThreadPool(const ThreadPool&)            = delete;
     ThreadPool& operator=(const ThreadPool&) = delete;
 
     // Enqueue method: Adds a new task to the thread pool
-    template <class F, class... Args>
+    template<class F, class... Args>
     auto enqueue(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>>
     {
         using return_type = std::invoke_result_t<F, Args...>;
 
         // Create a packaged_task with the bound function and its arguments
         auto task = std::make_shared<std::packaged_task<return_type()>>(
-            [f = std::forward<F>(f),
-            args = std::make_tuple(std::forward<Args>(args)...)]() mutable -> return_type {
+            [f = std::forward<F>(f), args = std::make_tuple(std::forward<Args>(args)...)]() mutable -> return_type {
                 return std::apply(f, std::move(args));
-            }
-        );
+            });
 
         std::future<return_type> res = task->get_future();
 
@@ -220,9 +225,7 @@ public:
             }
 
             // Wait until there's space in the queue or the pool is stopped
-            condition.wait(lock, [this] {
-                return this->tasks_count < this->maxQueueSize || this->stop;
-                });
+            condition.wait(lock, [this] { return this->tasks_count < this->maxQueueSize || this->stop; });
 
             if (stop) {
                 throw std::runtime_error("enqueue on stopped ThreadPool");
@@ -239,19 +242,22 @@ public:
     }
 
     // Checks if the thread pool is idle (no tasks in queue and no active workers)
-    bool isIdle() {
+    bool isIdle()
+    {
         std::unique_lock<std::mutex> lock(queue_mutex);
         return tasks.empty() && (working == 0);
     }
 
     // Waits for all tasks to complete
-    void waitForAllTasks() {
+    void waitForAllTasks()
+    {
         std::unique_lock<std::mutex> lock(queue_mutex);
         done_condition.wait(lock, [this] { return tasks_count == 0; });
     }
 
     // Sets a new limitation for the task queue size
-    void setWritePoolLimitation(size_t limit) {
+    void setWritePoolLimitation(size_t limit)
+    {
         {
             std::unique_lock<std::mutex> lock(queue_mutex);
             maxQueueSize = limit;
@@ -261,7 +267,8 @@ public:
     }
 
     // Destructor: Stops the thread pool and joins all threads
-    ~ThreadPool() {
+    ~ThreadPool()
+    {
         {
             std::unique_lock<std::mutex> lock(queue_mutex);
             stop = true;
@@ -274,17 +281,17 @@ public:
     }
 
 private:
-    std::vector<std::thread> workers;                // Worker threads
-    std::queue<std::function<void()>> tasks;         // Task queue
+    std::vector<std::thread> workers;         // Worker threads
+    std::queue<std::function<void()>> tasks;  // Task queue
 
-    std::mutex queue_mutex;                          // Mutex to protect the task queue
-    std::condition_variable condition;               // Condition variable for task availability and queue space
-    std::condition_variable done_condition;          // Condition variable for completion of all tasks
+    std::mutex queue_mutex;                  // Mutex to protect the task queue
+    std::condition_variable condition;       // Condition variable for task availability and queue space
+    std::condition_variable done_condition;  // Condition variable for completion of all tasks
 
-    bool stop;                                       // Flag to stop the ThreadPool
-    size_t working;                                  // Counter for the number of active workers
-    size_t tasks_count;                              // Counter for the number of tasks in the queue
-    size_t maxQueueSize;                             // Maximum size of the task queue
+    bool stop;            // Flag to stop the ThreadPool
+    size_t working;       // Counter for the number of active workers
+    size_t tasks_count;   // Counter for the number of tasks in the queue
+    size_t maxQueueSize;  // Maximum size of the task queue
 };
 
 
@@ -515,4 +522,4 @@ private:
 //    std::atomic<int> tasks_count;
 //};
 
-#endif // THREADPOOL_H
+#endif  // THREADPOOL_H
