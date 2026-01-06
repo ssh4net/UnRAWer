@@ -748,6 +748,17 @@ Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::atom
     processing->setStatus(ProcessingStatus::Written);
     spdlog::debug("Writer: Finished writing data to file: {}", outFilePath);
 
+    const auto preview_enqueue = procGlobals.previewSink.enqueue.load(std::memory_order_acquire);
+    if (preview_enqueue != nullptr) {
+        spdlog::trace("Preview: notify written '{}'", outFilePath);
+        int total_files = 0;
+        if (processing->progressTracker != nullptr) {
+            total_files = static_cast<int>(processing->progressTracker->totalFiles);
+        }
+        void* preview_user = procGlobals.previewSink.user.load(std::memory_order_acquire);
+        preview_enqueue(preview_user, outFilePath.c_str(), index + 1, total_files);
+    }
+
     processing->raw_data.reset();
     processing->raw_image = nullptr;
     processing.reset();

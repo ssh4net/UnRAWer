@@ -50,6 +50,10 @@ loadSettings(Settings& settings, const std::string& filename)
 
         get_value(data, "Range", "RangeMode", settings.rangeMode);
 
+        get_value(data, "Preview", "Enable", settings.previewEnable);
+        get_value(data, "Preview", "QueueMax", settings.previewQueueMax);
+        get_value(data, "Preview", "MinTimeMs", settings.previewMinTimeMs);
+
         get_value(data, "Export", "DefaultFormat", settings.defFormat);
         get_value(data, "Export", "FileFormat", settings.fileFormat);
         get_value(data, "Export", "DefaultBit", settings.defBDepth);
@@ -105,6 +109,9 @@ loadSettings(Settings& settings, const std::string& filename)
             }
         }
 
+        settings.previewQueueMax  = std::clamp(settings.previewQueueMax, 0, 10000);
+        settings.previewMinTimeMs = std::clamp(settings.previewMinTimeMs, 0, 600000);
+
         return true;
     } catch (const std::exception& e) {
         spdlog::error("Error loading settings: {}", e.what());
@@ -119,6 +126,9 @@ printSettings(Settings& settings)
     spdlog::info("Console: {}", settings.conEnable);
     spdlog::info("Threads: {}", settings.threads);
     spdlog::info("Verbosity: {}", settings.verbosity);
+    spdlog::info("Preview Enable: {}", settings.previewEnable);
+    spdlog::info("Preview QueueMax: {}", settings.previewQueueMax);
+    spdlog::info("Preview MinTimeMs: {}", settings.previewMinTimeMs);
     spdlog::info("Range Mode: {}", settings.rangeMode);
     spdlog::info("Export Format: {}", settings.fileFormat);
     spdlog::info("Bit Depth: {}", settings.bitDepth);

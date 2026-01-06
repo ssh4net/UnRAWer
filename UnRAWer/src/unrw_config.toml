@@ -21,6 +21,14 @@ PathPrefix = ""
 # fatal - 5 = trace (most outputs)
 Verbosity = 3
 
+[Preview]
+# GUI preview settings (CLI always disables preview generation)
+Enable = true
+# Max queued preview thumbnails (older ones are dropped when full)
+QueueMax = 100
+# Minimum time to keep each preview visible (ms)
+MinTimeMs = 1000
+
 [Range]
 # Range conversion mode
 # 0 - Unsigned [0.0 ~ 1.0]

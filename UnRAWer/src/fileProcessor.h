@@ -297,6 +297,11 @@ struct ProcessingParams {
 
 struct ProcessGlobals {
     std::unique_ptr<OIIO::ColorConfig> ocio_conf_ptr;  // per session color config load
+    struct PreviewSink {
+        using EnqueueFn = void (*)(void* user, const char* out_file_path, int file_index1, int total_files);
+        std::atomic<EnqueueFn> enqueue { nullptr };
+        std::atomic<void*> user { nullptr };
+    } previewSink;
 };
 
 extern ProcessGlobals procGlobals;

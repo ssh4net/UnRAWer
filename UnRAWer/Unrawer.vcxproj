@@ -157,6 +157,7 @@
     <ClCompile Include="src\imageio.cpp" />
     <ClCompile Include="src\do_process.cpp" />
     <ClCompile Include="src\processors.cpp" />
+    <ClCompile Include="src\preview.cpp" />
     <ClCompile Include="src\settings.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -184,6 +185,7 @@
     <ClInclude Include="src\imageio.h" />
     <ClInclude Include="src\do_process.h" />
     <ClInclude Include="src\processors.h" />
+    <ClInclude Include="src\preview.h" />
     <ClInclude Include="src\settings.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\threadpool.h" />

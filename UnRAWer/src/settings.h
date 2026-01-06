@@ -33,6 +33,11 @@ struct Settings {
     // UI state
     bool show_settings_window = true;
 
+    // Preview (GUI only; CLI never triggers previews)
+    bool previewEnable;
+    int previewQueueMax;      // Max queued thumbnails
+    int previewMinTimeMs;     // Minimum time per preview frame
+
 	bool conEnable, useSbFldr, perCamera;
 	std::string pathPrefix;
 
@@ -91,6 +96,11 @@ struct Settings {
 		useSbFldr = false;	// Use subfolder for output
 		pathPrefix = "";	// Path prefix for output
 		verbosity = 3;		// Verbosity level: 0 - none, 1 - errors, 2 - warnings, 3 - info, 4 - debug, 5 - trace
+
+        previewEnable    = true;
+        previewQueueMax  = 100;
+        previewMinTimeMs = 1000;
+
 		lutMode = 0;		// LUT mode: -1 - disabled, 0 - Smart, 1 - Force
 		lutFolder = "";		// LUT folder
 		crop_mode = 0;		// Crop mode: -1 - disabled, 0 - Smart, 1 - Force

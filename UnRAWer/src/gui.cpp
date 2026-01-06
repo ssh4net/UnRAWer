@@ -2,17 +2,140 @@
 #include "gui.h"
 #include "settings.h"
 #include "do_process.h"
+#include "fileProcessor.h"
+#include "preview.h"
+
+#include <cstdio>
+
+#ifndef GL_CLAMP_TO_EDGE
+#    define GL_CLAMP_TO_EDGE 0x812F
+#endif
+#ifndef GL_RGBA16F
+#    define GL_RGBA16F 0x881A
+#endif
+#ifndef GL_HALF_FLOAT
+#    define GL_HALF_FLOAT 0x140B
+#endif
 
 // Global state for processing
 static std::atomic<bool> g_isProcessing = false;
+static std::atomic<bool> g_inProcessingStage = false;
 static std::atomic<float> g_progress    = 0.0f;
-static std::string g_statusText         = "Waiting for user inputs...";
+static std::mutex g_statusMutex;
+static std::string g_statusText = "Waiting for user inputs...";
 static std::atomic<bool> g_dragging     = false;
+static std::atomic<bool> g_previewEnabled { true };
+static PreviewQueue g_previewQueue;
+static GLuint g_previewTexture = 0;
+static int g_previewTextureW   = 0;
+static int g_previewTextureH   = 0;
+static double g_previewLastSwapTime = 0.0;
+static int g_previewFileIndex1      = 0;
+static int g_previewTotalFiles      = 0;
+static int g_previewShownCount      = 0;
+
+static void PreviewSinkEnqueue(void* user, const char* out_file_path, int file_index1, int total_files);
+
+static void
+ApplyPreviewSettingsFromConfig()
+{
+    const bool enabled = settings.previewEnable;
+    g_previewEnabled   = enabled;
+    g_previewQueue.SetEnabled(enabled);
+    g_previewQueue.SetRequestQueueMaxSize(settings.previewQueueMax);
+    g_previewQueue.SetReadyQueueMaxSize(settings.previewQueueMax);
+    if (!enabled) {
+        procGlobals.previewSink.enqueue.store(nullptr, std::memory_order_release);
+        procGlobals.previewSink.user.store(nullptr, std::memory_order_release);
+    } else if (g_inProcessingStage.load()) {
+        procGlobals.previewSink.user.store(&g_previewQueue, std::memory_order_release);
+        procGlobals.previewSink.enqueue.store(&PreviewSinkEnqueue, std::memory_order_release);
+    }
+    spdlog::debug("Preview: apply config enable={} queueMax={} minTimeMs={}",
+                  enabled ? "true" : "false", settings.previewQueueMax, settings.previewMinTimeMs);
+}
+
+static void
+PreviewSinkEnqueue(void* user, const char* out_file_path, int file_index1, int total_files)
+{
+    if (user == nullptr) {
+        return;
+    }
+    spdlog::trace("Preview: sink enqueue '{}' ({}/{})", out_file_path != nullptr ? out_file_path : "",
+                  file_index1, total_files);
+    PreviewQueue* queue = static_cast<PreviewQueue*>(user);
+    queue->EnqueuePath(out_file_path, file_index1, total_files);
+}
+
+static void
+UploadPreviewTextureRGBA16F(const PreviewThumbnailRGBA16F& thumb)
+{
+    if (thumb.width <= 0 || thumb.height <= 0) {
+        return;
+    }
+    if (thumb.pixels_rgba16f.empty()) {
+        return;
+    }
+
+    spdlog::trace("Preview: upload {}x{} from '{}'", thumb.width, thumb.height, thumb.source_path);
+
+    if (g_previewTexture == 0) {
+        glGenTextures(1, &g_previewTexture);
+        glBindTexture(GL_TEXTURE_2D, g_previewTexture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    } else {
+        glBindTexture(GL_TEXTURE_2D, g_previewTexture);
+    }
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, thumb.width, thumb.height, 0, GL_RGBA, GL_HALF_FLOAT,
+                 thumb.pixels_rgba16f.data());
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    g_previewTextureW = thumb.width;
+    g_previewTextureH = thumb.height;
+    g_previewFileIndex1 = thumb.file_index1;
+    g_previewTotalFiles = thumb.total_files;
+}
+
+static void
+ResetToAwaitingState()
+{
+    g_inProcessingStage = false;
+    g_progress          = 0.0f;
+    {
+        std::lock_guard<std::mutex> lock(g_statusMutex);
+        g_statusText = "Waiting for user inputs...";
+    }
+
+    g_previewQueue.Clear();
+    g_previewTextureW = 0;
+    g_previewTextureH = 0;
+    g_previewLastSwapTime = 0.0;
+    g_previewFileIndex1   = 0;
+    g_previewTotalFiles   = 0;
+    g_previewShownCount   = 0;
+    procGlobals.previewSink.enqueue.store(nullptr, std::memory_order_release);
+    procGlobals.previewSink.user.store(nullptr, std::memory_order_release);
+
+    spdlog::debug("Preview: reset to awaiting state");
+}
 
 void
 SetDragging(bool dragging)
 {
     g_dragging = dragging;
+    if (dragging) {
+        const bool busy           = g_isProcessing.load();
+        const bool inProcessStage = g_inProcessingStage.load();
+        if (!busy && inProcessStage) {
+            ResetToAwaitingState();
+        }
+    }
 }
 bool
 IsDragging()
@@ -39,8 +162,33 @@ StartProcessing(const std::vector<std::string>& files)
         return;
 
     g_isProcessing = true;
+    g_inProcessingStage = true;
     g_progress     = 0.0f;
-    g_statusText   = "Processing " + std::to_string(files.size()) + " files...";
+    {
+        std::lock_guard<std::mutex> lock(g_statusMutex);
+        g_statusText = "Processing " + std::to_string(files.size()) + " files...";
+    }
+
+    const bool previewEnabled = g_previewEnabled.load();
+    g_previewQueue.SetEnabled(previewEnabled);
+    g_previewQueue.SetRequestQueueMaxSize(settings.previewQueueMax);
+    g_previewQueue.SetReadyQueueMaxSize(settings.previewQueueMax);
+    g_previewQueue.Clear();
+    g_previewTextureW = 0;
+    g_previewTextureH = 0;
+    g_previewLastSwapTime = 0.0;
+    g_previewFileIndex1   = 0;
+    g_previewTotalFiles   = 0;
+    g_previewShownCount   = 0;
+    if (previewEnabled) {
+        procGlobals.previewSink.user.store(&g_previewQueue, std::memory_order_release);
+        procGlobals.previewSink.enqueue.store(&PreviewSinkEnqueue, std::memory_order_release);
+    } else {
+        procGlobals.previewSink.enqueue.store(nullptr, std::memory_order_release);
+        procGlobals.previewSink.user.store(nullptr, std::memory_order_release);
+    }
+
+    spdlog::debug("Preview: start processing (previewEnabled={})", previewEnabled ? "true" : "false");
 
     // Create a copy of the file list for the thread
     std::vector<std::string> taskFiles = files;
@@ -50,11 +198,18 @@ StartProcessing(const std::vector<std::string>& files)
         // For now, we simulate progress or wait for it to finish
         bool success   = doProcessing(taskFiles, [](float p, std::string s) {
             g_progress   = p;
-            g_statusText = s;
+            {
+                std::lock_guard<std::mutex> lock(g_statusMutex);
+                g_statusText = std::move(s);
+            }
         });
         g_isProcessing = false;
         g_progress     = success ? 1.0f : 0.0f;
-        g_statusText   = success ? "Everything Done!" : "Finished with errors.";
+        {
+            std::lock_guard<std::mutex> lock(g_statusMutex);
+            g_statusText = success ? "Everything Done!" : "Finished with errors.";
+        }
+        spdlog::debug("Preview: processing finished (success={})", success ? "true" : "false");
     }).detach();
 }
 
@@ -118,7 +273,10 @@ AppMenuBar()
         // Files
         if (ImGui::BeginMenu("Files")) {
             if (ImGui::MenuItem("Reload Config")) {
-                loadSettings(settings, "unrw_config.toml");
+                if (loadSettings(settings, "unrw_config.toml")) {
+                    ApplyPreviewSettingsFromConfig();
+                    printSettings(settings);
+                }
             }
             ImGui::Separator();
             if (ImGui::MenuItem("Exit")) {
@@ -204,9 +362,26 @@ AppMenuBar()
         }
 
         // Processing
-        if (ImGui::BeginMenu("Processing")) {
-            if (ImGui::MenuItem("Disable Processing")) {
-                ZeroProc();
+            if (ImGui::BeginMenu("Processing")) {
+                if (ImGui::MenuItem("Disable Processing")) {
+                    ZeroProc();
+                }
+
+            {
+                bool previewEnabled = g_previewEnabled.load();
+                if (ImGui::MenuItem("Enable Preview", NULL, previewEnabled)) {
+                    previewEnabled   = !previewEnabled;
+                    g_previewEnabled = previewEnabled;
+                    g_previewQueue.SetEnabled(previewEnabled);
+                    settings.previewEnable = previewEnabled;
+                    if (previewEnabled && g_inProcessingStage.load()) {
+                        procGlobals.previewSink.user.store(&g_previewQueue, std::memory_order_release);
+                        procGlobals.previewSink.enqueue.store(&PreviewSinkEnqueue, std::memory_order_release);
+                    } else {
+                        procGlobals.previewSink.enqueue.store(nullptr, std::memory_order_release);
+                        procGlobals.previewSink.user.store(nullptr, std::memory_order_release);
+                    }
+                }
             }
 
             if (ImGui::BeginMenu("Crop")) {
@@ -340,6 +515,15 @@ AppMenuBar()
 void
 RenderUI()
 {
+    const int verbosity = std::clamp<int>(static_cast<int>(settings.verbosity), 0, 5);
+    spdlog::set_level(static_cast<spdlog::level::level_enum>(5 - verbosity));
+
+    static bool s_previewInit = false;
+    if (!s_previewInit) {
+        s_previewInit = true;
+        ApplyPreviewSettingsFromConfig();
+    }
+
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -375,19 +559,96 @@ RenderUI()
         // Draw a background box for the drop area
         ImVec2 dropAreaSize = ImVec2(content_width,
                                      regionSize.y - progressBarHeight - statusHeight - 2.0f * pad - 2.0f * space);
+        const bool inProcessingStage = g_inProcessingStage.load();
+        const bool isBusy            = g_isProcessing.load();
+        const bool previewEnabled    = g_previewEnabled.load();
+        const int previewSquareSize = std::max(1, static_cast<int>(dropAreaSize.y + 0.5f));
+        g_previewQueue.SetTargetSquareSize(previewSquareSize);
+        if (inProcessingStage && previewEnabled) {
+            const int minTimeMs      = std::max(0, settings.previewMinTimeMs);
+            const double minTimeSec  = static_cast<double>(minTimeMs) / 1000.0;
+            const double now         = ImGui::GetTime();
+            const bool haveTexture   = g_previewTexture != 0 && g_previewTextureW > 0 && g_previewTextureH > 0;
+
+            if (!isBusy) {
+                PreviewThumbnailRGBA16F thumb;
+                bool got = false;
+                while (g_previewQueue.TryConsume(&thumb)) {
+                    got = true;
+                }
+                if (got) {
+                    spdlog::debug("Preview: flush to last '{}' {}x{}", thumb.source_path, thumb.width, thumb.height);
+                    UploadPreviewTextureRGBA16F(thumb);
+                    ++g_previewShownCount;
+                    g_previewLastSwapTime = now;
+                }
+            } else if (!haveTexture || (now - g_previewLastSwapTime) >= minTimeSec) {
+                PreviewThumbnailRGBA16F thumb;
+                if (g_previewQueue.TryConsume(&thumb)) {
+                    spdlog::debug("Preview: consume '{}' {}x{}", thumb.source_path, thumb.width, thumb.height);
+                    UploadPreviewTextureRGBA16F(thumb);
+                    ++g_previewShownCount;
+                    g_previewLastSwapTime = now;
+                }
+            }
+        }
+
         {
             ImGui::SetCursorPos(ImVec2(pad, cusror_y));
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.094f, 0.094f, 0.094f, 1.0f));
             ImGui::BeginChild("DropArea", dropAreaSize, false);
+            if (!inProcessingStage) {
+                // Centered Text
+                const char* dropText = "Drag & drop files here";
+                ImGui::SetWindowFontScale(1.5f);  // Larger text
+                ImVec2 textSize  = ImGui::CalcTextSize(dropText);
+                ImVec2 childSize = ImGui::GetWindowSize();
+                ImGui::SetCursorPos(ImVec2((childSize.x - textSize.x) * 0.5f, (childSize.y - textSize.y) * 0.5f));
+                ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "%s", dropText);
+                ImGui::SetWindowFontScale(1.0f);
+            } else {
+                const bool havePreview    = previewEnabled && g_previewTexture != 0 && g_previewTextureW > 0
+                                         && g_previewTextureH > 0;
+                if (havePreview) {
+                    ImVec2 childSize         = ImGui::GetWindowSize();
+                    const float squareSize   = childSize.y;
+                    const float squareOffset = (childSize.x - squareSize) * 0.5f;
 
-            // Centered Text
-            const char* dropText = "Drag & drop files here";
-            ImGui::SetWindowFontScale(1.5f);  // Larger text
-            ImVec2 textSize  = ImGui::CalcTextSize(dropText);
-            ImVec2 childSize = ImGui::GetWindowSize();
-            ImGui::SetCursorPos(ImVec2((childSize.x - textSize.x) * 0.5f, (childSize.y - textSize.y) * 0.5f));
-            ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "%s", dropText);
-            ImGui::SetWindowFontScale(1.0f);
+                    const float imgW  = static_cast<float>(g_previewTextureW);
+                    const float imgH  = static_cast<float>(g_previewTextureH);
+                    const float scale = std::min(squareSize / imgW, squareSize / imgH);
+                    const ImVec2 drawSize { imgW * scale, imgH * scale };
+
+                    const ImVec2 cursorPos { squareOffset + (squareSize - drawSize.x) * 0.5f,
+                                             (squareSize - drawSize.y) * 0.5f };
+                    ImGui::SetCursorPos(cursorPos);
+
+                    ImTextureRef texRef((ImTextureID)(uintptr_t)g_previewTexture);
+                    ImGui::Image(texRef, drawSize);
+
+                    {
+                        const int previewLabel = std::max(1, g_previewShownCount);
+                        char label[32];
+                        std::snprintf(label, sizeof(label), "%d", previewLabel);
+
+                        const ImVec2 winPos = ImGui::GetWindowPos();
+                        const float pad     = 10.0f;
+                        const ImVec2 textPos { winPos.x + pad, winPos.y + pad };
+                        ImDrawList* dl = ImGui::GetWindowDrawList();
+                        dl->AddText(textPos, IM_COL32(255, 255, 255, 220), label);
+                    }
+                } else {
+                    // Centered Text
+                    const char* procText = "Processing files...";
+                    ImGui::SetWindowFontScale(1.5f);  // Larger text
+                    ImVec2 textSize  = ImGui::CalcTextSize(procText);
+                    ImVec2 childSize = ImGui::GetWindowSize();
+                    ImGui::SetCursorPos(ImVec2((childSize.x - textSize.x) * 0.5f, (childSize.y - textSize.y) * 0.5f));
+                    ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "%s", procText);
+                    ImGui::SetWindowFontScale(1.0f);
+                }
+            }
+
 
             ImGui::EndChild();
             ImGui::PopStyleColor();
@@ -416,7 +677,12 @@ RenderUI()
                               ImGuiChildFlags_AlwaysUseWindowPadding);
 
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.88f, 0.88f, 0.88f, 1.0f));
-            ImGui::TextUnformatted(g_statusText.c_str());
+            std::string statusTextCopy;
+            {
+                std::lock_guard<std::mutex> lock(g_statusMutex);
+                statusTextCopy = g_statusText;
+            }
+            ImGui::TextUnformatted(statusTextCopy.c_str());
 
             ImGui::PopStyleColor(2);
             ImGui::PopStyleVar();

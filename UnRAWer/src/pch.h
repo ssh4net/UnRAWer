@@ -63,6 +63,18 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
+// Some Windows OpenGL headers are stuck at 1.1 and may miss newer enums.
+// Dear ImGui's OpenGL backend provides function loading, but enums still come from headers.
+#ifndef GL_CLAMP_TO_EDGE
+#    define GL_CLAMP_TO_EDGE 0x812F
+#endif
+#ifndef GL_RGBA16F
+#    define GL_RGBA16F 0x881A
+#endif
+#ifndef GL_HALF_FLOAT
+#    define GL_HALF_FLOAT 0x140B
+#endif
+
 // dnd_glfw
 #define DND_GLFW_IMPLEMENTATION
 #include <dnd_glfw.h>
