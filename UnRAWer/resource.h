@@ -3,6 +3,7 @@
 // Used by Unrawer.rc
 //
 #define IDI_ICON1 101
+#define IDR_FIRA_SANS_REGULAR 102
 
 // Next default values for new objects
 //

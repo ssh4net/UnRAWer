@@ -111,8 +111,8 @@ countExpectedSteps(const Settings& settings, const std::optional<std::string>& l
     // Step 2: Unpack (LUnpacker)
     info.stepCount++;
 
-    // Step 3: Demosaic (if enabled)
-    info.hasDemosaic = (settings.dDemosaic > -1);
+    // Step 3: Demosaic/no-interpolation conversion (if routed through Demosaic)
+    info.hasDemosaic = (settings.dDemosaic > -2);
     if (info.hasDemosaic) {
         info.stepCount++;
     }

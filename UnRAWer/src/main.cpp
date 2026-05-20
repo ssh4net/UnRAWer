@@ -21,9 +21,18 @@
 #include "do_process.h"
 #include "gui.h"
 
+#include <limits>
+
+#ifdef _WIN32
+#    include "../resource.h"
+#else
+extern const unsigned char unrawer_embedded_font[];
+extern const unsigned int unrawer_embedded_font_size;
+#endif
+
 #define VERSION_MAJOR 2
 #define VERSION_MINOR 1
-#define VERSION_PATCH 0
+#define VERSION_PATCH 1
 
 static void
 glfw_error_callback(int error, const char* description)
@@ -60,6 +69,44 @@ onDrop(GLFWwindow* window, const dnd_glfw::DropEvent& event, void* userData)
     }
 }
 
+static bool
+loadEmbeddedGuiFont(ImGuiIO& io, const ImWchar* glyphRanges)
+{
+#ifdef _WIN32
+    HRSRC fontResource = FindResourceW(nullptr, MAKEINTRESOURCEW(IDR_FIRA_SANS_REGULAR), MAKEINTRESOURCEW(10));
+    if (fontResource == nullptr) {
+        return false;
+    }
+    HGLOBAL fontHandle = LoadResource(nullptr, fontResource);
+    if (fontHandle == nullptr) {
+        return false;
+    }
+    const DWORD fontSize = SizeofResource(nullptr, fontResource);
+    const void* fontData = LockResource(fontHandle);
+    if (fontData == nullptr || fontSize == 0 || fontSize > static_cast<DWORD>(std::numeric_limits<int>::max())) {
+        return false;
+    }
+    void* fontBytes         = const_cast<void*>(fontData);
+    const int fontByteCount = static_cast<int>(fontSize);
+#else
+    if (unrawer_embedded_font_size == 0
+        || unrawer_embedded_font_size > static_cast<unsigned int>(std::numeric_limits<int>::max())) {
+        return false;
+    }
+    void* fontBytes         = const_cast<unsigned char*>(unrawer_embedded_font);
+    const int fontByteCount = static_cast<int>(unrawer_embedded_font_size);
+#endif
+
+    ImFontConfig fontConfig;
+    fontConfig.FontDataOwnedByAtlas = false;
+    ImFont* font = io.Fonts->AddFontFromMemoryTTF(fontBytes, fontByteCount, 16.0f, &fontConfig, glyphRanges);
+    if (font == nullptr) {
+        return false;
+    }
+    io.FontDefault = font;
+    return true;
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -93,18 +140,27 @@ main(int argc, char* argv[])
         return 1;
     }
 
-    // GL 3.0 + GLSL 130
+#if defined(__APPLE__)
+    const char* glsl_version = "#version 150";
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+#else
     const char* glsl_version = "#version 130";
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#endif
 
     // Window configuration
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);  // Fixed size
     glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);    // Always on top
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(500, 500, "UnRAWer ToolBox", NULL, NULL);
-    if (window == NULL) {
+    GLFWwindow* window = glfwCreateWindow(500, 500, "UnRAWer ToolBox", nullptr, nullptr);
+    if (window == nullptr) {
         spdlog::critical("Failed to create GLFW window");
         glfwTerminate();
         return 1;
@@ -115,9 +171,12 @@ main(int argc, char* argv[])
     // Center window
     GLFWmonitor* monitor    = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-    int windowWidth, windowHeight;
-    glfwGetWindowSize(window, &windowWidth, &windowHeight);
-    glfwSetWindowPos(window, (mode->width - windowWidth) / 2, (mode->height - windowHeight) / 2);
+    if (mode != nullptr) {
+        int windowWidth  = 0;
+        int windowHeight = 0;
+        glfwGetWindowSize(window, &windowWidth, &windowHeight);
+        glfwSetWindowPos(window, (mode->width - windowWidth) / 2, (mode->height - windowHeight) / 2);
+    }
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -141,23 +200,24 @@ main(int argc, char* argv[])
 
     // Hook to ensure all ImGui platform windows (popups, menus) are also floating/always-on-top
     // This fixes the issue where menu popups render behind the main window
-    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    ImGuiPlatformIO& platform_io                          = ImGui::GetPlatformIO();
     static void (*s_originalCreateWindow)(ImGuiViewport*) = platform_io.Platform_CreateWindow;
-    platform_io.Platform_CreateWindow = [](ImGuiViewport* viewport) {
-        if (s_originalCreateWindow)
+    platform_io.Platform_CreateWindow                     = [](ImGuiViewport* viewport) {
+        if (s_originalCreateWindow) {
             s_originalCreateWindow(viewport);
+        }
 
         // Apply GLFW_FLOATING to all platform windows created by ImGui
-        GLFWwindow* glfw_window = (GLFWwindow*)viewport->PlatformHandle;
-        if (glfw_window) {
+        GLFWwindow* glfw_window = static_cast<GLFWwindow*>(viewport->PlatformHandle);
+        if (glfw_window != nullptr) {
             glfwSetWindowAttrib(glfw_window, GLFW_FLOATING, GLFW_TRUE);
         }
     };
 
     // Load Fonts
-    ImFont* font = io.Fonts->AddFontFromFileTTF("fonts/FiraSans-Regular.otf", 16.0f);
-    if (font == nullptr) {
-        spdlog::warn("Failed to load font: fonts/FiraSans-Regular.otf");
+    const ImWchar* glyphRanges = io.Fonts->GetGlyphRangesDefault();
+    if (!loadEmbeddedGuiFont(io, glyphRanges)) {
+        spdlog::warn("Failed to load embedded FiraSans font; using default ImGui font.");
     }
 
     // Initialize drag and drop via dnd_glfw
@@ -176,6 +236,11 @@ main(int argc, char* argv[])
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
+        if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0) {
+            ImGui_ImplGlfw_Sleep(10);
+            continue;
+        }
+
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -186,12 +251,18 @@ main(int argc, char* argv[])
 
         // Rendering
         ImGui::Render();
-        int display_w, display_h;
+        ImDrawData* drawData     = ImGui::GetDrawData();
+        const bool mainMinimized = drawData->DisplaySize.x <= 0.0f || drawData->DisplaySize.y <= 0.0f;
+
+        int display_w = 0;
+        int display_h = 0;
         glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        if (!mainMinimized && display_w > 0 && display_h > 0) {
+            glViewport(0, 0, display_w, display_h);
+            glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
+            glClear(GL_COLOR_BUFFER_BIT);
+            ImGui_ImplOpenGL3_RenderDrawData(drawData);
+        }
 
         // Update and Render additional Platform Windows
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
@@ -201,7 +272,9 @@ main(int argc, char* argv[])
             glfwMakeContextCurrent(backup_current_context);
         }
 
-        glfwSwapBuffers(window);
+        if (!mainMinimized && display_w > 0 && display_h > 0) {
+            glfwSwapBuffers(window);
+        }
     }
 
     // --- Cleanup ---

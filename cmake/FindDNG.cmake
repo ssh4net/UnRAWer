@@ -53,23 +53,44 @@ else()
     # ---------------------------------------------------------------------------
 
     if(DNG_SDK_DIR)
+        set(_dng_root "${DNG_SDK_DIR}")
+        get_filename_component(_dng_dir_name "${DNG_SDK_DIR}" NAME)
+        if(_dng_dir_name STREQUAL "source")
+            get_filename_component(_dng_root "${DNG_SDK_DIR}" DIRECTORY)
+        elseif(EXISTS "${DNG_SDK_DIR}/dng_sdk.h" OR EXISTS "${DNG_SDK_DIR}/dng_host.h"
+               OR EXISTS "${DNG_SDK_DIR}/dng_types.h")
+            get_filename_component(_dng_parent "${DNG_SDK_DIR}" DIRECTORY)
+            if(EXISTS "${_dng_parent}/projects")
+                set(_dng_root "${_dng_parent}")
+            endif()
+        elseif(EXISTS "${DNG_SDK_DIR}/source/dng_sdk.h" OR EXISTS "${DNG_SDK_DIR}/source/dng_host.h"
+               OR EXISTS "${DNG_SDK_DIR}/source/dng_types.h")
+            set(_dng_root "${DNG_SDK_DIR}")
+        endif()
+
         # User specified DNG SDK directory
         if(DNG_INCLUDE_DIR)
             set(_dng_include_paths ${DNG_INCLUDE_DIR})
         else()
             set(_dng_include_paths
-                "${DNG_SDK_DIR}/source"
-                "${DNG_SDK_DIR}/include"
-                "${DNG_SDK_DIR}"
+                "${_dng_root}/source"
+                "${_dng_root}/include"
+                "${_dng_root}"
             )
         endif()
 
         set(_dng_lib_paths
-            "${DNG_SDK_DIR}/lib"
-            "${DNG_SDK_DIR}/libraries"
-            "${DNG_SDK_DIR}/build/lib"
-            "${DNG_SDK_DIR}/projects/win/x64/Release"
-            "${DNG_SDK_DIR}/projects/win/x64/Debug"
+            "${_dng_root}/lib"
+            "${_dng_root}/libraries"
+            "${_dng_root}/build/lib"
+            "${_dng_root}/projects/win/x64/Release"
+            "${_dng_root}/projects/win/x64/Debug"
+        )
+        set(_dng_lib_paths_debug
+            "${_dng_root}/projects/win/x64/Debug"
+            "${_dng_root}/lib"
+            "${_dng_root}/libraries"
+            "${_dng_root}/build/lib"
         )
     else()
         # Default search paths
@@ -85,6 +106,7 @@ else()
             /usr/local/lib
             ${CMAKE_PREFIX_PATH}/lib
         )
+        set(_dng_lib_paths_debug ${_dng_lib_paths})
     endif()
 
     # ---------------------------------------------------------------------------
@@ -92,7 +114,7 @@ else()
     # ---------------------------------------------------------------------------
 
     find_path(DNG_INCLUDE_DIR
-        NAMES dng_sdk.h dng_version.h dng_types.h
+        NAMES dng_sdk.h dng_host.h dng_version.h dng_types.h
         PATHS ${_dng_include_paths}
         NO_DEFAULT_PATH
     )
@@ -104,8 +126,8 @@ else()
     )
 
     find_library(DNG_LIBRARY_DEBUG
-        NAMES dng_sdkd libdng_sdkd dng_sdk_d libdng_sdk_d
-        PATHS ${_dng_lib_paths}
+        NAMES dng_sdkd libdng_sdkd dng_sdk_d libdng_sdk_d dng_sdk libdng_sdk
+        PATHS ${_dng_lib_paths_debug}
         NO_DEFAULT_PATH
     )
 

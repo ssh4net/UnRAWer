@@ -31,6 +31,80 @@ m_progress_callback(void* opaque_data, float portion_done)
     return (portion_done >= 1.f);
 }
 
+static int
+clamp_int(int value, int min_value, int max_value)
+{
+    if (value < min_value) {
+        return min_value;
+    }
+    if (value > max_value) {
+        return max_value;
+    }
+    return value;
+}
+
+static int
+half_ceil(int value)
+{
+    if (value <= 0) {
+        return 0;
+    }
+    return (value + 1) / 2;
+}
+
+static std::array<int, 4>
+normalize_write_crop(const ImageBuf& out_buf, const std::array<int, 4>& input_crop)
+{
+    const ImageSpec& spec = out_buf.spec();
+    const int image_width = spec.width;
+    const int image_height = spec.height;
+
+    if (image_width <= 0 || image_height <= 0) {
+        return { 0, 0, 0, 0 };
+    }
+
+    if (settings.crop_mode == -1) {
+        return { 0, 0, image_width, image_height };
+    }
+
+    std::array<int, 4> crop = input_crop;
+    if (crop[2] <= 0 || crop[3] <= 0) {
+        spdlog::warn("Writer: invalid crop {}x{}; writing full image", crop[2], crop[3]);
+        return { 0, 0, image_width, image_height };
+    }
+
+    const bool crop_outside_image = crop[0] < 0 || crop[1] < 0 || crop[0] >= image_width || crop[1] >= image_height
+                                    || crop[0] + crop[2] > image_width || crop[1] + crop[3] > image_height;
+
+    if (settings.rawParms.half_size && crop_outside_image) {
+        std::array<int, 4> half_crop = { half_ceil(crop[0]), half_ceil(crop[1]), half_ceil(crop[2]),
+                                         half_ceil(crop[3]) };
+        const bool half_crop_fits = half_crop[0] >= 0 && half_crop[1] >= 0 && half_crop[0] < image_width
+                                    && half_crop[1] < image_height && half_crop[0] + half_crop[2] <= image_width
+                                    && half_crop[1] + half_crop[3] <= image_height;
+        if (half_crop_fits) {
+            spdlog::debug("Writer: scaled crop for half-size output: {} {} {} {}", half_crop[0], half_crop[1],
+                          half_crop[2], half_crop[3]);
+            return half_crop;
+        }
+        crop = half_crop;
+    }
+
+    const int left = clamp_int(crop[0], 0, image_width - 1);
+    const int top = clamp_int(crop[1], 0, image_height - 1);
+    const int right = clamp_int(crop[0] + crop[2], left + 1, image_width);
+    const int bottom = clamp_int(crop[1] + crop[3], top + 1, image_height);
+
+    std::array<int, 4> normalized = { left, top, right - left, bottom - top };
+    if (normalized != input_crop) {
+        spdlog::warn("Writer: crop {} {} {} {} adjusted to {} {} {} {} for image {}x{}", input_crop[0],
+                     input_crop[1], input_crop[2], input_crop[3], normalized[0], normalized[1], normalized[2],
+                     normalized[3], image_width, image_height);
+    }
+
+    return normalized;
+}
+
 // settings.bitDepth to OIIO::TypeDesc
 TypeDesc
 getTypeDesc(int bit_depth)
@@ -246,13 +320,19 @@ img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& out_sp
     default: out_spec->attribute("Compression", "zip"); break;
     }
 
+    const std::array<int, 4> write_crop = normalize_write_crop(*out_buf, crops);
+    if (write_crop[2] <= 0 || write_crop[3] <= 0) {
+        spdlog::error("Writer: invalid output image size for {}", outputFileName);
+        return false;
+    }
+
     ImageSpec write_spec = *out_spec.get();
 
     if (settings.crop_mode != -1) {
-        write_spec.width       = crops[2];  // .width;
-        write_spec.height      = crops[3];  // .height;
-        write_spec.full_width  = crops[2];  // .width;
-        write_spec.full_height = crops[3];  // .height;
+        write_spec.width       = write_crop[2];
+        write_spec.height      = write_crop[3];
+        write_spec.full_width  = write_crop[2];
+        write_spec.full_height = write_crop[3];
     }
     spdlog::info("Output file format: {}", formatText(write_spec.format));
 
@@ -263,15 +343,14 @@ img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& out_sp
         return false;
     }
 
-    if (settings.crop_mode != -1) {
-        out->open(outputFileName, write_spec, ImageOutput::Create);
-    } else {
-        out->open(outputFileName, *out_spec.get(), ImageOutput::Create);
+    if (!out->open(outputFileName, write_spec, ImageOutput::Create)) {
+        spdlog::error("Could not open output file {}: {}", outputFileName, out->geterror());
+        return false;
     }
 
     spdlog::info("Writing {}", outputFileName);
 
-    auto ou_px  = out_buf->pixeladdr(crops[0], crops[1], 0);
+    auto ou_px  = out_buf->pixeladdr(write_crop[0], write_crop[1], 0);
     auto ou_pst = out_buf->pixel_stride();
     auto ou_bst = out_buf->scanline_stride();
     auto ou_zst = out_buf->z_stride();
@@ -279,7 +358,18 @@ img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& out_sp
     spdlog::info("Writing image: {} Pixel address: {} Pixel stride: {} Scanline stride: {} Z stride: {}",
                  outputFileName, reinterpret_cast<uintptr_t>(ou_px), ou_pst, ou_bst, ou_zst);
 
-    out->write_image(write_spec.format, ou_px, ou_pst, ou_bst, ou_zst, m_progress_callback, nullptr);
+    if (ou_px == nullptr) {
+        spdlog::error("Writer: crop {} {} {} {} is outside image buffer for {}", write_crop[0], write_crop[1],
+                      write_crop[2], write_crop[3], outputFileName);
+        out->close();
+        return false;
+    }
+
+    if (!out->write_image(write_spec.format, ou_px, ou_pst, ou_bst, ou_zst, m_progress_callback, nullptr)) {
+        spdlog::error("Error writing {}: {}", outputFileName, out->geterror());
+        out->close();
+        return false;
+    }
     out->close();
 
     return true;

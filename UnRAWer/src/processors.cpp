@@ -660,8 +660,8 @@ Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::atom
                                      processing->m_crops.height };
     std::unique_ptr<LibRaw>& raw = processing->raw_data;
 
-    spdlog::trace("Writer: RAW Image buffer: {}", reinterpret_cast<uintptr_t>(raw->imgdata.image));
-    spdlog::trace("Writer: Inp Image buffer: {}", reinterpret_cast<uintptr_t>(processing->image->localpixels()));
+    spdlog::trace("Writer: RAW processed image buffer: {}", reinterpret_cast<uintptr_t>(raw->imgdata.image));
+    spdlog::trace("Writer: RAW unpacked data buffer: {}", reinterpret_cast<uintptr_t>(raw->imgdata.rawdata.raw_image));
 
     // Check if the output path exists and create it if not
     std::string outDir = outpaths.get_path(processing->outPathIdx);
@@ -682,25 +682,34 @@ Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::atom
 
     spdlog::info("Writer: Writing data to file: {}", outFilePath);
     if (settings.dDemosaic == -2) {
+        ushort* raw_image = raw->imgdata.rawdata.raw_image;
+        int raw_width     = raw->imgdata.sizes.raw_width;
+        int raw_height    = raw->imgdata.sizes.raw_height;
+        if (raw_image == nullptr || raw_width <= 0 || raw_height <= 0) {
+            spdlog::error("Writer: RAW data buffer is empty for file: {}", processing->srcFile);
+            processing->setStatus(ProcessingStatus::Failed);
+            return;
+        }
+
         // Write raw data to a file
         outFilePath = outDir + "/" + processing->outFile + ".ppm";
         std::ofstream output(outFilePath, std::ios::binary);
         if (!output) {
             spdlog::error("Writer: Cannot open output file: {}", outFilePath);
+            processing->setStatus(ProcessingStatus::Failed);
             return;
         }
 
-        size_t pix_count      = raw->imgdata.sizes.raw_width * raw->imgdata.sizes.raw_height;
-        size_t raw_image_size = pix_count * sizeof(ushort);
+        size_t pix_count = static_cast<size_t>(raw_width) * static_cast<size_t>(raw_height);
 
         // Write PGM header
         output << "P5\n";
-        output << raw->imgdata.sizes.raw_width << " " << raw->imgdata.sizes.raw_height << "\n";
+        output << raw_width << " " << raw_height << "\n";
         output << "65535\n";  // Max value for 16-bit data
 
         // Write raw data with swapped byte order
         for (size_t i = 0; i < pix_count; ++i) {
-            ushort value = raw->imgdata.rawdata.raw_image[i];
+            ushort value = raw_image[i];
             value        = (value << 8) | (value >> 8);  // Swap bytes
             output.write(reinterpret_cast<char*>(&value), sizeof(ushort));
         }
@@ -708,6 +717,12 @@ Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::atom
         output.close();
     } else if (settings.dDemosaic == -1)  // writing color ppm/tiff using dcraw_ppm_tiff_writer
     {
+        if (raw->imgdata.image == nullptr) {
+            spdlog::error("Writer: processed RAW image buffer is empty for file: {}", processing->srcFile);
+            processing->setStatus(ProcessingStatus::Failed);
+            return;
+        }
+
         if (settings.fileFormat == -1) {
             if (settings.defFormat == 0) {
                 raw->imgdata.params.output_tiff = 1;  // TIF
@@ -722,14 +737,22 @@ Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::atom
         int ret = raw->dcraw_ppm_tiff_writer(outFilePath.c_str());
         if (ret != LIBRAW_SUCCESS) {
             spdlog::error("Writer: Cannot write image to file: {}", outFilePath);
+            processing->setStatus(ProcessingStatus::Failed);
             processing->raw_data.reset();
             return;
         }
     } else {  // Write processed image using oiio
+        if (!processing->image || !processing->outSpec) {
+            spdlog::error("Writer: processed image buffer is empty for file: {}", processing->srcFile);
+            processing->setStatus(ProcessingStatus::Failed);
+            return;
+        }
+
         spdlog::trace("Writer: Inp Image buffer: {}", reinterpret_cast<uintptr_t>(processing->image->localpixels()));
         bool write_ok = img_write(processing->image, processing->outSpec, outFilePath, crops);
         if (!write_ok) {
             spdlog::error("Writer: Error writing: {}", outFilePath);
+            processing->setStatus(ProcessingStatus::Failed);
             return;
         }
 

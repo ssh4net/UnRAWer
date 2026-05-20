@@ -147,10 +147,9 @@ IsDragging()
 bool
 Combo(const char* label, int* current_item, const std::string* items, int items_count)
 {
-    auto getter = [](void* data, int idx, const char** out_text) {
+    auto getter = [](void* data, int idx) -> const char* {
         const std::string* items = (const std::string*)data;
-        *out_text                = items[idx].c_str();
-        return true;
+        return items[idx].c_str();
     };
     return ImGui::Combo(label, current_item, getter, (void*)items, items_count);
 }

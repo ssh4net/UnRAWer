@@ -242,6 +242,45 @@ if(NOT TARGET openjp2)
     endif()
 endif()
 
+if(NOT TARGET aom)
+    find_library(AOM_LIBRARY_RELEASE NAMES aom libaom HINTS ${CMAKE_PREFIX_PATH}/lib)
+    find_library(AOM_LIBRARY_DEBUG NAMES aomd libaomd HINTS ${CMAKE_PREFIX_PATH}/lib)
+    if(AOM_LIBRARY_RELEASE OR AOM_LIBRARY_DEBUG)
+        add_library(aom UNKNOWN IMPORTED)
+        if(AOM_LIBRARY_RELEASE)
+            set_property(TARGET aom APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+            set_target_properties(aom PROPERTIES
+                IMPORTED_LOCATION_RELEASE "${AOM_LIBRARY_RELEASE}"
+                IMPORTED_LOCATION_RELWITHDEBINFO "${AOM_LIBRARY_RELEASE}"
+                IMPORTED_LOCATION_MINSIZEREL "${AOM_LIBRARY_RELEASE}"
+            )
+        endif()
+        if(AOM_LIBRARY_DEBUG)
+            set_property(TARGET aom APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
+            set_target_properties(aom PROPERTIES IMPORTED_LOCATION_DEBUG "${AOM_LIBRARY_DEBUG}")
+        endif()
+        if(AOM_LIBRARY_RELEASE)
+            set_target_properties(aom PROPERTIES IMPORTED_LOCATION "${AOM_LIBRARY_RELEASE}")
+        elseif(AOM_LIBRARY_DEBUG)
+            set_target_properties(aom PROPERTIES IMPORTED_LOCATION "${AOM_LIBRARY_DEBUG}")
+        endif()
+    endif()
+endif()
+
+# libheif's exported target is referenced by OpenImageIO as plain target `heif`.
+# Define it before OpenImageIO is loaded, otherwise CMake emits bare `heif.lib`.
+find_package(libheif CONFIG QUIET)
+if(NOT TARGET heif)
+    find_package(Libheif QUIET)
+    if(TARGET Libheif::Libheif)
+        add_library(heif ALIAS Libheif::Libheif)
+    endif()
+endif()
+
+if(UNRAWER_WITH_DNG)
+    find_package(dng_sdk CONFIG QUIET)
+endif()
+
 # Pre-find PNG and ZLIB before OpenImageIO (OIIO may require specific target names)
 find_package(ZLIB QUIET)
 find_package(PNG QUIET)
@@ -253,6 +292,16 @@ endif()
 
 # Find OpenImageIO and handle legacy target names
 find_package(OpenImageIO REQUIRED)
+
+set(UNRAWER_OIIO_USE_COMPILED_FMT OFF)
+if(TARGET OpenImageIO::OpenImageIO_Util)
+    get_target_property(_oiio_util_link_libs OpenImageIO::OpenImageIO_Util INTERFACE_LINK_LIBRARIES)
+    if(_oiio_util_link_libs)
+        if(";${_oiio_util_link_libs};" MATCHES ";fmt::fmt;")
+            set(UNRAWER_OIIO_USE_COMPILED_FMT ON)
+        endif()
+    endif()
+endif()
 
 if(NOT TARGET OpenImageIO::OpenImageIO)
     if(TARGET OpenImageIO)
@@ -417,23 +466,40 @@ add_static_dep(OpenColorIO OpenColorIO_d)
 
 # XMP and DNG SDK (optional, for DNG file support)
 if(UNRAWER_WITH_DNG)
-    find_package(XMP QUIET)
-    if(XMP_FOUND)
+    find_package(XMPToolkit CONFIG QUIET)
+    if(TARGET XMP::XMPCoreStatic AND TARGET XMP::XMPFilesStatic)
+        set(XMP_FOUND TRUE)
+        list(APPEND EXTRA_STATIC_LIBS XMP::XMPCoreStatic XMP::XMPFilesStatic)
+    else()
+        find_package(XMP QUIET)
+    endif()
+
+    if(XMP_FOUND AND NOT TARGET XMP::XMPCoreStatic)
         if(TARGET XMP::Core)
             list(APPEND EXTRA_STATIC_LIBS XMP::Core XMP::Files)
         elseif(TARGET XMP::XMP)
             list(APPEND EXTRA_STATIC_LIBS XMP::XMP)
         endif()
-    else()
+    elseif(NOT XMP_FOUND)
         message(WARNING "XMP SDK not found. DNG support may be limited.")
     endif()
 
-    find_package(DNG QUIET)
-    if(DNG_FOUND)
+    if(NOT TARGET dng_sdk::dng_sdk)
+        find_package(dng_sdk CONFIG QUIET)
+    endif()
+
+    if(TARGET dng_sdk::dng_sdk)
+        set(DNG_FOUND TRUE)
+        list(APPEND EXTRA_STATIC_LIBS dng_sdk::dng_sdk)
+    else()
+        find_package(DNG QUIET)
+    endif()
+
+    if(DNG_FOUND AND NOT TARGET dng_sdk::dng_sdk)
         if(TARGET DNG::SDK)
             list(APPEND EXTRA_STATIC_LIBS DNG::SDK)
         endif()
-    else()
+    elseif(NOT DNG_FOUND)
         message(WARNING "DNG SDK not found. DNG support will be disabled.")
         set(UNRAWER_WITH_DNG OFF)
     endif()
@@ -577,6 +643,32 @@ file(GLOB_RECURSE UNRAWER_SOURCES CONFIGURE_DEPENDS
 add_executable(UnRAWer ${UNRAWER_SOURCES} ${IMGUI_SOURCES})
 set_target_properties(UnRAWer PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
+set(UNRAWER_GUI_FONT "${CMAKE_CURRENT_SOURCE_DIR}/external/Fira/FiraSans-Regular.otf")
+if(NOT EXISTS "${UNRAWER_GUI_FONT}")
+    message(FATAL_ERROR "Expected GUI font not found at ${UNRAWER_GUI_FONT}")
+endif()
+
+if(WIN32)
+    target_sources(UnRAWer PRIVATE
+        UnRAWer/Unrawer.rc
+        UnRAWer/font_resource.rc
+    )
+else()
+    set(UNRAWER_EMBEDDED_FONT_SOURCE "${CMAKE_CURRENT_BINARY_DIR}/generated/unrawer_embedded_font.cpp")
+    add_custom_command(
+        OUTPUT "${UNRAWER_EMBEDDED_FONT_SOURCE}"
+        COMMAND ${CMAKE_COMMAND}
+                -DINPUT_FILE=${UNRAWER_GUI_FONT}
+                -DOUTPUT_FILE=${UNRAWER_EMBEDDED_FONT_SOURCE}
+                -DSYMBOL=unrawer_embedded_font
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed_binary.cmake"
+        DEPENDS "${UNRAWER_GUI_FONT}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed_binary.cmake"
+        COMMENT "Embed FiraSans font"
+        VERBATIM
+    )
+    target_sources(UnRAWer PRIVATE "${UNRAWER_EMBEDDED_FONT_SOURCE}")
+endif()
+
 # Tell the compiler where to find project and dependency headers
 target_include_directories(UnRAWer PRIVATE
     UnRAWer/src
@@ -615,9 +707,13 @@ target_link_libraries(UnRAWer PRIVATE
 if(openjph_FOUND)
     # Find library file directly - don't use the target
     find_library(OPENJPH_LINK_LIBRARY NAMES openjph libopenjph
-        HINTS ${CMAKE_PREFIX_PATH}/lib /mnt/e/UBS/lib
+        HINTS ${CMAKE_PREFIX_PATH}
+        PATH_SUFFIXES lib lib64
         NO_DEFAULT_PATH
     )
+    if(NOT OPENJPH_LINK_LIBRARY)
+        find_library(OPENJPH_LINK_LIBRARY NAMES openjph libopenjph)
+    endif()
     if(OPENJPH_LINK_LIBRARY)
         target_link_libraries(UnRAWer PRIVATE ${OPENJPH_LINK_LIBRARY})
         message(STATUS "Linking OpenJPH library at end: ${OPENJPH_LINK_LIBRARY}")
@@ -681,7 +777,6 @@ endif()
 
 # Define preprocessor macros for static linkage
 target_compile_definitions(UnRAWer PRIVATE
-    SPDLOG_USE_STD_FORMAT
     JXL_STATIC_DEFINE=1
     OPJ_STATIC
     LIBDE265_STATIC_BUILD
@@ -691,6 +786,10 @@ target_compile_definitions(UnRAWer PRIVATE
     OIIO_STATIC_DEFINE=1
     PCRE2_STATIC
 )
+
+if(UNRAWER_OIIO_USE_COMPILED_FMT)
+    target_compile_definitions(UnRAWer PRIVATE OIIO_USE_COMPILED_FMT=1)
+endif()
 
 # Windows-specific definitions
 if(WIN32)
@@ -711,19 +810,9 @@ add_custom_command(TARGET UnRAWer POST_BUILD
             "${CMAKE_CURRENT_SOURCE_DIR}/UnRAWer/src/unrw_config.toml"
             $<TARGET_FILE_DIR:UnRAWer>/unrw_config.toml)
 
-# Copy FiraSans-Regular.otf font to fonts directory
-add_custom_command(TARGET UnRAWer POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:UnRAWer>/fonts
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_CURRENT_SOURCE_DIR}/external/Fira/FiraSans-Regular.otf"
-            $<TARGET_FILE_DIR:UnRAWer>/fonts/FiraSans-Regular.otf)
-
 # ------------------------------------------------------------------------------
 #  Installation
 # ------------------------------------------------------------------------------
 include(GNUInstallDirs)
 install(TARGETS UnRAWer RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES UnRAWer/src/unrw_config.toml DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES external/Fira/FiraSans-Regular.otf DESTINATION ${CMAKE_INSTALL_BINDIR}/fonts)
-
- 
