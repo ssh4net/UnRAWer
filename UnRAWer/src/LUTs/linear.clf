@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<ProcessList compCLFversion="3" id="Identity">
+  <Description>Identity CLF transform</Description>
+  <ASC_CDL inBitDepth="32f" outBitDepth="32f" style="FwdNoClamp">
+    <Description>No-op</Description>
+    <SOPNode>
+      <Slope>1.0 1.0 1.0</Slope>
+      <Offset>0.0 0.0 0.0</Offset>
+      <Power>1.0 1.0 1.0</Power>
+    </SOPNode>
+  </ASC_CDL>
+</ProcessList>

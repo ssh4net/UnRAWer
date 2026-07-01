@@ -7,6 +7,12 @@ void
 AppMenuBar();
 void
 RenderUI();
+bool
+InitializeNativeFileDialogs();
+void
+ShutdownNativeFileDialogs();
+bool
+NativeFileDialogsAvailable();
 
 void SetDragging(bool dragging);
 bool IsDragging();

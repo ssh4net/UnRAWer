@@ -26,6 +26,7 @@
 #include <atomic>
 
 #include "imageio.h"
+#include <OpenColorIO/OpenColorTypes.h>
 
 #ifndef FILEPROCESSOR_H
 #    define FILEPROCESSOR_H
@@ -195,6 +196,7 @@ struct ProcessingParams {
 
     //LibRaw raw_data;
     std::unique_ptr<LibRaw> raw_data;
+    std::vector<char> rawBuffer;
     libraw_processed_image_t* raw_image;
     // source settings:
     std::unique_ptr<OIIO::ImageSpec> srcSpec;
@@ -296,7 +298,9 @@ struct ProcessingParams {
 };
 
 struct ProcessGlobals {
-    std::unique_ptr<OIIO::ColorConfig> ocio_conf_ptr;  // per session color config load
+    OCIO_NAMESPACE::ConstConfigRcPtr ocio_config;
+    std::mutex ocio_processor_mutex;
+    std::map<std::string, OCIO_NAMESPACE::ConstCPUProcessorRcPtr> ocio_processor_cache;
     struct PreviewSink {
         using EnqueueFn = void (*)(void* user, const char* out_file_path, int file_index1, int total_files);
         std::atomic<EnqueueFn> enqueue { nullptr };

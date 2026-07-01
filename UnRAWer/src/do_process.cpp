@@ -21,17 +21,43 @@
 
 #include "imageio.h"
 #include "do_process.h"
+#include "pathutils.h"
 #include "processors.h"
 #include "settings.h"
 #include "Timer.h"
+#include <OpenColorIO/OpenColorIO.h>
 #include <regex>
 
 namespace fs = std::filesystem;
+namespace OCIO = OCIO_NAMESPACE;
 
 std::map<std::string, std::unique_ptr<ThreadPool>> myPools;
 std::atomic_size_t fileCntr;
 
 ProcessGlobals procGlobals;
+
+static void
+initializeOcioConfigForLuts()
+{
+    {
+        std::lock_guard<std::mutex> lock(procGlobals.ocio_processor_mutex);
+        procGlobals.ocio_processor_cache.clear();
+    }
+    procGlobals.ocio_config.reset();
+
+    if (settings.lutMode < 0 || settings.lut_Preset.empty()) {
+        return;
+    }
+
+    try {
+        procGlobals.ocio_config = OCIO::Config::CreateFromBuiltinConfig("studio-config-latest");
+        procGlobals.ocio_config->validate();
+        spdlog::info("Using OCIO built-in config: {}", procGlobals.ocio_config->getName());
+    } catch (const OCIO::Exception& e) {
+        procGlobals.ocio_config.reset();
+        spdlog::error("OCIO built-in config initialization failed: {}", e.what());
+    }
+}
 
 // Step-based progress reporting
 bool
@@ -75,14 +101,14 @@ doProcessing(const std::vector<std::string>& urls, std::function<void(float, std
 
     for (const auto& fileString : urls) {
         if (!fileString.empty()) {
-            fs::path p(fileString);
+            fs::path p = pathFromUtf8(fileString);
             if (fs::exists(p) && fs::is_directory(p)) {
-                spdlog::trace("SORT: Directory: {}", fs::absolute(p).string());
+                spdlog::trace("SORT: Directory: {}", pathToUtf8(fs::absolute(p)));
                 try {
                     for (const auto& entry :
                          fs::recursive_directory_iterator(p, fs::directory_options::follow_directory_symlink)) {
                         if (entry.is_regular_file()) {
-                            std::string file = entry.path().string();
+                            std::string file = pathToUtf8(entry.path());
                             if (isRaw(file, raw_ext_set)) {
                                 fileNames.push_back(file);
                                 count++;
@@ -113,7 +139,7 @@ doProcessing(const std::vector<std::string>& urls, std::function<void(float, std
         return false;
     }
 
-    procGlobals.ocio_conf_ptr = std::make_unique<OIIO::ColorConfig>(settings.ocioConfigPath);
+    initializeOcioConfigForLuts();
 
     std::vector<std::future<bool>> results;
 

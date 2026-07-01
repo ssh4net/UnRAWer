@@ -17,6 +17,7 @@
  */
 #include "pch.h"
 #include "settings.h"
+#include "pathutils.h"
 
 #include <toml.hpp>
 
@@ -32,6 +33,89 @@ get_value(const toml::value& v, const std::string& section, const std::string& k
     }
 }
 
+static std::string
+settingsToken(const std::string& value)
+{
+    std::string result;
+    result.reserve(value.size());
+    for (char c : value) {
+        if (c != ' ' && c != '-' && c != '_' && c != '/') {
+            result.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+        }
+    }
+    return result;
+}
+
+template<typename Fn>
+static void
+get_codec_value(const toml::value& data, const std::string& section, const std::string& key, int& var, Fn parser)
+{
+    if (!data.contains(section) || !data.at(section).contains(key)) {
+        return;
+    }
+    const toml::value& value = data.at(section).at(key);
+    if (value.is_string()) {
+        var = parser(value.as_string(), var);
+    } else if (value.is_integer()) {
+        var = static_cast<int>(value.as_integer());
+    }
+}
+
+static int
+tiffCompressionFromString(const std::string& value, int fallback)
+{
+    const std::string token = settingsToken(value);
+    if (token == "zip" || token == "deflate" || token == "zipdeflate") return TiffCompression_Zip;
+    if (token == "lzw") return TiffCompression_Lzw;
+    if (token == "packbits") return TiffCompression_PackBits;
+    if (token == "none") return TiffCompression_None;
+    return fallback;
+}
+
+static int
+exrCompressionFromString(const std::string& value, int fallback)
+{
+    const std::string token = settingsToken(value);
+    if (token == "zip" || token == "deflate" || token == "zipdeflate") return ExrCompression_Zip;
+    if (token == "zips") return ExrCompression_Zips;
+    if (token == "piz") return ExrCompression_Piz;
+    if (token == "pxr24") return ExrCompression_Pxr24;
+    if (token == "rle") return ExrCompression_Rle;
+    if (token == "b44") return ExrCompression_B44;
+    if (token == "b44a") return ExrCompression_B44A;
+    if (token == "dwaa") return ExrCompression_Dwaa;
+    if (token == "dwab") return ExrCompression_Dwab;
+    if (token == "htj2k256") return ExrCompression_Htj2k256;
+    if (token == "htj2k32") return ExrCompression_Htj2k32;
+    if (token == "none") return ExrCompression_None;
+    return fallback;
+}
+
+static int
+pngStrategyFromString(const std::string& value, int fallback)
+{
+    const std::string token = settingsToken(value);
+    if (token == "default") return PngCompression_Default;
+    if (token == "filtered") return PngCompression_Filtered;
+    if (token == "huffman") return PngCompression_Huffman;
+    if (token == "rle") return PngCompression_Rle;
+    if (token == "fixed") return PngCompression_Fixed;
+    if (token == "fast" || token == "pngfast") return PngCompression_Fast;
+    if (token == "none") return PngCompression_None;
+    return fallback;
+}
+
+static int
+jpegSubsamplingFromString(const std::string& value, int fallback)
+{
+    const std::string token = settingsToken(value);
+    if (token == "4:4:4" || token == "444") return JpegSubsampling_444;
+    if (token == "4:2:2" || token == "422") return JpegSubsampling_422;
+    if (token == "4:2:0" || token == "420") return JpegSubsampling_420;
+    if (token == "4:1:1" || token == "411") return JpegSubsampling_411;
+    return fallback;
+}
+
 // Specialization or overload for handling type mismatches if necessary,
 // but toml11 usually handles conversions well for standard types.
 
@@ -39,7 +123,22 @@ bool
 loadSettings(Settings& settings, const std::string& filename)
 {
     try {
-        const auto data = toml::parse(filename);
+        namespace fs = std::filesystem;
+        const fs::path config_path = pathFromUtf8(filename);
+        std::error_code ec;
+        fs::path config_dir = fs::absolute(config_path, ec).parent_path();
+        if (ec || config_dir.empty()) {
+            config_dir = fs::current_path();
+        }
+
+        std::ifstream config_stream(config_path, std::ios::binary);
+        if (!config_stream) {
+            spdlog::error("Could not open settings file: {}", filename);
+            return false;
+        }
+        const auto data = toml::parse(config_stream, filename);
+
+        settings.lut_Preset.clear();
 
         get_value(data, "Global", "Console", settings.conEnable);
         get_value(data, "Global", "Threads", settings.threads);
@@ -59,6 +158,47 @@ loadSettings(Settings& settings, const std::string& filename)
         get_value(data, "Export", "DefaultBit", settings.defBDepth);
         get_value(data, "Export", "BitDepth", settings.bitDepth);
         get_value(data, "Export", "Quality", settings.quality);
+        settings.jpegQuality  = settings.quality;
+        settings.heicQuality  = settings.quality;
+        settings.jpegxlQuality = settings.quality;
+
+        get_codec_value(data, "Encoding", "TiffCompression", settings.tiffCompression, tiffCompressionFromString);
+        get_value(data, "Encoding", "TiffZipLevel", settings.tiffZipLevel);
+        get_codec_value(data, "Encoding", "OpenEXRCompression", settings.exrCompression, exrCompressionFromString);
+        get_value(data, "Encoding", "OpenEXRZipLevel", settings.exrZipLevel);
+        get_value(data, "Encoding", "OpenEXRDwaLevel", settings.exrDwaLevel);
+        get_codec_value(data, "Encoding", "PngStrategy", settings.pngStrategy, pngStrategyFromString);
+        get_value(data, "Encoding", "PngLevel", settings.pngCompressionLevel);
+        get_value(data, "Encoding", "JpegQuality", settings.jpegQuality);
+        get_codec_value(data, "Encoding", "JpegSubsampling", settings.jpegSubsampling, jpegSubsamplingFromString);
+        get_value(data, "Encoding", "Jpeg2000QStep", settings.jpeg2000QStep);
+        get_value(data, "Encoding", "HeicQuality", settings.heicQuality);
+        get_value(data, "Encoding", "JpegXLQuality", settings.jpegxlQuality);
+        get_value(data, "Encoding", "JpegXLEffort", settings.jpegxlEffort);
+        get_value(data, "Encoding", "JpegXLSpeed", settings.jpegxlSpeed);
+
+        settings.defFormat           = std::clamp(settings.defFormat, 0, 8);
+        settings.fileFormat          = std::clamp(settings.fileFormat, -1, 8);
+        settings.defBDepth           = std::clamp(settings.defBDepth, 0, 6);
+        settings.bitDepth            = std::clamp(settings.bitDepth, -1, 6);
+        settings.tiffCompression     = std::clamp(settings.tiffCompression, static_cast<int>(TiffCompression_Zip),
+                                                  static_cast<int>(TiffCompression_None));
+        settings.tiffZipLevel        = std::clamp(settings.tiffZipLevel, 1, 9);
+        settings.exrCompression      = std::clamp(settings.exrCompression, static_cast<int>(ExrCompression_Zip),
+                                                  static_cast<int>(ExrCompression_None));
+        settings.exrZipLevel         = std::clamp(settings.exrZipLevel, 1, 9);
+        settings.exrDwaLevel         = std::clamp(settings.exrDwaLevel, 1, 100);
+        settings.pngStrategy         = std::clamp(settings.pngStrategy, static_cast<int>(PngCompression_Default),
+                                                  static_cast<int>(PngCompression_None));
+        settings.pngCompressionLevel = std::clamp(settings.pngCompressionLevel, 0, 9);
+        settings.jpegQuality         = std::clamp(settings.jpegQuality, 1, 100);
+        settings.jpegSubsampling     = std::clamp(settings.jpegSubsampling, static_cast<int>(JpegSubsampling_444),
+                                                  static_cast<int>(JpegSubsampling_411));
+        settings.jpeg2000QStep       = std::clamp(settings.jpeg2000QStep, -1.0f, 10.0f);
+        settings.heicQuality         = std::clamp(settings.heicQuality, 1, 100);
+        settings.jpegxlQuality       = std::clamp(settings.jpegxlQuality, 1, 100);
+        settings.jpegxlEffort        = std::clamp(settings.jpegxlEffort, 1, 9);
+        settings.jpegxlSpeed         = std::clamp(settings.jpegxlSpeed, 0, 4);
 
         get_value(data, "CameraRaw", "RawRotation", settings.rawRot);
         get_value(data, "CameraRaw", "RawColorSpace", settings.rawSpace);
@@ -83,8 +223,6 @@ loadSettings(Settings& settings, const std::string& filename)
         get_value(data, "CameraRaw", "fbdd_noiserd", settings.rawParms.fbdd_noiserd);
         get_value(data, "CameraRaw", "exif_crop", settings.crop_mode);
 
-        get_value(data, "OCIO", "OCIO_Config", settings.ocioConfigPath);
-
         get_value(data, "Transform", "LutFolder", settings.lutFolder);
         get_value(data, "Transform", "LutTransform", settings.lutMode);
         get_value(data, "Transform", "LutDefault", settings.dLutPreset);
@@ -96,15 +234,16 @@ loadSettings(Settings& settings, const std::string& filename)
         get_value(data, "Unsharp", "sharp_contrast", settings.sharp_contrast);
         get_value(data, "Unsharp", "sharp_treshold", settings.sharp_tresh);
 
-        // Scan LUT folder
-        namespace fs = std::filesystem;
-        fs::path lutPath(settings.lutFolder);
+        fs::path lutPath = pathFromUtf8(settings.lutFolder);
+        if (!lutPath.empty() && lutPath.is_relative()) {
+            lutPath = config_dir / lutPath;
+        }
         if (fs::exists(lutPath) && fs::is_directory(lutPath)) {
             lutPath            = fs::absolute(lutPath);
-            settings.lutFolder = lutPath.string();
+            settings.lutFolder = pathToUtf8(lutPath);
             for (const auto& entry : fs::directory_iterator(lutPath)) {
                 if (entry.is_regular_file()) {
-                    settings.lut_Preset[entry.path().stem().string()] = entry.path().string();
+                    settings.lut_Preset[pathToUtf8(entry.path().stem())] = pathToUtf8(entry.path());
                 }
             }
         }
@@ -133,6 +272,15 @@ printSettings(Settings& settings)
     spdlog::info("Export Format: {}", settings.fileFormat);
     spdlog::info("Bit Depth: {}", settings.bitDepth);
     spdlog::info("Quality: {}", settings.quality);
+    spdlog::info("TIFF Compression: {} level {}", settings.tiffCompression, settings.tiffZipLevel);
+    spdlog::info("OpenEXR Compression: {} zip level {} dwa level {}", settings.exrCompression, settings.exrZipLevel,
+                 settings.exrDwaLevel);
+    spdlog::info("PNG Compression: {} level {}", settings.pngStrategy, settings.pngCompressionLevel);
+    spdlog::info("JPEG Quality: {} subsampling {}", settings.jpegQuality, settings.jpegSubsampling);
+    spdlog::info("HTJ2K QStep: {}", settings.jpeg2000QStep);
+    spdlog::info("HEIC Quality: {}", settings.heicQuality);
+    spdlog::info("JPEG XL Quality: {} effort {} speed {}", settings.jpegxlQuality, settings.jpegxlEffort,
+                 settings.jpegxlSpeed);
 
     spdlog::info("Raw Rotation: {}", settings.rawRot);
     spdlog::info("Raw Color Space: {}", settings.rawSpace);
@@ -141,7 +289,6 @@ printSettings(Settings& settings)
     spdlog::info("Auto WB: {}", settings.rawParms.use_auto_wb);
     spdlog::info("Camera WB: {}", settings.rawParms.use_camera_wb);
 
-    spdlog::info("OCIO Config: {}", settings.ocioConfigPath);
     spdlog::info("LUT Mode: {}", settings.lutMode);
     spdlog::info("Sharp Mode: {}", settings.sharp_mode);
     spdlog::info("------------------------");

@@ -216,14 +216,21 @@ At this moment, both auto and force work the same. TODO: merge them into the one
 `exif_crop = 0`
 
 ## OCIO settings
-OCIO config file:
-If empty, the OpenColorIO library will use the $OCIO environment variable
-### If $OCIO is not set, app will give an error
+UnRAWer uses OpenColorIO's built-in `studio-config-latest` config for LUT transforms. No external
+`config.ocio` file or `$OCIO` environment variable is required.
 
-`OCIO_Config = "aces_1.2/config.ocio"`
+## User config and LUTs
+On first run, UnRAWer creates a user config folder, copies the default `unrw_config.toml`, and copies the packaged
+example LUTs into a `LUTs` subfolder. Existing user config files and existing `LUTs` folders are not overwritten.
+
+- Windows: `%APPDATA%\UnRAWer`
+- macOS: `~/Library/Application Support/UnRAWer`
+- Linux: `${XDG_CONFIG_HOME:-~/.config}/unrawer`
+
+Dear ImGui state is stored in the same folder as `imgui.ini`.
 
 ## Transform image (color transform)
-Luts folder, absolute or relative to a program folder. **UnRAWer** automatically loads the list of LUTs in this folder in load time.
+Luts folder, absolute or relative to the TOML config file. **UnRAWer** automatically loads the list of LUTs in this folder in load time.
 *Use a console to check if LUTs are correctly recognized.*
 **No LUT checking load time!!**
 (TODO: check if non-default handle correctly)

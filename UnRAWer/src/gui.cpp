@@ -1,11 +1,20 @@
 #include "pch.h"
 #include "gui.h"
+#include "app_console.h"
+#include "app_paths.h"
 #include "settings.h"
 #include "do_process.h"
 #include "fileProcessor.h"
+#include "pathutils.h"
+#include "presets.h"
 #include "preview.h"
 
+#include <cctype>
 #include <cstdio>
+
+#ifdef UNRAWER_WITH_NFD
+#    include <nfd.h>
+#endif
 
 #ifndef GL_CLAMP_TO_EDGE
 #    define GL_CLAMP_TO_EDGE 0x812F
@@ -33,8 +42,391 @@ static double g_previewLastSwapTime = 0.0;
 static int g_previewFileIndex1      = 0;
 static int g_previewTotalFiles      = 0;
 static int g_previewShownCount      = 0;
+static std::vector<PresetEntry> g_presets;
+static bool g_presetsLoaded = false;
+static char g_presetNameBuffer[128] = "Preset";
+static bool g_nativeFileDialogsReady = false;
+static bool g_openEncoderSettings = false;
+
+enum class PendingPresetPopup {
+    None,
+    SaveLocal,
+};
+
+static PendingPresetPopup g_pendingPresetPopup = PendingPresetPopup::None;
 
 static void PreviewSinkEnqueue(void* user, const char* out_file_path, int file_index1, int total_files);
+
+bool
+InitializeNativeFileDialogs()
+{
+#ifdef UNRAWER_WITH_NFD
+    const nfdresult_t result = NFD_Init();
+    if (result == NFD_OKAY) {
+        g_nativeFileDialogsReady = true;
+        return true;
+    }
+
+    const char* err = NFD_GetError();
+    spdlog::warn("Native file dialog init failed: {}", err != nullptr ? err : "unknown error");
+#endif
+    g_nativeFileDialogsReady = false;
+    return false;
+}
+
+void
+ShutdownNativeFileDialogs()
+{
+#ifdef UNRAWER_WITH_NFD
+    if (g_nativeFileDialogsReady) {
+        NFD_Quit();
+    }
+#endif
+    g_nativeFileDialogsReady = false;
+}
+
+bool
+NativeFileDialogsAvailable()
+{
+    return g_nativeFileDialogsReady;
+}
+
+static GLFWwindow*
+CurrentMainGlfwWindow()
+{
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    if (viewport == nullptr || viewport->PlatformHandle == nullptr) {
+        return nullptr;
+    }
+    return static_cast<GLFWwindow*>(viewport->PlatformHandle);
+}
+
+static void
+SetMainWindowFloating(bool enabled)
+{
+    GLFWwindow* window = CurrentMainGlfwWindow();
+    if (window != nullptr) {
+        glfwSetWindowAttrib(window, GLFW_FLOATING, enabled ? GLFW_TRUE : GLFW_FALSE);
+    }
+}
+
+static constexpr const char* kTiffCompressionLabels[] = { "ZIP/Deflate", "LZW", "PackBits", "None" };
+static constexpr const char* kExrCompressionLabels[]  = {
+    "ZIP", "ZIPS", "PIZ", "PXR24", "RLE", "B44", "B44A", "DWAA", "DWAB", "HTJ2K256", "HTJ2K32", "None",
+};
+static constexpr const char* kPngStrategyLabels[] = {
+    "Default", "Filtered", "Huffman", "RLE", "Fixed", "PNG fast", "None",
+};
+static constexpr const char* kJpegSubsamplingLabels[] = { "4:4:4", "4:2:2", "4:2:0", "4:1:1" };
+
+static void
+DisabledDash()
+{
+    ImGui::BeginDisabled();
+    ImGui::TextUnformatted("-");
+    ImGui::EndDisabled();
+}
+
+static void
+SetControlWidth(float width)
+{
+    ImGui::SetNextItemWidth(width);
+}
+
+static void
+RenderEncoderSettingsWindow()
+{
+    if (!g_openEncoderSettings) {
+        return;
+    }
+
+    ImGui::SetNextWindowSize(ImVec2(820.0f, 430.0f), ImGuiCond_FirstUseEver);
+    if (!ImGui::Begin("Encoder Settings", &g_openEncoderSettings)) {
+        ImGui::End();
+        return;
+    }
+
+    if (ImGui::BeginTable("EncoderSettingsTable", 4,
+                          ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp)) {
+        ImGui::TableSetupColumn("Format", ImGuiTableColumnFlags_WidthFixed, 92.0f);
+        ImGui::TableSetupColumn("Codec", ImGuiTableColumnFlags_WidthStretch, 1.0f);
+        ImGui::TableSetupColumn("Level", ImGuiTableColumnFlags_WidthStretch, 1.0f);
+        ImGui::TableSetupColumn("Extra", ImGuiTableColumnFlags_WidthStretch, 1.15f);
+        ImGui::TableHeadersRow();
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("TIFF");
+        ImGui::TableSetColumnIndex(1);
+        SetControlWidth(170.0f);
+        ImGui::Combo("##tiffCompression", &settings.tiffCompression, kTiffCompressionLabels,
+                     IM_ARRAYSIZE(kTiffCompressionLabels));
+        ImGui::TableSetColumnIndex(2);
+        if (settings.tiffCompression == TiffCompression_Zip) {
+            SetControlWidth(150.0f);
+            ImGui::SliderInt("##tiffZipLevel", &settings.tiffZipLevel, 1, 9);
+        } else {
+            DisabledDash();
+        }
+        ImGui::TableSetColumnIndex(3);
+        DisabledDash();
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("OpenEXR");
+        ImGui::TableSetColumnIndex(1);
+        SetControlWidth(170.0f);
+        ImGui::Combo("##exrCompression", &settings.exrCompression, kExrCompressionLabels,
+                     IM_ARRAYSIZE(kExrCompressionLabels));
+        ImGui::TableSetColumnIndex(2);
+        if (settings.exrCompression == ExrCompression_Zip || settings.exrCompression == ExrCompression_Zips) {
+            SetControlWidth(150.0f);
+            ImGui::SliderInt("##exrZipLevel", &settings.exrZipLevel, 1, 9);
+        } else if (settings.exrCompression == ExrCompression_Dwaa || settings.exrCompression == ExrCompression_Dwab) {
+            SetControlWidth(150.0f);
+            ImGui::SliderInt("##exrDwaLevel", &settings.exrDwaLevel, 1, 100);
+        } else {
+            DisabledDash();
+        }
+        ImGui::TableSetColumnIndex(3);
+        DisabledDash();
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("PNG");
+        ImGui::TableSetColumnIndex(1);
+        SetControlWidth(170.0f);
+        ImGui::Combo("##pngStrategy", &settings.pngStrategy, kPngStrategyLabels, IM_ARRAYSIZE(kPngStrategyLabels));
+        ImGui::TableSetColumnIndex(2);
+        if (settings.pngStrategy != PngCompression_Fast && settings.pngStrategy != PngCompression_None) {
+            SetControlWidth(150.0f);
+            ImGui::SliderInt("##pngLevel", &settings.pngCompressionLevel, 0, 9);
+        } else {
+            DisabledDash();
+        }
+        ImGui::TableSetColumnIndex(3);
+        DisabledDash();
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("JPEG");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextUnformatted("JPEG");
+        ImGui::TableSetColumnIndex(2);
+        SetControlWidth(150.0f);
+        ImGui::SliderInt("##jpegQuality", &settings.jpegQuality, 1, 100);
+        ImGui::TableSetColumnIndex(3);
+        SetControlWidth(150.0f);
+        ImGui::Combo("##jpegSubsampling", &settings.jpegSubsampling, kJpegSubsamplingLabels,
+                     IM_ARRAYSIZE(kJpegSubsamplingLabels));
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("JPEG-2000");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextUnformatted("OpenJPEG");
+        ImGui::TableSetColumnIndex(2);
+        DisabledDash();
+        ImGui::TableSetColumnIndex(3);
+        DisabledDash();
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("HTJ2K");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextUnformatted("OpenJPH");
+        ImGui::TableSetColumnIndex(2);
+        SetControlWidth(150.0f);
+        ImGui::DragFloat("##jpeg2000QStep", &settings.jpeg2000QStep, 0.001f, -1.0f, 10.0f, "%.4f");
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("0 or less uses reversible output.");
+        }
+        ImGui::TableSetColumnIndex(3);
+        DisabledDash();
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("JPEG XL");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextUnformatted("JPEG XL");
+        ImGui::TableSetColumnIndex(2);
+        SetControlWidth(150.0f);
+        ImGui::SliderInt("##jpegxlQuality", &settings.jpegxlQuality, 1, 100);
+        ImGui::TableSetColumnIndex(3);
+        SetControlWidth(92.0f);
+        ImGui::SliderInt("Effort##jpegxlEffort", &settings.jpegxlEffort, 1, 9);
+        ImGui::SameLine();
+        SetControlWidth(92.0f);
+        ImGui::SliderInt("Speed##jpegxlSpeed", &settings.jpegxlSpeed, 0, 4);
+
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("HEIC");
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextUnformatted("HEIC");
+        ImGui::TableSetColumnIndex(2);
+        SetControlWidth(150.0f);
+        ImGui::SliderInt("##heicQuality", &settings.heicQuality, 1, 100);
+        ImGui::TableSetColumnIndex(3);
+        DisabledDash();
+
+        ImGui::EndTable();
+    }
+
+    settings.tiffZipLevel        = std::clamp(settings.tiffZipLevel, 1, 9);
+    settings.exrZipLevel         = std::clamp(settings.exrZipLevel, 1, 9);
+    settings.exrDwaLevel         = std::clamp(settings.exrDwaLevel, 1, 100);
+    settings.pngCompressionLevel = std::clamp(settings.pngCompressionLevel, 0, 9);
+    settings.jpegQuality         = std::clamp(settings.jpegQuality, 1, 100);
+    settings.jpeg2000QStep       = std::clamp(settings.jpeg2000QStep, -1.0f, 10.0f);
+    settings.heicQuality         = std::clamp(settings.heicQuality, 1, 100);
+    settings.jpegxlQuality       = std::clamp(settings.jpegxlQuality, 1, 100);
+    settings.jpegxlEffort        = std::clamp(settings.jpegxlEffort, 1, 9);
+    settings.jpegxlSpeed         = std::clamp(settings.jpegxlSpeed, 0, 4);
+
+    ImGui::End();
+}
+
+static bool
+SavePortablePresetDialogPath(const std::string& presetName, std::filesystem::path& outputPath)
+{
+#ifdef UNRAWER_WITH_NFD
+    if (!g_nativeFileDialogsReady) {
+        return false;
+    }
+
+    const std::string default_dir  = pathToUtf8(appRuntimePaths().user_preset_dir);
+    const std::string default_name = presetName + ".unrwpreset";
+    const nfdfilteritem_t filters[] = { { "UnRAWer portable preset", "unrwpreset" } };
+
+    nfdchar_t* path = nullptr;
+    SetMainWindowFloating(false);
+    const nfdresult_t result
+        = NFD_SaveDialog(&path, filters, 1, default_dir.c_str(), default_name.c_str());
+    SetMainWindowFloating(true);
+
+    if (result == NFD_OKAY && path != nullptr) {
+        outputPath = pathFromUtf8(path);
+        NFD_FreePath(path);
+        return true;
+    }
+    if (path != nullptr) {
+        NFD_FreePath(path);
+    }
+    if (result == NFD_ERROR) {
+        const char* err = NFD_GetError();
+        spdlog::error("Save preset dialog failed: {}", err != nullptr ? err : "unknown error");
+    }
+#endif
+    return false;
+}
+
+static std::string
+PresetNameFromCurrentSettings()
+{
+    std::string name = settings.dLutPreset.empty() ? "Preset" : settings.dLutPreset;
+    for (char& c : name) {
+        const unsigned char uc = static_cast<unsigned char>(c);
+        if (!std::isalnum(uc) && c != '_' && c != '-' && c != ' ') {
+            c = '_';
+        }
+    }
+    while (!name.empty() && name.front() == ' ') {
+        name.erase(name.begin());
+    }
+    while (!name.empty() && name.back() == ' ') {
+        name.pop_back();
+    }
+    if (name.empty()) {
+        name = "Preset";
+    }
+    return name;
+}
+
+static bool
+OpenPresetDialogPath(std::filesystem::path& presetPath)
+{
+#ifdef UNRAWER_WITH_NFD
+    if (!g_nativeFileDialogsReady) {
+        return false;
+    }
+
+    const std::string default_dir = pathToUtf8(appRuntimePaths().user_preset_dir);
+    const nfdfilteritem_t filters[] = { { "UnRAWer presets", "unrwpreset,toml" } };
+
+    nfdchar_t* path = nullptr;
+    SetMainWindowFloating(false);
+    const nfdresult_t result = NFD_OpenDialog(&path, filters, 1, default_dir.c_str());
+    SetMainWindowFloating(true);
+
+    if (result == NFD_OKAY && path != nullptr) {
+        presetPath = pathFromUtf8(path);
+        NFD_FreePath(path);
+        return true;
+    }
+    if (path != nullptr) {
+        NFD_FreePath(path);
+    }
+    if (result == NFD_ERROR) {
+        const char* err = NFD_GetError();
+        spdlog::error("Open preset dialog failed: {}", err != nullptr ? err : "unknown error");
+    }
+#endif
+    return false;
+}
+
+static void
+SetStatusText(std::string text)
+{
+    std::lock_guard<std::mutex> lock(g_statusMutex);
+    g_statusText = std::move(text);
+}
+
+static void
+RefreshPresetList()
+{
+    g_presets       = ListPresets();
+    g_presetsLoaded = true;
+}
+
+static void
+QueuePresetNamePopup(PendingPresetPopup popup)
+{
+    if (!settings.dLutPreset.empty()) {
+        std::snprintf(g_presetNameBuffer, sizeof(g_presetNameBuffer), "%s", settings.dLutPreset.c_str());
+    } else {
+        std::snprintf(g_presetNameBuffer, sizeof(g_presetNameBuffer), "%s", "Preset");
+    }
+    g_pendingPresetPopup = popup;
+}
+
+static void
+RenderPresetPopups()
+{
+    if (g_pendingPresetPopup == PendingPresetPopup::SaveLocal) {
+        ImGui::OpenPopup("Save Local Preset");
+        g_pendingPresetPopup = PendingPresetPopup::None;
+    }
+
+    if (ImGui::BeginPopupModal("Save Local Preset", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::InputText("Name", g_presetNameBuffer, IM_ARRAYSIZE(g_presetNameBuffer));
+        if (ImGui::Button("Save")) {
+            if (SaveLocalPreset(settings, g_presetNameBuffer)) {
+                RefreshPresetList();
+                SetStatusText("Local preset saved.");
+                ImGui::CloseCurrentPopup();
+            } else {
+                SetStatusText("Local preset save failed.");
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+}
 
 static void
 ApplyPreviewSettingsFromConfig()
@@ -246,7 +638,7 @@ ZeroRaw()
     settings.rawParms.use_camera_wb     = false;
     settings.rawParms.use_camera_matrix = 0;  // Disabled
     settings.rawParms.highlight         = 1;  // Unclip
-    settings.fileFormat                 = 7;  // PPM (index in list)
+    settings.fileFormat                 = 8;  // PPM (index in list)
     settings.bitDepth                   = 1;  // 16 bits int
 }
 
@@ -272,7 +664,7 @@ AppMenuBar()
         // Files
         if (ImGui::BeginMenu("Files")) {
             if (ImGui::MenuItem("Reload Config")) {
-                if (loadSettings(settings, "unrw_config.toml")) {
+                if (loadSettings(settings, appRuntimePaths().user_config_file_string)) {
                     ApplyPreviewSettingsFromConfig();
                     printSettings(settings);
                 }
@@ -280,6 +672,69 @@ AppMenuBar()
             ImGui::Separator();
             if (ImGui::MenuItem("Exit")) {
                 exit(0);
+            }
+            ImGui::EndMenu();
+        }
+
+        // Presets
+        if (ImGui::BeginMenu("Presets")) {
+            if (!g_presetsLoaded) {
+                RefreshPresetList();
+            }
+
+            if (ImGui::BeginMenu("Load")) {
+                if (g_presets.empty()) {
+                    ImGui::MenuItem("(No presets found)", NULL, false, false);
+                } else {
+                    for (const PresetEntry& preset : g_presets) {
+                        const std::string label
+                            = preset.name
+                              + (preset.storage == PresetStorage::PortableZip ? "  [portable]" : "  [local]");
+                        if (ImGui::MenuItem(label.c_str())) {
+                            if (LoadPreset(preset, settings)) {
+                                SetStatusText("Preset loaded: " + preset.name);
+                                printSettings(settings);
+                            } else {
+                                SetStatusText("Preset load failed: " + preset.name);
+                            }
+                        }
+                    }
+                }
+                ImGui::EndMenu();
+            }
+
+            ImGui::Separator();
+            if (ImGui::MenuItem("Save Local Preset...")) {
+                QueuePresetNamePopup(PendingPresetPopup::SaveLocal);
+            }
+            if (ImGui::MenuItem("Export Portable Preset...", nullptr, false, NativeFileDialogsAvailable())) {
+                const std::string presetName = PresetNameFromCurrentSettings();
+                std::filesystem::path outputPath;
+                if (SavePortablePresetDialogPath(presetName, outputPath)
+                    && ExportPortablePresetToFile(settings, presetName, outputPath)) {
+                    RefreshPresetList();
+                    SetStatusText("Portable preset exported.");
+                } else {
+                    SetStatusText("Portable preset export canceled or failed.");
+                }
+            }
+            if (ImGui::MenuItem("Load Preset File...", nullptr, false, NativeFileDialogsAvailable())) {
+                std::filesystem::path presetPath;
+                if (OpenPresetDialogPath(presetPath) && LoadPresetFile(presetPath, settings)) {
+                    SetStatusText("Preset loaded: " + pathToUtf8(presetPath.filename()));
+                    printSettings(settings);
+                } else {
+                    SetStatusText("Preset import canceled or failed.");
+                }
+            }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Refresh Presets")) {
+                RefreshPresetList();
+            }
+            if (ImGui::MenuItem("Open Presets Folder")) {
+                if (!OpenPresetsFolder()) {
+                    SetStatusText("Could not open presets folder.");
+                }
             }
             ImGui::EndMenu();
         }
@@ -453,9 +908,10 @@ AppMenuBar()
                 MenuRadio("PNG", settings.fileFormat, 2);
                 MenuRadio("JPEG", settings.fileFormat, 3);
                 MenuRadio("JPEG2000", settings.fileFormat, 4);
-                MenuRadio("JPEG-XL", settings.fileFormat, 5);
-                MenuRadio("HEIC", settings.fileFormat, 6);
-                MenuRadio("PPM", settings.fileFormat, 7);
+                MenuRadio("HTJ2K", settings.fileFormat, 5);
+                MenuRadio("JPEG-XL", settings.fileFormat, 6);
+                MenuRadio("HEIC", settings.fileFormat, 7);
+                MenuRadio("PPM", settings.fileFormat, 8);
                 ImGui::EndMenu();
             }
 
@@ -483,6 +939,10 @@ AppMenuBar()
         if (ImGui::BeginMenu("Settings")) {
             if (ImGui::MenuItem("Enable Console", NULL, settings.conEnable)) {
                 settings.conEnable = !settings.conEnable;
+                SetAppConsoleEnabled(settings.conEnable);
+            }
+            if (ImGui::MenuItem("Encoder Settings...")) {
+                g_openEncoderSettings = true;
             }
             ImGui::Separator();
             if (ImGui::MenuItem("Print Settings")) {
@@ -507,6 +967,8 @@ AppMenuBar()
 
         ImGui::EndMenuBar();
     }
+
+    RenderPresetPopups();
 
     ImGui::PopStyleVar(3);
 }
@@ -542,6 +1004,8 @@ RenderUI()
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
 
         // --- Main Content Area ---
+        RenderEncoderSettingsWindow();
+
         // Calculate remaining size for Drop Area and Footer
         ImVec2 regionSize = ImGui::GetContentRegionAvail();
 

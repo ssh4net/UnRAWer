@@ -19,9 +19,11 @@
 
 #include "pch.h"
 
+#include "app_paths.h"
 #include "cli.h"
 #include "settings.h"
 #include "do_process.h"
+#include "pathutils.h"
 
 // Check if the string ends with the given suffix (case-insensitive)
 bool
@@ -56,7 +58,7 @@ std::vector<std::string>
 readBatchFile(const std::string& file)
 {
     std::vector<std::string> URLs;
-    std::ifstream batchFile(file);
+    std::ifstream batchFile(pathFromUtf8(file));
     if (!batchFile.is_open()) {
         std::cerr << "Error: Can not open the batch file [" << file << "]" << std::endl;
         return URLs;
@@ -73,15 +75,19 @@ readBatchFile(const std::string& file)
 int
 cli_main(int argc, char* argv[])
 {
+    const std::vector<std::string> args = commandLineArgsUtf8(argc, argv);
+    if (args.size() <= 1) {
+        return 0;
+    }
+
     int i         = 1;
     int verbosity = 3;
 
     const std::string shortFlag = "-v=";
     const std::string longFlag  = "-verbose=";
-    if (std::string(argv[1]).find(shortFlag) != std::string::npos
-        || std::string(argv[1]).find(longFlag) != std::string::npos) {
-        if (std::string(argv[1]).find("=") != std::string::npos) {
-            verbosity = std::stoi(std::string(argv[1]).substr(std::string(argv[1]).find("=") + 1));
+    if (args[1].find(shortFlag) != std::string::npos || args[1].find(longFlag) != std::string::npos) {
+        if (args[1].find("=") != std::string::npos) {
+            verbosity = std::stoi(args[1].substr(args[1].find("=") + 1));
             i++;
         } else {
             std::cerr << "Error: Invalid verbosity flag. Using default verbosity." << std::endl;
@@ -100,8 +106,8 @@ cli_main(int argc, char* argv[])
     std::vector<std::string> filePaths;
 
     // Iterate through command-line arguments
-    for (; i < argc; ++i) {
-        char* arg = argv[i];
+    for (; i < static_cast<int>(args.size()); ++i) {
+        const std::string& arg = args[static_cast<size_t>(i)];
 
         if (endsWith(arg, configSuffix)) {
             if (configFile.empty()) {
@@ -123,7 +129,7 @@ cli_main(int argc, char* argv[])
         std::cout << configFile << std::endl;
     } else {
         std::cout << "Use default settings" << std::endl;
-        configFile = "unrw_config.toml";
+        configFile = appRuntimePaths().user_config_file_string;
     }
 
     std::cout << "Batch Files (" << batchFiles.size() << "):" << std::endl;

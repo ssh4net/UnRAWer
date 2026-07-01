@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<ProcessList compCLFversion="3" id="Exposure +2 and sRGB gamma encode">
+  <Description>Raise exposure, and encode to sRGB</Description>
+  <ASC_CDL inBitDepth="32f" outBitDepth="32f" style="FwdNoClamp">
+    <Description>Exposure +2.0</Description>
+    <SOPNode>
+      <Slope>4.0 4.0 4.0</Slope>
+      <Offset>0.0 0.0 0.0</Offset>
+      <Power>1.0 1.0 1.0</Power>
+    </SOPNode>
+  </ASC_CDL>
+  <Exponent inBitDepth="32f" outBitDepth="32f" style="monCurveRev">
+    <Description>sRGB EOTF</Description>
+    <ExponentParams exponent="2.4" offset="0.055" />
+  </Exponent>
+</ProcessList>

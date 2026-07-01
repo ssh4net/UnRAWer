@@ -18,6 +18,7 @@
 #include "pch.h"
 
 #include "fileProcessor.h"
+#include "pathutils.h"
 #include "settings.h"
 #include <filesystem>
 
@@ -53,15 +54,16 @@ getExtension(std::string& extension, Settings* settings)
 {
     extension = toLower(extension);
     switch (settings->fileFormat) {
-        //-1 - original, 0 - TIFF, 1 - OpenEXR, 2 - PNG, 3 - JPEG, 4 - JPEG-2000, 5 - JPEG-XL, 6 - HEIC, 7 - PPM
+        //-1 - original, 0 - TIFF, 1 - OpenEXR, 2 - PNG, 3 - JPEG, 4 - JPEG-2000, 5 - HTJ2K, 6 - JPEG-XL, 7 - HEIC, 8 - PPM
     case 0: return ".tif";
     case 1: return ".exr";
     case 2: return ".png";
     case 3: return ".jpg";
     case 4: return ".jp2";
-    case 5: return ".jxl";
-    case 6: return ".heic";
-    case 7: return ".ppm";
+    case 5: return ".jph";
+    case 6: return ".jxl";
+    case 7: return ".heic";
+    case 8: return ".ppm";
     }
     extension = "." + settings->out_formats[settings->defFormat];
     return extension;
@@ -70,20 +72,20 @@ getExtension(std::string& extension, Settings* settings)
 std::tuple<std::string, std::string, std::string, std::string>
 splitPath(const std::string& fileName)
 {  // returns path, parent folder, base name, extension
-    fs::path p(fileName);
-    std::string path         = p.parent_path().string();
-    std::string parentFolder = p.parent_path().filename().string();
-    std::string baseName     = p.stem().string();
-    std::string extension    = p.extension().string();
+    fs::path p = pathFromUtf8(fileName);
+    std::string path         = pathToUtf8(p.parent_path());
+    std::string parentFolder = pathToUtf8(p.parent_path().filename());
+    std::string baseName     = pathToUtf8(p.stem());
+    std::string extension    = pathToUtf8(p.extension());
     return { path, parentFolder, baseName, extension };
 }
 
 std::optional<std::string>
 getPresetfromName(const std::string& fileName, Settings* settings)
 {
-    fs::path p(fileName);
-    std::string baseName = p.stem().string();
-    std::string path     = p.parent_path().string();
+    fs::path p = pathFromUtf8(fileName);
+    std::string baseName = pathToUtf8(p.stem());
+    std::string path     = pathToUtf8(p.parent_path());
 
     std::string baseNameLower = toLower(baseName);
     std::string pathLower     = toLower(path);
@@ -149,9 +151,9 @@ getOutName(std::string& path, std::string& baseName, std::string& extension, std
     std::string outPath = path;
     if (settings->pathPrefix != "") {
         // Use fs::path to handle separator correctly
-        fs::path p(outPath);
-        p /= settings->pathPrefix;
-        outPath = p.string();
+        fs::path p = pathFromUtf8(outPath);
+        p /= pathFromUtf8(settings->pathPrefix);
+        outPath = pathToUtf8(p);
     }
     std::string outName  = baseName;
     std::string proc_sfx = "_conv";
@@ -181,9 +183,9 @@ getOutName(std::string& path, std::string& baseName, std::string& extension, std
     outExt = getExtension(extension, settings);
 
     if (settings->useSbFldr) {
-        fs::path p(outPath);
+        fs::path p = pathFromUtf8(outPath);
         p /= proc_sfx;
-        outPath = p.string();
+        outPath = pathToUtf8(p);
     } else {
         outName += proc_sfx;
     }

@@ -9,7 +9,20 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
 # ------------------------------------------------------------------------------
 #  Project metadata
 # ------------------------------------------------------------------------------
-project(UnRAWer LANGUAGES CXX C VERSION 0.1.0)
+project(UnRAWer LANGUAGES CXX C VERSION 2.1.5)
+include(GNUInstallDirs)
+
+if(MSVC)
+    set(CMAKE_INSTALL_OPENMP_LIBRARIES TRUE)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
+    include(InstallRequiredSystemLibraries)
+    set(UNRAWER_OPENMP_RUNTIME_LIBS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})
+    list(FILTER UNRAWER_OPENMP_RUNTIME_LIBS INCLUDE REGEX "([/\\\\]|^)vcomp[0-9]+d?\\.dll$")
+endif()
+
+if(APPLE)
+    enable_language(OBJCXX)
+endif()
 
 # ------------------------------------------------------------------------------
 #  Configuration restrictions (Debug and Release only)
@@ -193,6 +206,9 @@ endif()
 # Find Imath and OpenEXR first, as OpenImageIO depends on them
 find_package(Imath CONFIG)
 find_package(OpenEXR CONFIG REQUIRED)
+find_package(OpenColorIO REQUIRED)
+find_package(minizip-ng CONFIG QUIET)
+find_package(nfd CONFIG QUIET)
 
 # Find GIF (dependency of OpenImageIO)
 find_package(GIF QUIET)
@@ -321,6 +337,45 @@ endif()
 find_package(LibRaw REQUIRED)
 find_package(spdlog REQUIRED)
 
+set(LIBRAW_USES_OPENMP FALSE)
+set(UNRAWER_LIBRAW_OPENMP_LINK_LIBS "")
+set(_libraw_config_header "${LibRaw_INCLUDE_DIR}/libraw/libraw_config.h")
+if(EXISTS "${_libraw_config_header}")
+    file(STRINGS "${_libraw_config_header}" _libraw_openmp_define
+        REGEX "^#define[ \t]+LIBRAW_USE_OPENMP[ \t]+1"
+    )
+    if(_libraw_openmp_define)
+        set(LIBRAW_USES_OPENMP TRUE)
+        find_package(OpenMP QUIET COMPONENTS CXX)
+        if(OpenMP_CXX_FOUND)
+            list(APPEND UNRAWER_LIBRAW_OPENMP_LINK_LIBS OpenMP::OpenMP_CXX)
+        elseif(APPLE)
+            find_library(LIBOMP_LIBRARY
+                NAMES omp libomp
+                HINTS
+                    ${CMAKE_PREFIX_PATH}
+                    /opt/homebrew/opt/libomp
+                    /opt/homebrew
+                    /usr/local/opt/libomp
+                    /usr/local
+                PATH_SUFFIXES lib
+            )
+            if(LIBOMP_LIBRARY)
+                list(APPEND UNRAWER_LIBRAW_OPENMP_LINK_LIBS "${LIBOMP_LIBRARY}")
+            else()
+                message(FATAL_ERROR
+                    "LibRaw was built with OpenMP, but CMake could not find libomp. "
+                    "Install libomp or set LIBOMP_LIBRARY to the full path of libomp.dylib."
+                )
+            endif()
+        else()
+            message(FATAL_ERROR
+                "LibRaw was built with OpenMP, but CMake could not find OpenMP_CXX."
+            )
+        endif()
+    endif()
+endif()
+
 # Manual search for static dependencies missing from OIIO/LibRaw config interface
 set(EXTRA_STATIC_LIBS "")
 macro(add_static_dep NAME_REL NAME_DBG)
@@ -433,9 +488,31 @@ if(NOT LCMS2_FOUND)
     endif()
 endif()
 
+# Some OIIO package exports can leak stale debug-only LCMS static library names
+# through their imported link interfaces. Keep the dependency resolved through
+# lcms2::lcms2 / LCMS2 above, which is configuration-aware.
+foreach(_oiio_target OpenImageIO::OpenImageIO OpenImageIO OpenImageIO::OpenImageIO_Util OpenImageIO_Util)
+    if(TARGET ${_oiio_target})
+        get_target_property(_oiio_target_real ${_oiio_target} ALIASED_TARGET)
+        if(NOT _oiio_target_real)
+            set(_oiio_target_real ${_oiio_target})
+        endif()
+        get_target_property(_oiio_link_libs ${_oiio_target_real} INTERFACE_LINK_LIBRARIES)
+        if(_oiio_link_libs)
+            list(FILTER _oiio_link_libs EXCLUDE REGEX "([/\\\\]|^)lcms2_staticd\\.lib$")
+            set_target_properties(${_oiio_target_real} PROPERTIES INTERFACE_LINK_LIBRARIES "${_oiio_link_libs}")
+        endif()
+    endif()
+endforeach()
+unset(_oiio_target)
+unset(_oiio_target_real)
+unset(_oiio_link_libs)
+
 add_static_dep(libsharpyuv libsharpyuvd)
 add_static_dep(libexpatMT libexpatdMT)
-add_static_dep(minizip-ng minizip-ngd)
+if(NOT TARGET MINIZIP::minizip-ng)
+    add_static_dep(minizip-ng minizip-ngd)
+endif()
 add_static_dep(pystring pystringd)
 add_static_dep(pugixml pugixmld)
 add_static_dep(yaml-cpp yaml-cppd)
@@ -461,8 +538,10 @@ add_static_dep(libwebpdecoder libwebpdecoderd)
 add_static_dep(libwebpdemux libwebpdemuxd)
 add_static_dep(libwebpmux libwebpmuxd)
 
-# OCIO
-add_static_dep(OpenColorIO OpenColorIO_d)
+# OCIO fallback for packages that do not export an imported target
+if(NOT TARGET OpenColorIO::OpenColorIO)
+    add_static_dep(OpenColorIO OpenColorIO_d)
+endif()
 
 # XMP and DNG SDK (optional, for DNG file support)
 if(UNRAWER_WITH_DNG)
@@ -525,7 +604,6 @@ elseif(openjph_FOUND)
 endif()
 
 # Misc
-add_static_dep(libglew32 libglew32d)
 add_static_dep(uhdr uhdrd)
 add_static_dep(libpng18_static libpng18_staticd)
 add_static_dep(zlibstatic zlibstaticd)
@@ -587,6 +665,7 @@ dependency_status("dnd_glfw" DND_GLFW_INCLUDE_DIR)
 dependency_status("toml11" TOML11_FOUND)
 dependency_status("OpenImageIO" OpenImageIO_FOUND)
 dependency_status("LibRaw" LibRaw_FOUND)
+dependency_status("LibRaw OpenMP" LIBRAW_USES_OPENMP)
 dependency_status("spdlog" spdlog_FOUND)
 dependency_status("OpenEXR" OpenEXR_FOUND)
 dependency_status("Imath" Imath_FOUND)
@@ -644,8 +723,13 @@ add_executable(UnRAWer ${UNRAWER_SOURCES} ${IMGUI_SOURCES})
 set_target_properties(UnRAWer PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
 
 set(UNRAWER_GUI_FONT "${CMAKE_CURRENT_SOURCE_DIR}/external/Fira/FiraSans-Regular.otf")
+set(UNRAWER_DEFAULT_LUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/UnRAWer/src/LUTs")
+file(TO_CMAKE_PATH "${CMAKE_INSTALL_FULL_BINDIR}" UNRAWER_INSTALL_RESOURCE_DIR)
 if(NOT EXISTS "${UNRAWER_GUI_FONT}")
     message(FATAL_ERROR "Expected GUI font not found at ${UNRAWER_GUI_FONT}")
+endif()
+if(NOT EXISTS "${UNRAWER_DEFAULT_LUT_DIR}")
+    message(FATAL_ERROR "Expected default LUT folder not found at ${UNRAWER_DEFAULT_LUT_DIR}")
 endif()
 
 if(WIN32)
@@ -667,6 +751,12 @@ else()
         VERBATIM
     )
     target_sources(UnRAWer PRIVATE "${UNRAWER_EMBEDDED_FONT_SOURCE}")
+endif()
+
+if(APPLE)
+    target_sources(UnRAWer PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/external/dnd_glfw/dnd_glfw_macos.mm"
+    )
 endif()
 
 # Tell the compiler where to find project and dependency headers
@@ -699,6 +789,30 @@ target_link_libraries(UnRAWer PRIVATE
     ${OPENGL_LIBRARIES}
     ${EXTRA_STATIC_LIBS}
 )
+
+if(UNRAWER_LIBRAW_OPENMP_LINK_LIBS)
+    target_link_libraries(UnRAWer PRIVATE ${UNRAWER_LIBRAW_OPENMP_LINK_LIBS})
+endif()
+
+if(TARGET OpenColorIO::OpenColorIO)
+    target_link_libraries(UnRAWer PRIVATE OpenColorIO::OpenColorIO)
+elseif(OpenColorIO_LIBRARIES)
+    target_link_libraries(UnRAWer PRIVATE ${OpenColorIO_LIBRARIES})
+endif()
+
+if(TARGET MINIZIP::minizip-ng)
+    target_link_libraries(UnRAWer PRIVATE MINIZIP::minizip-ng)
+    target_compile_definitions(UnRAWer PRIVATE UNRAWER_WITH_MINIZIP=1)
+endif()
+
+if(TARGET nfd::nfd)
+    target_link_libraries(UnRAWer PRIVATE nfd::nfd)
+    target_compile_definitions(UnRAWer PRIVATE UNRAWER_WITH_NFD=1)
+endif()
+
+if(OpenColorIO_INCLUDE_DIRS)
+    target_include_directories(UnRAWer PRIVATE ${OpenColorIO_INCLUDE_DIRS})
+endif()
 
 # OpenJPH must be linked at the end to resolve symbols needed by OpenEXR/libheif/OIIO
 # Static library link order matters - symbols providers must come after consumers
@@ -785,6 +899,11 @@ target_compile_definitions(UnRAWer PRIVATE
     LIBRAW_NODLL
     OIIO_STATIC_DEFINE=1
     PCRE2_STATIC
+    UNRAWER_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
+    UNRAWER_VERSION_MINOR=${PROJECT_VERSION_MINOR}
+    UNRAWER_VERSION_PATCH=${PROJECT_VERSION_PATCH}
+    UNRAWER_VERSION_STRING="${PROJECT_VERSION}"
+    UNRAWER_INSTALL_DATADIR="${UNRAWER_INSTALL_RESOURCE_DIR}"
 )
 
 if(UNRAWER_OIIO_USE_COMPILED_FMT)
@@ -808,11 +927,24 @@ endif()
 add_custom_command(TARGET UnRAWer POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${CMAKE_CURRENT_SOURCE_DIR}/UnRAWer/src/unrw_config.toml"
-            $<TARGET_FILE_DIR:UnRAWer>/unrw_config.toml)
+            $<TARGET_FILE_DIR:UnRAWer>/unrw_config.toml
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${UNRAWER_DEFAULT_LUT_DIR}"
+            $<TARGET_FILE_DIR:UnRAWer>/LUTs)
+
+if(WIN32 AND MSVC AND UNRAWER_OPENMP_RUNTIME_LIBS)
+    add_custom_command(TARGET UnRAWer POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${UNRAWER_OPENMP_RUNTIME_LIBS}
+                $<TARGET_FILE_DIR:UnRAWer>)
+endif()
 
 # ------------------------------------------------------------------------------
 #  Installation
 # ------------------------------------------------------------------------------
-include(GNUInstallDirs)
 install(TARGETS UnRAWer RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(WIN32 AND MSVC AND UNRAWER_OPENMP_RUNTIME_LIBS)
+    install(PROGRAMS ${UNRAWER_OPENMP_RUNTIME_LIBS} DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 install(FILES UnRAWer/src/unrw_config.toml DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(DIRECTORY UnRAWer/src/LUTs DESTINATION ${CMAKE_INSTALL_BINDIR})

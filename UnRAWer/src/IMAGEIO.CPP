@@ -21,6 +21,8 @@
 #include "imageio.h"
 #include "settings.h"
 #include "exif_parser.h"
+#include "encoder_settings.h"
+#include "pathutils.h"
 
 bool
 m_progress_callback(void* opaque_data, float portion_done)
@@ -179,7 +181,7 @@ thumb_load(ImageBuf& outBuf, const std::string inputFileName)
         return false;
     }
 
-    std::ofstream output_file(inputFileName + ".jpg", std::ios::binary);
+    std::ofstream output_file(pathFromUtf8(inputFileName + ".jpg"), std::ios::binary);
     output_file.write(reinterpret_cast<char*>(thumb->data), thumb->data_size);
     output_file.close();
 
@@ -273,7 +275,7 @@ makePath(const std::string& out_path)
 {
     namespace fs = std::filesystem;
     try {
-        fs::path p(out_path);
+        fs::path p = pathFromUtf8(out_path);
         if (fs::exists(p)) {
             return true;
         }
@@ -288,37 +290,7 @@ bool
 img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& out_spec, const std::string& outputFileName,
           std::array<int, 4> crops)
 {
-    out_spec->attribute("pnm:binary", 1);
-    out_spec->attribute("pnm:pfmflip", 0);
-    out_spec->attribute("oiio:UnassociatedAlpha", 1);
-    out_spec->attribute("jpeg:subsampling", "4:4:4");
-    out_spec->attribute("png:compressionLevel", 4);
-
-    switch (settings.fileFormat) {
-    case 0:  // TIFF
-        out_spec->attribute("Compression", "zip");
-        out_spec->attribute("tiff:zipquality", "9");
-        break;
-    case 1:  // OpenEXR
-        out_spec->attribute("Compression", "piz");
-        break;
-    case 2:  // PNG
-        out_spec->attribute("Compression", "zip");
-        break;
-    case 3:  // JPEG
-        out_spec->attribute("Compression", "jpeg:" + std::to_string(settings.quality));
-        break;
-    case 4:                                                                                  // JPEG-2000
-        out_spec->attribute("Compression", "jpeg2000:" + std::to_string(settings.quality));  // Not used
-        break;
-    case 5:  // JPEG-XL
-        out_spec->attribute("Compression", "jpegxl:" + std::to_string(settings.quality));
-        break;
-    case 6:  // HEIC
-        out_spec->attribute("Compression", "heic:" + std::to_string(settings.quality));
-        break;
-    default: out_spec->attribute("Compression", "zip"); break;
-    }
+    applyEncoderSettings(*out_spec, outputFileName);
 
     const std::array<int, 4> write_crop = normalize_write_crop(*out_buf, crops);
     if (write_crop[2] <= 0 || write_crop[3] <= 0) {
@@ -336,19 +308,20 @@ img_write(std::unique_ptr<ImageBuf>& out_buf, std::unique_ptr<ImageSpec>& out_sp
     }
     spdlog::info("Output file format: {}", formatText(write_spec.format));
 
-    auto out = ImageOutput::create(outputFileName);
+    const std::string output_file_name = pathToUtf8(pathFromUtf8(outputFileName));
+    auto out = ImageOutput::create(output_file_name);
 
     if (!out) {
-        spdlog::error("Could not create output file: {}", outputFileName);
+        spdlog::error("Could not create output file: {}", output_file_name);
         return false;
     }
 
-    if (!out->open(outputFileName, write_spec, ImageOutput::Create)) {
-        spdlog::error("Could not open output file {}: {}", outputFileName, out->geterror());
+    if (!out->open(output_file_name, write_spec, ImageOutput::Create)) {
+        spdlog::error("Could not open output file {}: {}", output_file_name, out->geterror());
         return false;
     }
 
-    spdlog::info("Writing {}", outputFileName);
+    spdlog::info("Writing {}", output_file_name);
 
     auto ou_px  = out_buf->pixeladdr(write_crop[0], write_crop[1], 0);
     auto ou_pst = out_buf->pixel_stride();

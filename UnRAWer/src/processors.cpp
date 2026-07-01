@@ -18,20 +18,230 @@
 #include "pch.h"
 
 #include "processors.h"
+#include "encoder_settings.h"
 #include "exif_parser.h"
+#include "pathutils.h"
 #include "settings.h"
 
+#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColorIO/OpenColorTransforms.h>
+#include <OpenImageIO/parallel.h>
+
 namespace fs = std::filesystem;
+namespace OCIO = OCIO_NAMESPACE;
 
 #define DEBWRT 0
 
 OutPaths outpaths;
 
+static bool
+ocioBitDepthForType(TypeDesc type, OCIO::BitDepth& bit_depth)
+{
+    switch (type.basetype) {
+    case TypeDesc::UINT8: bit_depth = OCIO::BIT_DEPTH_UINT8; return true;
+    case TypeDesc::UINT16: bit_depth = OCIO::BIT_DEPTH_UINT16; return true;
+    case TypeDesc::HALF: bit_depth = OCIO::BIT_DEPTH_F16; return true;
+    case TypeDesc::FLOAT: bit_depth = OCIO::BIT_DEPTH_F32; return true;
+    default: bit_depth = OCIO::BIT_DEPTH_UNKNOWN; return false;
+    }
+}
+
+static std::string
+ocioProcessorCacheKey(const std::string& lut_path, OCIO::BitDepth src_bit_depth, OCIO::BitDepth dst_bit_depth)
+{
+    return lut_path + "\n" + std::to_string(static_cast<int>(src_bit_depth)) + "\n"
+           + std::to_string(static_cast<int>(dst_bit_depth));
+}
+
+static OCIO::ConstCPUProcessorRcPtr
+getOcioFileProcessor(const fs::path& lut_path, OCIO::BitDepth src_bit_depth, OCIO::BitDepth dst_bit_depth)
+{
+    const std::string lut_string = pathToUtf8(lut_path);
+    const std::string cache_key  = ocioProcessorCacheKey(lut_string, src_bit_depth, dst_bit_depth);
+
+    {
+        std::lock_guard<std::mutex> lock(procGlobals.ocio_processor_mutex);
+        const auto found = procGlobals.ocio_processor_cache.find(cache_key);
+        if (found != procGlobals.ocio_processor_cache.end()) {
+            return found->second;
+        }
+    }
+
+    OCIO::FileTransformRcPtr lut_xfm = OCIO::FileTransform::Create();
+    lut_xfm->setSrc(lut_string.c_str());
+    lut_xfm->setInterpolation(OCIO::INTERP_BEST);
+
+    OCIO::ConstProcessorRcPtr processor
+        = procGlobals.ocio_config->getProcessor(lut_xfm, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::ConstCPUProcessorRcPtr cpu
+        = processor->getOptimizedCPUProcessor(src_bit_depth, dst_bit_depth, OCIO::OPTIMIZATION_DEFAULT);
+
+    {
+        std::lock_guard<std::mutex> lock(procGlobals.ocio_processor_mutex);
+        const auto found = procGlobals.ocio_processor_cache.find(cache_key);
+        if (found != procGlobals.ocio_processor_cache.end()) {
+            return found->second;
+        }
+        procGlobals.ocio_processor_cache.emplace(cache_key, cpu);
+    }
+
+    return cpu;
+}
+
+static bool
+applyOcioFileTransform(ImageBuf& dst_buf, ImageBuf& src_buf, const fs::path& lut_path, TypeDesc out_format)
+{
+    if (!procGlobals.ocio_config) {
+        spdlog::error("LUT not applied: OCIO built-in config is not available");
+        return false;
+    }
+
+    const ImageSpec& src_spec = src_buf.spec();
+    const ImageSpec& dst_spec = dst_buf.spec();
+    if (src_spec.width <= 0 || src_spec.height <= 0 || src_spec.nchannels < 3 || src_spec.nchannels > 4) {
+        spdlog::error("LUT not applied: unsupported image layout {}x{}x{}", src_spec.width, src_spec.height,
+                      src_spec.nchannels);
+        return false;
+    }
+    if (dst_spec.width != src_spec.width || dst_spec.height != src_spec.height || dst_spec.nchannels != src_spec.nchannels) {
+        spdlog::error("LUT not applied: destination layout mismatch {}x{}x{}", dst_spec.width, dst_spec.height,
+                      dst_spec.nchannels);
+        return false;
+    }
+
+    OCIO::BitDepth src_bit_depth;
+    OCIO::BitDepth dst_bit_depth;
+    if (!ocioBitDepthForType(src_spec.format, src_bit_depth) || !ocioBitDepthForType(out_format, dst_bit_depth)) {
+        spdlog::error("LUT not applied: unsupported OCIO bit depth {} -> {}", formatText(src_spec.format),
+                      formatText(out_format));
+        return false;
+    }
+
+    void* src_pixels = src_buf.localpixels();
+    void* dst_pixels = dst_buf.localpixels();
+    if (!src_pixels || !dst_pixels) {
+        spdlog::error("LUT not applied: missing source or destination buffer");
+        return false;
+    }
+
+    const ptrdiff_t src_chan_stride = static_cast<ptrdiff_t>(src_spec.format.basesize());
+    const ptrdiff_t dst_chan_stride = static_cast<ptrdiff_t>(out_format.basesize());
+    const ptrdiff_t src_x_stride    = static_cast<ptrdiff_t>(src_spec.pixel_bytes());
+    const ptrdiff_t dst_x_stride    = static_cast<ptrdiff_t>(dst_spec.pixel_bytes());
+    const ptrdiff_t src_y_stride    = static_cast<ptrdiff_t>(src_spec.scanline_bytes());
+    const ptrdiff_t dst_y_stride    = static_cast<ptrdiff_t>(dst_spec.scanline_bytes());
+
+    try {
+        OCIO::ConstCPUProcessorRcPtr cpu = getOcioFileProcessor(lut_path, src_bit_depth, dst_bit_depth);
+
+        const int max_threads = settings.threads > 0 ? static_cast<int>(settings.threads)
+                                                     : static_cast<int>(std::thread::hardware_concurrency());
+        const int thread_count = std::max(1, std::min(src_spec.height, max_threads));
+        const int rows_per_task = std::max(1, src_spec.height / (thread_count * 2));
+        std::atomic_bool transform_ok { true };
+        spdlog::debug("LUT OCIO transform: {} thread(s), {} rows per task", thread_count, rows_per_task);
+
+        OIIO::parallel_for_chunked(
+            0, src_spec.height, rows_per_task,
+            [&](int64_t row_begin, int64_t row_end) {
+                if (!transform_ok.load(std::memory_order_relaxed)) {
+                    return;
+                }
+
+                unsigned char* src_row = static_cast<unsigned char*>(src_pixels) + (row_begin * src_y_stride);
+                unsigned char* dst_row = static_cast<unsigned char*>(dst_pixels) + (row_begin * dst_y_stride);
+                const long row_count   = static_cast<long>(row_end - row_begin);
+
+                try {
+                    OCIO::PackedImageDesc src_img(src_row, src_spec.width, row_count, src_spec.nchannels, src_bit_depth,
+                                                  src_chan_stride, src_x_stride, src_y_stride);
+                    OCIO::PackedImageDesc dst_img(dst_row, dst_spec.width, row_count, dst_spec.nchannels, dst_bit_depth,
+                                                  dst_chan_stride, dst_x_stride, dst_y_stride);
+                    cpu->apply(src_img, dst_img);
+                } catch (const OCIO::Exception& e) {
+                    transform_ok.store(false, std::memory_order_relaxed);
+                    spdlog::error("LUT chunk not applied: {}", e.what());
+                }
+            },
+            OIIO::paropt(thread_count));
+
+        if (!transform_ok.load(std::memory_order_relaxed)) {
+            return false;
+        }
+    } catch (const OCIO::Exception& e) {
+        spdlog::error("LUT not applied: {}", e.what());
+        return false;
+    }
+
+    return true;
+}
+
+static std::array<int, 4>
+normalizeMemoryWriteCrop(int image_width, int image_height, const std::array<int, 4>& input_crop)
+{
+    if (image_width <= 0 || image_height <= 0 || settings.crop_mode == -1) {
+        return { 0, 0, image_width, image_height };
+    }
+
+    if (input_crop[2] <= 0 || input_crop[3] <= 0) {
+        return { 0, 0, image_width, image_height };
+    }
+
+    const int left   = std::clamp(input_crop[0], 0, image_width - 1);
+    const int top    = std::clamp(input_crop[1], 0, image_height - 1);
+    const int right  = std::clamp(input_crop[0] + input_crop[2], left + 1, image_width);
+    const int bottom = std::clamp(input_crop[1] + input_crop[3], top + 1, image_height);
+    return { left, top, right - left, bottom - top };
+}
+
+static bool
+writeMemoryImageWithOiio(const std::string& output_file_name, const void* pixels, int image_width, int image_height,
+                         int channels, TypeDesc source_format, stride_t xstride, stride_t ystride,
+                         const std::array<int, 4>& crops)
+{
+    if (pixels == nullptr || image_width <= 0 || image_height <= 0 || channels <= 0) {
+        spdlog::error("Writer: invalid memory image for {}", output_file_name);
+        return false;
+    }
+
+    const std::array<int, 4> write_crop = normalizeMemoryWriteCrop(image_width, image_height, crops);
+    if (write_crop[2] <= 0 || write_crop[3] <= 0) {
+        spdlog::error("Writer: invalid crop for {}", output_file_name);
+        return false;
+    }
+
+    const TypeDesc output_format = getTypeDesc(settings.bitDepth != -1 ? settings.bitDepth : settings.defBDepth);
+    ImageSpec spec(write_crop[2], write_crop[3], channels, output_format);
+    applyEncoderSettings(spec, output_file_name);
+
+    const std::string normalized_output = pathToUtf8(pathFromUtf8(output_file_name));
+    std::unique_ptr<ImageOutput> out = ImageOutput::create(normalized_output);
+    if (!out) {
+        spdlog::error("Could not create output file: {}", normalized_output);
+        return false;
+    }
+    if (!out->open(normalized_output, spec, ImageOutput::Create)) {
+        spdlog::error("Could not open output file {}: {}", normalized_output, out->geterror());
+        return false;
+    }
+
+    const auto* base = static_cast<const unsigned char*>(pixels);
+    const void* crop_pixels = base + static_cast<stride_t>(write_crop[1]) * ystride
+                              + static_cast<stride_t>(write_crop[0]) * xstride;
+    const bool ok = out->write_image(source_format, crop_pixels, xstride, ystride, AutoStride, m_progress_callback,
+                                     nullptr);
+    if (!ok) {
+        spdlog::error("Error writing {}: {}", normalized_output, out->geterror());
+    }
+    out->close();
+    return ok;
+}
+
 bool
 isRaw(const std::string& file, const std::unordered_set<std::string>& raw_ext_set)
 {
-    fs::path p(file);
-    std::string ext = toLower(p.extension().string());
+    fs::path p = pathFromUtf8(file);
+    std::string ext = toLower(pathToUtf8(p.extension()));
     if (!ext.empty() && ext[0] == '.') {
         ext = ext.substr(1);
     }
@@ -248,10 +458,10 @@ Reader(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::atom
 
     spdlog::info("Reader: file {}", processing->srcFile);
 
-    fs::path p(processing->srcFile);
+    fs::path p = pathFromUtf8(processing->srcFile);
     if (fs::is_symlink(p)) {
         try {
-            std::string symLinkTarget = fs::read_symlink(p).string();
+            std::string symLinkTarget = pathToUtf8(fs::read_symlink(p));
             spdlog::debug("Reader: File is a symlink to: {}", symLinkTarget);
             processing->srcFile = symLinkTarget;
         } catch (const fs::filesystem_error& e) {
@@ -259,7 +469,7 @@ Reader(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::atom
         }
     }
 
-    std::ifstream file(processing->srcFile, std::ios::binary | std::ios::ate);
+    std::ifstream file(pathFromUtf8(processing->srcFile), std::ios::binary | std::ios::ate);
     if (!file)
         spdlog::error("Reader: Could not open file: {}", processing->srcFile);
 
@@ -293,10 +503,10 @@ rawReader(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::a
 {
     auto& processing = processing_entry;
 
-    fs::path p(processing->srcFile);
+    fs::path p = pathFromUtf8(processing->srcFile);
     if (fs::is_symlink(p)) {
         try {
-            std::string symLinkTarget = fs::read_symlink(p).string();
+            std::string symLinkTarget = pathToUtf8(fs::read_symlink(p));
             spdlog::debug("Reader: File is a symlink to: {}", symLinkTarget);
             processing->srcFile = symLinkTarget;
         } catch (const fs::filesystem_error& e) {
@@ -309,7 +519,24 @@ rawReader(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::a
 
     spdlog::info("Libraw Reader: file {}", processing->srcFile);
 
-    int ret = raw->open_file(processing->srcFile.c_str());
+    std::ifstream file(pathFromUtf8(processing->srcFile), std::ios::binary | std::ios::ate);
+    if (!file) {
+        spdlog::error("Reader: Could not open file: {}", processing->srcFile);
+        return;
+    }
+    const std::streamsize fileSize = file.tellg();
+    if (fileSize <= 0) {
+        spdlog::error("Reader: Could not determine size of file: {}", processing->srcFile);
+        return;
+    }
+    file.seekg(0);
+    processing->rawBuffer.resize(static_cast<size_t>(fileSize));
+    if (!file.read(processing->rawBuffer.data(), fileSize)) {
+        spdlog::error("Reader: Could not read file: {}", processing->srcFile);
+        return;
+    }
+
+    int ret = raw->open_buffer(processing->rawBuffer.data(), processing->rawBuffer.size());
     if (ret != LIBRAW_SUCCESS) {
         spdlog::error("Reader: Cannot read file: {}", processing->srcFile);
         return;
@@ -566,21 +793,20 @@ Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::a
     spdlog::trace("LUT: Input Image buffer: {}", reinterpret_cast<uintptr_t>(image_buf.localpixels()));
 
     if (settings.lutMode >= 0 && lutValid) {
-        fs::path lutPreset = settings.lut_Preset.at(processing->lut_preset);
+        fs::path lutPreset = pathFromUtf8(settings.lut_Preset.at(processing->lut_preset));
 
         if (settings.perCamera) {
-            std::string lut_ext  = lutPreset.extension().string();
-            std::string lut_file = lutPreset.stem().string();
+            std::string lut_ext  = pathToUtf8(lutPreset.extension());
+            std::string lut_file = pathToUtf8(lutPreset.stem());
             fs::path lut_dir     = lutPreset.parent_path();
 
             fs::path new_lut = lut_dir
-                               / (lut_file + "_" + processing->m_exif.make + "_" + processing->m_exif.model + lut_ext);
+                               / pathFromUtf8(lut_file + "_" + processing->m_exif.make + "_" + processing->m_exif.model + lut_ext);
             lutPreset = new_lut;
         }
 
-        if (ImageBufAlgo::ociofiletransform(*lut_buf_ptr, image_buf, lutPreset.string(), false, false,
-                                            procGlobals.ocio_conf_ptr.get())) {
-            spdlog::info("LUT preset {} <{}> applied", processing->lut_preset, lutPreset.string());
+        if (applyOcioFileTransform(*lut_buf_ptr, image_buf, lutPreset, out_format)) {
+            spdlog::info("LUT preset {} <{}> applied", processing->lut_preset, pathToUtf8(lutPreset));
             processing_entry->setStatus(ProcessingStatus::Graded);
             image_buf.reset();
             if (!processing_entry->rawCleared) {
@@ -588,7 +814,6 @@ Processor(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::a
                 processing_entry->rawCleared = true;
             }
         } else {
-            spdlog::error("LUT not applied: {}", lut_buf.geterror());
             lut_buf_ptr = &image_buf;
         }
     } else {
@@ -666,14 +891,14 @@ Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::atom
     // Check if the output path exists and create it if not
     std::string outDir = outpaths.get_path(processing->outPathIdx);
     if (!outpaths.get_path_status(processing->outPathIdx)) {
-        fs::path dir(outDir);
+        fs::path dir = pathFromUtf8(outDir);
         if (!fs::exists(dir)) {
             fs::create_directories(dir);
         }
         outpaths.set_path_status(processing->outPathIdx, true);
     }
 
-    std::string outFilePath = outDir + "/" + processing->outFile + processing->outExt;
+    std::string outFilePath = pathToUtf8(pathFromUtf8(outDir) / pathFromUtf8(processing->outFile + processing->outExt));
 
     if (!makePath(outDir)) {
         spdlog::error("Writer: Cannot create output directory: {}", outFilePath);
@@ -691,31 +916,12 @@ Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::atom
             return;
         }
 
-        // Write raw data to a file
-        outFilePath = outDir + "/" + processing->outFile + ".ppm";
-        std::ofstream output(outFilePath, std::ios::binary);
-        if (!output) {
-            spdlog::error("Writer: Cannot open output file: {}", outFilePath);
+        if (!writeMemoryImageWithOiio(outFilePath, raw_image, raw_width, raw_height, 1, TypeDesc::UINT16,
+                                      sizeof(ushort), static_cast<stride_t>(raw_width) * sizeof(ushort), crops)) {
             processing->setStatus(ProcessingStatus::Failed);
             return;
         }
-
-        size_t pix_count = static_cast<size_t>(raw_width) * static_cast<size_t>(raw_height);
-
-        // Write PGM header
-        output << "P5\n";
-        output << raw_width << " " << raw_height << "\n";
-        output << "65535\n";  // Max value for 16-bit data
-
-        // Write raw data with swapped byte order
-        for (size_t i = 0; i < pix_count; ++i) {
-            ushort value = raw_image[i];
-            value        = (value << 8) | (value >> 8);  // Swap bytes
-            output.write(reinterpret_cast<char*>(&value), sizeof(ushort));
-        }
-
-        output.close();
-    } else if (settings.dDemosaic == -1)  // writing color ppm/tiff using dcraw_ppm_tiff_writer
+    } else if (settings.dDemosaic == -1)
     {
         if (raw->imgdata.image == nullptr) {
             spdlog::error("Writer: processed RAW image buffer is empty for file: {}", processing->srcFile);
@@ -723,19 +929,13 @@ Writer(int index, std::unique_ptr<ProcessingParams>& processing_entry, std::atom
             return;
         }
 
-        if (settings.fileFormat == -1) {
-            if (settings.defFormat == 0) {
-                raw->imgdata.params.output_tiff = 1;  // TIF
-            } else if (settings.defFormat == 7) {
-                raw->imgdata.params.output_tiff = 0;  // PPM
-            } else {
-                spdlog::error("Writer: Unknown file format. Format changed to *.tif");
-                outFilePath = outDir + "/" + processing->outFile + ".tif";
-            }
-        }
-
-        int ret = raw->dcraw_ppm_tiff_writer(outFilePath.c_str());
-        if (ret != LIBRAW_SUCCESS) {
+        const int image_width = raw->imgdata.sizes.iwidth > 0 ? raw->imgdata.sizes.iwidth : raw->imgdata.sizes.width;
+        const int image_height
+            = raw->imgdata.sizes.iheight > 0 ? raw->imgdata.sizes.iheight : raw->imgdata.sizes.height;
+        const int channels = std::clamp(static_cast<int>(raw->imgdata.idata.colors), 1, 4);
+        if (!writeMemoryImageWithOiio(outFilePath, raw->imgdata.image, image_width, image_height, channels,
+                                      TypeDesc::UINT16, static_cast<stride_t>(4 * sizeof(ushort)),
+                                      static_cast<stride_t>(image_width) * 4 * sizeof(ushort), crops)) {
             spdlog::error("Writer: Cannot write image to file: {}", outFilePath);
             processing->setStatus(ProcessingStatus::Failed);
             processing->raw_data.reset();

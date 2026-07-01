@@ -17,9 +17,12 @@
  */
 #include "pch.h"
 #include "settings.h"
+#include "app_console.h"
+#include "app_paths.h"
 #include "cli.h"
 #include "do_process.h"
 #include "gui.h"
+#include "pathutils.h"
 
 #include <limits>
 
@@ -30,9 +33,9 @@ extern const unsigned char unrawer_embedded_font[];
 extern const unsigned int unrawer_embedded_font_size;
 #endif
 
-#define VERSION_MAJOR 2
-#define VERSION_MINOR 1
-#define VERSION_PATCH 1
+#ifndef UNRAWER_VERSION_STRING
+#    define UNRAWER_VERSION_STRING "0.0.0"
+#endif
 
 static void
 glfw_error_callback(int error, const char* description)
@@ -114,12 +117,19 @@ main(int argc, char* argv[])
     spdlog::set_level(spdlog::level::info);
     spdlog::set_pattern("%^[%l]%$<%t> %v");
 
+    if (argc <= 1) {
+        SetAppConsoleEnabled(false);
+    }
+
     time_t timestamp;
     time(&timestamp);
 
-    spdlog::info("UnRAWer {}.{}.{}", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+    spdlog::info("UnRAWer {}", UNRAWER_VERSION_STRING);
     spdlog::info("Build from: {} {}", __DATE__, __TIME__);
     spdlog::info("Log started at: {}", ctime(&timestamp), "%Y-%m-%d %H:%M:%S");
+
+    prepareAppUserFiles();
+    const AppRuntimePaths& paths = appRuntimePaths();
 
     // --- CLI or GUI Branch ---
     if (argc > 1) {
@@ -127,10 +137,15 @@ main(int argc, char* argv[])
     }
 
     // --- GUI Mode ---
-    if (!loadSettings(settings, "unrw_config.toml")) {
-        spdlog::error("Can not load [unrw_config.toml]. Using default settings.");
-        settings.reSettings();
+    if (!loadSettings(settings, paths.user_config_file_string)) {
+        spdlog::error("Can not load [{}]. Using default settings.", paths.user_config_file_string);
+        if (!paths.default_config_file.empty() && loadSettings(settings, pathToUtf8(paths.default_config_file))) {
+            spdlog::warn("Loaded installed default config: {}", pathToUtf8(paths.default_config_file));
+        } else {
+            settings.reSettings();
+        }
     }
+    SetAppConsoleEnabled(settings.conEnable);
     printSettings(settings);
 
     // --- GLFW and ImGui Initialization ---
@@ -183,6 +198,7 @@ main(int argc, char* argv[])
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
+    io.IniFilename = appImguiIniFilename();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;      // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;    // Enable Multi-Viewport / Platform Windows
@@ -197,6 +213,7 @@ main(int argc, char* argv[])
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
+    InitializeNativeFileDialogs();
 
     // Hook to ensure all ImGui platform windows (popups, menus) are also floating/always-on-top
     // This fixes the issue where menu popups render behind the main window
@@ -278,6 +295,7 @@ main(int argc, char* argv[])
     }
 
     // --- Cleanup ---
+    ShutdownNativeFileDialogs();
     dnd_glfw::shutdown(window);
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

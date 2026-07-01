@@ -29,6 +29,45 @@ typedef unsigned short ushort;
 typedef unsigned int uint;
 typedef unsigned long ulong;
 
+enum TiffCompressionMode : int {
+    TiffCompression_Zip = 0,
+    TiffCompression_Lzw,
+    TiffCompression_PackBits,
+    TiffCompression_None,
+};
+
+enum ExrCompressionMode : int {
+    ExrCompression_Zip = 0,
+    ExrCompression_Zips,
+    ExrCompression_Piz,
+    ExrCompression_Pxr24,
+    ExrCompression_Rle,
+    ExrCompression_B44,
+    ExrCompression_B44A,
+    ExrCompression_Dwaa,
+    ExrCompression_Dwab,
+    ExrCompression_Htj2k256,
+    ExrCompression_Htj2k32,
+    ExrCompression_None,
+};
+
+enum PngCompressionStrategy : int {
+    PngCompression_Default = 0,
+    PngCompression_Filtered,
+    PngCompression_Huffman,
+    PngCompression_Rle,
+    PngCompression_Fixed,
+    PngCompression_Fast,
+    PngCompression_None,
+};
+
+enum JpegSubsamplingMode : int {
+    JpegSubsampling_444 = 0,
+    JpegSubsampling_422,
+    JpegSubsampling_420,
+    JpegSubsampling_411,
+};
+
 struct Settings {
     // UI state
     bool show_settings_window = true;
@@ -47,14 +86,21 @@ struct Settings {
 	int fileFormat, defFormat;
 	int bitDepth, defBDepth;
 	int quality;
+    int tiffCompression, tiffZipLevel;
+    int exrCompression, exrZipLevel, exrDwaLevel;
+    int pngStrategy, pngCompressionLevel;
+    int jpegQuality, jpegSubsampling;
+    float jpeg2000QStep;
+    int heicQuality;
+    int jpegxlQuality, jpegxlEffort, jpegxlSpeed;
 	int rawRot;
 	uint rawSpace, threads;
 	int dDemosaic;
 	float mltThreads;
 	uint verbosity;
 
-	std::vector<std::string> out_formats = { "tif", "exr", "png", "jpg", "jp2", "jxl", "heic", "ppm"};
-	std::string ocioConfigPath, dLutPreset;
+	std::vector<std::string> out_formats = { "tif", "exr", "png", "jpg", "jp2", "jph", "jxl", "heic", "ppm"};
+	std::string dLutPreset;
 	
 	std::map<std::string, std::string> lut_Preset;
 	std::string lutFolder;
@@ -94,6 +140,7 @@ struct Settings {
 	void reSettings() {
 		conEnable = true;	// Console enabled/disabled
 		useSbFldr = false;	// Use subfolder for output
+		perCamera = false;
 		pathPrefix = "";	// Path prefix for output
 		verbosity = 3;		// Verbosity level: 0 - none, 1 - errors, 2 - warnings, 3 - info, 4 - debug, 5 - trace
 
@@ -108,18 +155,30 @@ struct Settings {
 
 		threads = 5;		// Number of threads: 0 - auto, >0 - number of threads
 		rangeMode = 0;		// Float type: 0 - unsigned, 1 - signed, 2 - unsigned -> signed, 3 - signed -> unsigned
-		fileFormat = -1;	// File format: -1 - original, 0 - TIFF, 1 - OpenEXR, 2 - PNG, 3 - JPEG, 4 - JPEG-2000, 5 - JPEG-XL, 6 - HEIC, 7 - PPM
+		fileFormat = -1;	// File format: -1 - original, 0 - TIFF, 1 - OpenEXR, 2 - PNG, 3 - JPEG, 4 - JPEG-2000, 5 - HTJ2K, 6 - JPEG-XL, 7 - HEIC, 8 - PPM
 		defFormat = 0;		// Default file format = TIFF
 		bitDepth = -1;		// Bit depth: -1 - Original, 0 - uint8, 1 - uint16, 2 - uint32, 3 - uint64, 4 - half, 5 - float, 6 - double
 		defBDepth = 1;		// Default bit depth = uint16
 		quality = 100;		// JPEG quality
+        tiffCompression     = TiffCompression_Zip;
+        tiffZipLevel        = 6;
+        exrCompression      = ExrCompression_Zip;
+        exrZipLevel         = 4;
+        exrDwaLevel         = 45;
+        pngStrategy         = PngCompression_Default;
+        pngCompressionLevel = 4;
+        jpegQuality         = quality;
+        jpegSubsampling     = JpegSubsampling_444;
+        jpeg2000QStep       = -1.0f;
+        heicQuality         = quality;
+        jpegxlQuality       = quality;
+        jpegxlEffort        = 7;
+        jpegxlSpeed         = 0;
 		
 		rawRot = -1;		// Raw rotation: -1 - Auto EXIF, 0 - Unrotated/Horisontal, 3 - 180 Horisontal, 5 - 90 CCW Vertical, 6 - 90 CW Vertical
 		rawSpace = 1;
 		dDemosaic = 5;
 		
-		ocioConfigPath = "";
-
 		sharp_mode = 1;		// Sharpening mode: -1 - disabled, 0 - Smart, 1 - Force
 		sharp_kernel = 0;
 		sharp_width = 3.0f;
